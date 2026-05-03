@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astro Studio AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-deep: #07071a;
+      --bg-card: #0e0e2a;
+      --bg-card-hover: #16163a;
+      --bg-surface: #12123a;
+      --border: #1e1e4a;
+      --border-active: #3b3b7a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9090b8;
+      --text-muted: #606088;
+      --accent-cyan: #00e5ff;
+      --accent-violet: #8b5cf6;
+      --accent-purple: #6c3bd2;
+      --gradient-primary: linear-gradient(135deg, #6c3bd2, #4f46e5);
+      --gradient-accent: linear-gradient(135deg, #00e5ff, #8b5cf6);
+      --shadow-glow: 0 0 40px rgba(108, 59, 210, 0.15);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    /* ===== STARS CANVAS ===== */
+    #stars-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 20px 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      padding: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(108, 59, 210, 0.3);
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: -2px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      transition: var(--transition);
+    }
+
+    .status-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .status-badge.online .dot { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+    .status-badge.offline .dot { background: #64748b; box-shadow: 0 0 8px #64748b; }
+
+    body.auth-checking .app-container,
+    body.auth-checking .login-screen,
+    body.unauthenticated .app-container,
+    body.authenticated .login-screen {
+      display: none;
+    }
+
+    body.authenticated .app-container {
+      display: flex;
+    }
+
+    body.unauthenticated .login-screen {
+      display: flex;
+    }
+
+    .login-screen {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .login-content {
+      width: min(420px, 100%);
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 18px;
+      border-radius: 18px;
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      box-shadow: 0 0 28px rgba(108, 59, 210, 0.4);
+    }
+
+    .login-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-tagline {
+      color: var(--text-secondary);
+      margin: 8px 0 28px;
+      font-size: 16px;
+    }
+
+    .google-login-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 13px 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .google-login-btn:hover {
+      border-color: var(--accent-cyan);
+      background: var(--bg-card-hover);
+      box-shadow: 0 0 18px rgba(0, 229, 255, 0.14);
+      transform: translateY(-1px);
+    }
+
+    .google-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      color: #4285f4;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: Arial, sans-serif;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 4px 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-card);
+    }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-active);
+    }
+
+    .user-name {
+      max-width: 150px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .logout-btn {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .logout-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-active);
+    }
+
+    /* ===== DROP ZONE ===== */
+    .drop-zone {
+      position: relative;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg-card);
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      height: 220px;
+      max-height: 220px;
+      margin-top: 12px;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: var(--radius);
+      opacity: 0;
+      transition: var(--transition);
+      background: var(--gradient-primary);
+      z-index: 0;
+    }
+
+    .drop-zone.dragover {
+      border-color: var(--accent-cyan);
+      transform: scale(1.01);
+    }
+
+    .drop-zone.dragover::before {
+      opacity: 0.08;
+    }
+
+    .drop-zone-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .drop-zone .upload-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .drop-zone h3 {
+      font-size: 17px;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .drop-zone p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(108, 59, 210, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 24px rgba(108, 59, 210, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-active);
+    }
+
+    .btn-small {
+      padding: 7px 16px;
+      font-size: 13px;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .drop-zone input[type="file"] { display: none; }
+
+    /* ===== FILE INFO ===== */
+    .file-info {
+      display: none;
+      margin-top: 10px;
+      padding: 12px 16px;
+      background: var(--bg-surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .file-info.visible { display: block; }
+
+    .file-info .file-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .file-info .file-header .file-icon { font-size: 28px; }
+
+    .file-info .file-name {
+      font-weight: 600;
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .file-info .file-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .file-info .file-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .progress-bar {
+      margin-top: 14px;
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar .fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gradient-accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    .text-preview {
+      margin-top: 8px;
+      max-height: 80px;
+      overflow-y: auto;
+      padding: 8px 10px;
+      background: var(--bg-deep);
+      border-radius: var(--radius-xs);
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* Global dark scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-active); }
+    ::-webkit-scrollbar-corner { background: transparent; }
+
+    /* ===== TOOL PANEL ===== */
+    .tool-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      flex-shrink: 0;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 1;
+      min-width: fit-content;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--text-secondary); }
+
+    .tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--accent-cyan);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.35s ease;
+      min-height: 0;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== TAB 1 - CHAT ===== */
+    .chat-container {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .chat-messages {
+      flex: 1;
+      min-height: 100px;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    
+
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+      animation: messageIn 0.3s ease;
+    }
+
+    @keyframes messageIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--gradient-primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.ai {
+      align-self: flex-start;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.ai.loading {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .chat-input-area input:focus {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+    }
+
+    .chat-input-area input::placeholder { color: var(--text-muted); }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+
+    .typing-indicator span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-violet);
+      animation: typingBounce 1.2s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    .empty-chat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 6px;
+    }
+
+    .empty-chat .icon { font-size: 40px; }
+    .empty-chat p { font-size: 14px; }
+
+    /* ===== TAB 2 - FLASHCARDS ===== */
+    .flashcards-section {
+      text-align: center;
+    }
+
+    .flashcards-section .section-header {
+      margin-bottom: 24px;
+    }
+
+    .flashcards-section .section-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .flashcard-carousel {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .flashcard-container {
+      width: 100%;
+      max-width: 380px;
+      height: 240px;
+      perspective: 1000px;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .flashcard-face.front {
+      background: var(--gradient-primary);
+      color: #fff;
+    }
+
+    .flashcard-face.front .card-number {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 12px;
+      opacity: 0.6;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .flashcard-face.front .card-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      margin-bottom: 12px;
+    }
+
+    .flashcard-face.front .card-question {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .flashcard-face.back {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      transform: rotateY(180deg);
+      color: var(--text-primary);
+    }
+
+    .flashcard-face.back .card-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .flashcard-face.back .card-answer {
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .flashcard-face .flip-hint {
+      position: absolute;
+      bottom: 16px;
+      font-size: 11px;
+      opacity: 0.4;
+    }
+
+    .carousel-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .carousel-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-active);
+    }
+
+    .carousel-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .flashcard-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .flashcard-dots .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .flashcard-dots .dot.active {
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+    }
+
+    /* ===== TAB 3 - STUDY PLAN ===== */
+    .study-plan-section .section-header {
+      margin-bottom: 24px;
+    }
+
+    .study-plan-section .section-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .study-plan-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .study-plan-form input,
+    .study-plan-form select {
+      flex: 1;
+      min-width: 160px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .study-plan-form input:focus,
+    .study-plan-form select:focus {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+    }
+
+    .study-plan-form input::placeholder { color: var(--text-muted); }
+
+    .study-plan-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .study-plan-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .study-plan-table th {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-weight: 500;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .study-plan-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .study-plan-table tr:last-child td { border-bottom: none; }
+
+    .study-plan-table tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .study-plan-table .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .tag-cyan { background: rgba(0, 229, 255, 0.12); color: var(--accent-cyan); }
+    .tag-violet { background: rgba(139, 92, 246, 0.12); color: var(--accent-violet); }
+    .tag-purple { background: rgba(108, 59, 210, 0.2); color: #a78bfa; }
+
+    /* ===== TAB 4 - SUMMARY ===== */
+    .summary-section .section-header {
+      margin-bottom: 24px;
+    }
+
+    .summary-section .section-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-card .stat-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-card .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .summary-text {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      min-height: 180px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+    }
+
+    .summary-text h4 {
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .summary-text p {
+      margin-bottom: 12px;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    /* ===== TAB 5 - EXAM MODE ===== */
+    .exam-section { text-align: center; }
+    .exam-section .section-header { margin-bottom: 24px; }
+    .exam-section .section-header p { color: var(--text-secondary); font-size: 14px; margin-top: 6px; }
+
+    .exam-progress {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .exam-progress .step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .exam-progress .step.active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+    }
+
+    .exam-progress .step.done {
+      background: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      color: var(--bg-deep);
+    }
+
+    .exam-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+
+    .exam-card .exam-question-number {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .exam-card .exam-question-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .exam-card textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      resize: vertical;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .exam-card textarea:focus {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+    }
+
+    .exam-card textarea::placeholder { color: var(--text-muted); }
+
+    .exam-options {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .exam-option {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .exam-option:hover:not(:disabled) {
+      border-color: var(--border-active);
+      background: var(--bg-card-hover);
+    }
+
+    .exam-option.selected {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.14);
+      color: var(--accent-cyan);
+    }
+
+    .exam-option.correct {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.16);
+      color: #86efac;
+    }
+
+    .exam-option.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.16);
+      color: #fca5a5;
+    }
+
+    .exam-option:disabled {
+      cursor: default;
+      opacity: 0.88;
+    }
+
+    .exam-feedback {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      text-align: left;
+    }
+
+    .exam-feedback .score {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .exam-feedback .score.high { color: #22c55e; }
+    .exam-feedback .score.medium { color: #f59e0b; }
+    .exam-feedback .score.low { color: #ef4444; }
+
+    .exam-feedback .fb-text {
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .exam-results {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .exam-results .final-score {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .exam-results .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    .exam-results .result-item .r-icon { font-size: 18px; }
+    .exam-results .result-item .r-question {
+      flex: 1;
+      margin: 0 12px;
+      font-size: 13px;
+      text-align: left;
+      color: var(--text-secondary);
+    }
+
+    .exam-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+
+    /* ===== HISTORY PANEL ===== */
+    .history-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .history-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .history-panel {
+      position: fixed;
+      top: 0;
+      right: -380px;
+      width: 360px;
+      height: 100vh;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      z-index: 101;
+      transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .history-panel.open { right: 0; }
+
+    .history-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-panel-header h3 { font-size: 16px; }
+
+    .history-panel-header button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+    }
+
+    
+
+    .history-item {
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg-surface);
+    }
+
+    .history-item:hover {
+      border-color: var(--border-active);
+      background: var(--bg-card-hover);
+    }
+
+    .history-item .h-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .history-item .h-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .history-item .h-preview {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 40px 20px;
+      font-size: 14px;
+    }
+
+    .history-panel-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .history-panel-footer .clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .history-panel-footer .clear-btn:hover { color: #ef4444; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .status-badge { align-self: flex-start; }
+
+      .drop-zone { padding: 10px 14px; height: 220px; max-height: 220px; }
+      .drop-zone .upload-icon { font-size: 28px; margin-bottom: 4px; }
+      .drop-zone h3 { font-size: 15px; }
+      .drop-zone p { font-size: 12px; margin-bottom: 8px; }
+
+      .drop-zone h3 { font-size: 16px; }
+      .drop-zone .upload-icon { font-size: 34px; margin-bottom: 8px; }
+      .drop-zone p { margin-bottom: 12px; }
+
+      .tabs { gap: 2px; }
+
+      .tab-btn { padding: 8px 10px; font-size: 12px; }
+
+      .chat-messages { height: auto; min-height: 120px; }
+
+      .message { max-width: 92%; }
+
+      .flashcard-container { max-width: 280px; height: 200px; }
+
+      .flashcard-face .card-question { font-size: 16px; }
+
+      .study-plan-form input,
+      .study-plan-form select { min-width: 100%; }
+
+      .study-plan-table { font-size: 13px; }
+      .study-plan-table th,
+      .study-plan-table td { padding: 10px 12px; }
+
+      .app-container { padding: 12px 14px 0; }
+
+      .history-panel { width: 300px; right: -320px; }
+    }
+
+    @media (max-width: 480px) {
+      .logo-text { font-size: 17px; }
+      .logo-icon { width: 32px; height: 32px; font-size: 16px; }
+      header { padding: 8px 0; gap: 6px; }
+      .drop-zone { padding: 8px 10px; height: 220px; max-height: 220px; }
+      .drop-zone .upload-icon { font-size: 24px; margin-bottom: 2px; }
+      .drop-zone h3 { font-size: 14px; }
+      .drop-zone p { font-size: 11px; margin-bottom: 6px; }
+
+      .flashcard-container { max-width: 240px; height: 180px; }
+
+      .stat-card .stat-value { font-size: 18px; }
+
+      .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .exam-card { padding: 16px; }
+      .exam-card .exam-question-text { font-size: 15px; }
+      .history-panel { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body class="auth-checking">
+
+  <!-- Stars Background -->
+  <canvas id="stars-canvas"></canvas>
+
+  <main class="login-screen" id="loginScreen">
+    <div class="login-content">
+      <div class="login-logo">🚀</div>
+      <div class="login-title">Astro Studio AI</div>
+      <div class="login-tagline">Tu asistente de estudio inteligente 🚀</div>
+      <a class="google-login-btn" href="http://localhost:3000/auth/google">
+        <span class="google-icon">G</span>
+        <span>Continuar con Google</span>
+      </a>
+    </div>
+  </main>
+
+  <div class="app-container">
+
+    <!-- ===== HEADER ===== -->
+    <header>
+      <div class="logo-section">
+        <div class="logo-icon">🚀</div>
+        <div>
+          <div class="logo-text">Astro Studio AI</div>
+          <div class="tagline">Tu asistente de estudio inteligente</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="user-menu" id="userMenu">
+          <img class="user-avatar" id="userAvatar" alt="">
+          <span class="user-name" id="userName"></span>
+          <button class="logout-btn" id="logoutBtn" type="button">Cerrar sesión</button>
+        </div>
+        <button class="btn btn-secondary btn-small" id="historyBtn" title="Historial de sesiones">🕒</button>
+        <div class="status-badge offline" id="status-badge">
+          <span class="dot"></span>
+          <span id="status-text">Sin PDF</span>
+        </div>
+      </div>
+    </header>
+
+      <!-- DROP ZONE -->
+      <section class="drop-zone" id="dropZone">
+        <div class="drop-zone-content">
+          <span class="upload-icon">📄</span>
+          <h3>Sube tu PDF de apuntes</h3>
+          <p>Arrastra y suelta tu archivo aquí o haz clic para seleccionar</p>
+          <button class="btn btn-primary" id="uploadBtn">Seleccionar archivo</button>
+          <input type="file" id="fileInput" accept=".pdf">
+        </div>
+
+        <div class="file-info" id="fileInfo">
+          <div class="file-header">
+            <span class="file-icon">📘</span>
+            <div>
+              <div class="file-name" id="fileName">—</div>
+              <div class="file-meta">
+                <span>📄 <span id="pageCount">0</span> páginas</span>
+                <span>⚖️ <span id="fileSize">0</span> MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="fill" id="progressFill"></div>
+          </div>
+          <div class="progress-label" id="progressLabel">Listo para extraer</div>
+          <div class="text-preview" id="textPreview">Esperando contenido del PDF...</div>
+        </div>
+      </section>
+
+      <!-- TOOL PANEL -->
+      <section class="tool-panel" id="toolPanel">
+
+        <!-- Tabs -->
+        <div class="tabs" id="tabs">
+          <button class="tab-btn active" data-tab="chat">💬 Chat con tu PDF</button>
+          <button class="tab-btn" data-tab="flashcards">⚡ Flashcards</button>
+          <button class="tab-btn" data-tab="studyplan">📅 Plan de Estudio</button>
+          <button class="tab-btn" data-tab="summary">📊 Resumen</button>
+          <button class="tab-btn" data-tab="exam">🎯 Modo Examen</button>
+        </div>
+
+        <!-- TAB 1: CHAT -->
+        <div class="tab-content active" id="tab-chat">
+          <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+              <div class="empty-chat">
+                <div class="icon">💬</div>
+                <p>Sube un PDF y haz cualquier pregunta sobre tus apuntes</p>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" id="chatInput" placeholder="Pregunta sobre tu PDF..." autocomplete="off">
+              <button class="btn btn-primary btn-small" id="chatSend">Enviar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: FLASHCARDS -->
+        <div class="tab-content" id="tab-flashcards">
+          <div class="flashcards-section">
+            <div class="section-header">
+              <h2>⚡ Flashcards</h2>
+              <p>Las flashcards reales serán generadas por IA</p>
+            </div>
+            <button class="btn btn-primary" id="genFlashcards">
+              Generar Flashcards
+            </button>
+            <div style="margin-top:24px;">
+              <div class="flashcard-carousel">
+                <button class="carousel-btn" id="prevCard">‹</button>
+                <div class="flashcard-container">
+                  <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face front">
+                      <span class="card-number" id="cardIndex">1 / 3</span>
+                      <div class="card-label">Pregunta</div>
+                      <div class="card-question" id="cardQuestion">¿Qué es el aprendizaje supervisado?</div>
+                      <div class="flip-hint">Haz clic para ver respuesta</div>
+                    </div>
+                    <div class="flashcard-face back">
+                      <div class="card-hint">Respuesta</div>
+                      <div class="card-answer" id="cardAnswer">Un tipo de ML donde el modelo se entrena con datos etiquetados.</div>
+                      <div class="flip-hint">Haz clic para ver pregunta</div>
+                    </div>
+                  </div>
+                </div>
+                <button class="carousel-btn" id="nextCard">›</button>
+              </div>
+              <div class="flashcard-dots" id="cardDots">
+                <span class="dot active" data-i="0"></span>
+                <span class="dot" data-i="1"></span>
+                <span class="dot" data-i="2"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: STUDY PLAN -->
+        <div class="tab-content" id="tab-studyplan">
+          <div class="study-plan-section">
+            <div class="section-header">
+              <h2>📅 Plan de Estudio</h2>
+              <p>Organiza tu estudio con un plan personalizado</p>
+            </div>
+            <div class="study-plan-form">
+              <input type="text" id="planSubject" placeholder="Materia (ej: Álgebra Lineal)" value="Álgebra Lineal">
+              <input type="date" id="planDate">
+              <button class="btn btn-primary" id="createPlan">Crear Plan</button>
+            </div>
+            <div class="study-plan-table-wrap">
+              <table class="study-plan-table" id="planTable">
+                <thead>
+                  <tr><th>Día</th><th>Fecha</th><th>Tema</th><th>Duración</th><th>Estado</th></tr>
+                </thead>
+                <tbody id="planBody">
+                  <tr>
+                    <td>Día 1</td>
+                    <td>—</td>
+                    <td>Introducción a matrices</td>
+                    <td>2 h</td>
+                    <td><span class="tag tag-cyan">Por hacer</span></td>
+                  </tr>
+                  <tr>
+                    <td>Día 2</td>
+                    <td>—</td>
+                    <td>Sistemas de ecuaciones lineales</td>
+                    <td>2 h</td>
+                    <td><span class="tag tag-cyan">Por hacer</span></td>
+                  </tr>
+                  <tr>
+                    <td>Día 3</td>
+                    <td>—</td>
+                    <td>Determinantes y propiedades</td>
+                    <td>1.5 h</td>
+                    <td><span class="tag tag-cyan">Por hacer</span></td>
+                  </tr>
+                  <tr>
+                    <td>Día 4</td>
+                    <td>—</td>
+                    <td>Vectores y espacios vectoriales</td>
+                    <td>2 h</td>
+                    <td><span class="tag tag-cyan">Por hacer</span></td>
+                  </tr>
+                  <tr>
+                    <td>Día 5</td>
+                    <td>—</td>
+                    <td>Repaso y ejercicios prácticos</td>
+                    <td>3 h</td>
+                    <td><span class="tag tag-violet">Repaso</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="margin-top:12px;font-size:13px;color:var(--text-muted);">
+              * Plan de ejemplo — la versión IA generará fechas reales y temas personalizados.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 4: SUMMARY -->
+        <div class="tab-content" id="tab-summary">
+          <div class="summary-section">
+            <div class="section-header">
+              <h2>📊 Resumen</h2>
+              <p>Genera un resumen inteligente de tus apuntes</p>
+            </div>
+            <button class="btn btn-primary" id="genSummary">Generar Resumen</button>
+
+            <div class="summary-stats" style="margin-top:24px;">
+              <div class="stat-card">
+                <div class="stat-value" id="statWords">—</div>
+                <div class="stat-label">Palabras</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="statPages">—</div>
+                <div class="stat-label">Páginas</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="statChars">—</div>
+                <div class="stat-label">Caracteres</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="statReadTime">—</div>
+                <div class="stat-label">Lectura estimada</div>
+              </div>
+            </div>
+
+            <div class="summary-text" id="summaryText">
+              <h4>📝 Resumen</h4>
+              <p>Sube un PDF y genera un resumen para ver aquí el contenido extraído de tus apuntes de forma inteligente.</p>
+              <p>El resumen incluirá los conceptos clave, definiciones importantes y una estructura organizada por temas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: EXAM -->
+        <div class="tab-content" id="tab-exam">
+          <div class="exam-section">
+            <div class="section-header">
+              <h2>🎯 Modo Examen</h2>
+              <p>Pon a prueba lo que aprendiste con preguntas generadas por IA</p>
+            </div>
+            <div id="examContent">
+              <button class="btn btn-primary" id="startExam">Iniciar Examen</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    <!-- ===== HISTORY PANEL ===== -->
+    <div class="history-overlay" id="historyOverlay"></div>
+    <div class="history-panel" id="historyPanel">
+      <div class="history-panel-header">
+        <h3>🕒 Historial de sesiones</h3>
+        <button id="closeHistory">✕</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">Aún no hay sesiones guardadas.<br>Las conversaciones del chat se guardan automáticamente.</div>
+      </div>
+      <div class="history-panel-footer">
+        <button class="clear-btn" id="clearHistory">🗑️ Borrar todo el historial</button>
+      </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+      Astro Studio AI — Construido para estudiantes que van en serio 🚀
+    </footer>
+  </div>
+
+  <script>
+    if (window.location.protocol === 'file:') {
+      window.location.replace('http://localhost:3000/');
+    }
+
+    /* ==========================================================
+       CONFIGURACIÓN DE PDF.js
+       ========================================================== */
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    /* ==========================================================
+       GLOBAL: texto extraído del PDF
+       ========================================================== */
+    window.pdfContent = '';
+    let pdfDoc = null;
+    let isPDFLoaded = false;
+
+    /* ==========================================================
+       GLOBAL: placeholder para IA
+       Esta función window.askAI(prompt) es el ÚNICO punto que
+       necesitas reemplazar para conectar DeepSeek V4 Flash.
+       AHORA CONECTADA A: Gemma-4-31B-IT via proxy NVIDIA NIM.
+       ========================================================== */
+    window.askAI = async function (prompt) {
+      try {
+        const res = await fetch('http://localhost:3000/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            pdfContent: window.pdfContent
+          })
+        });
+        if (!res.ok) {
+          throw new Error(`Proxy error (${res.status})`);
+        }
+        const data = await res.json();
+        return data.text;
+      } catch (err) {
+        console.error('askAI error:', err);
+        return '⚠️ Lo siento, hubo un error al conectar con la IA. Por favor intenta de nuevo.';
+      }
+    };
+
+    /* ==========================================================
+       ESTRELLAS - Canvas Animation
+       ========================================================== */
+    (function initStars() {
+      const canvas = document.getElementById('stars-canvas');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      const STAR_COUNT = 180;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function createStars() {
+        stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 1.8 + 0.3,
+            alpha: Math.random() * 0.7 + 0.3,
+            speed: Math.random() * 0.005 + 0.002,
+            phase: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+
+      function draw(timestamp) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const t = timestamp * 0.001;
+
+        for (const s of stars) {
+          const twinkle = Math.sin(t * s.speed * 60 + s.phase) * 0.5 + 0.5;
+          const alpha = s.alpha * (0.4 + twinkle * 0.6);
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.fill();
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      resize();
+      createStars();
+      requestAnimationFrame(draw);
+
+      window.addEventListener('resize', () => {
+        resize();
+        createStars();
+      });
+    })();
+
+    /* ==========================================================
+       ELEMENTOS DEL DOM
+       ========================================================== */
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const uploadBtn = document.getElementById('uploadBtn');
+      const fileInfo = document.getElementById('fileInfo');
+      const fileName = document.getElementById('fileName');
+      const pageCount = document.getElementById('pageCount');
+      const fileSize = document.getElementById('fileSize');
+      const progressFill = document.getElementById('progressFill');
+      const progressLabel = document.getElementById('progressLabel');
+      const textPreview = document.getElementById('textPreview');
+      const toolPanel = document.getElementById('toolPanel');
+      const statusBadge = document.getElementById('status-badge');
+      const statusText = document.getElementById('status-text');
+      const userAvatar = document.getElementById('userAvatar');
+      const userName = document.getElementById('userName');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      const chatMessages = document.getElementById('chatMessages');
+      const chatInput = document.getElementById('chatInput');
+      const chatSend = document.getElementById('chatSend');
+
+      const genFlashcards = document.getElementById('genFlashcards');
+      const flashcard = document.getElementById('flashcard');
+      const prevCard = document.getElementById('prevCard');
+      const nextCard = document.getElementById('nextCard');
+      const cardIndex = document.getElementById('cardIndex');
+      const cardQuestion = document.getElementById('cardQuestion');
+      const cardAnswer = document.getElementById('cardAnswer');
+      const cardDots = document.getElementById('cardDots');
+
+      const planSubject = document.getElementById('planSubject');
+      const planDate = document.getElementById('planDate');
+      const createPlanBtn = document.getElementById('createPlan');
+
+      const genSummary = document.getElementById('genSummary');
+      const summaryText = document.getElementById('summaryText');
+
+      const statWords = document.getElementById('statWords');
+      const statPages = document.getElementById('statPages');
+      const statChars = document.getElementById('statChars');
+      const statReadTime = document.getElementById('statReadTime');
+
+    async function initAuth() {
+      try {
+        const res = await fetch('http://localhost:3000/api/me', {
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (!data.user) {
+          document.body.classList.remove('auth-checking', 'authenticated');
+          document.body.classList.add('unauthenticated');
+          return;
+        }
+
+        userName.textContent = data.user.displayName || data.user.email || 'Usuario';
+        if (data.user.photo) {
+          userAvatar.src = data.user.photo;
+          userAvatar.style.display = 'block';
+        } else {
+          userAvatar.style.display = 'none';
+        }
+
+        document.body.classList.remove('auth-checking', 'unauthenticated');
+        document.body.classList.add('authenticated');
+      } catch (err) {
+        console.error('Auth check error:', err);
+        document.body.classList.remove('auth-checking', 'authenticated');
+        document.body.classList.add('unauthenticated');
+      }
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      window.location.href = 'http://localhost:3000/auth/logout';
+    });
+
+    initAuth();
+
+    /* ==========================================================
+       FLASHCARDS - Data de ejemplo
+       ========================================================== */
+    const flashcardData = [
+      { q: '¿Qué es el aprendizaje supervisado?', a: 'Un tipo de ML donde el modelo se entrena con datos etiquetados.' },
+      { q: '¿Qué es una red neuronal?', a: 'Modelo computacional inspirado en el cerebro, compuesto por capas de neuronas interconectadas.' },
+      { q: '¿Qué es el overfitting?', a: 'Cuando el modelo aprende demasiado bien los datos de entrenamiento y falla en datos nuevos.' },
+    ];
+    let currentCard = 0;
+
+    function updateCard(i) {
+      currentCard = i;
+      const d = flashcardData[i];
+      cardQuestion.textContent = d.q;
+      cardAnswer.textContent = d.a;
+      cardIndex.textContent = `${i + 1} / ${flashcardData.length}`;
+      flashcard.classList.remove('flipped');
+
+      document.querySelectorAll('#cardDots .dot').forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === i);
+      });
+
+      prevCard.disabled = i === 0;
+      nextCard.disabled = i === flashcardData.length - 1;
+    }
+
+    flashcard.addEventListener('click', () => {
+      flashcard.classList.toggle('flipped');
+    });
+
+    prevCard.addEventListener('click', () => {
+      if (currentCard > 0) updateCard(currentCard - 1);
+    });
+
+    nextCard.addEventListener('click', () => {
+      if (currentCard < flashcardData.length - 1) updateCard(currentCard + 1);
+    });
+
+    document.querySelectorAll('#cardDots .dot').forEach((dot) => {
+      dot.addEventListener('click', () => updateCard(parseInt(dot.dataset.i)));
+    });
+
+    updateCard(0);
+
+    genFlashcards.addEventListener('click', async () => {
+      if (!isPDFLoaded) {
+        alert('Primero sube un PDF para generar flashcards.');
+        return;
+      }
+      /* ==========================================================
+         PUNTO DE CONEXIÓN IA — FLASHCARDS
+         Reemplaza este bloque para generar flashcards reales con IA.
+         ========================================================== */
+      genFlashcards.disabled = true;
+      genFlashcards.textContent = '⏳ Generando...';
+      try {
+        const res = await fetch('http://localhost:3000/api/flashcards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdfContent: window.pdfContent })
+        });
+        if (!res.ok) throw new Error('Error en flashcards');
+        const data = await res.json();
+        if (data.cards && data.cards.length > 0) {
+          flashcardData.length = 0;
+          data.cards.forEach(c => flashcardData.push({ q: c.pregunta, a: c.respuesta }));
+          document.querySelectorAll('#cardDots .dot').forEach(d => d.remove());
+          const dotsContainer = document.getElementById('cardDots');
+          flashcardData.forEach((_, i) => {
+            const dot = document.createElement('span');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dot.dataset.i = i;
+            dot.addEventListener('click', () => updateCard(parseInt(dot.dataset.i)));
+            dotsContainer.appendChild(dot);
+          });
+          updateCard(0);
+        }
+      } catch (e) {
+        console.error('Flashcards error:', e);
+        alert('⚠️ Error al generar flashcards. Intenta de nuevo.');
+      }
+      genFlashcards.disabled = false;
+      genFlashcards.textContent = 'Generar Flashcards';
+    });
+
+    /* ==========================================================
+       TABS
+       ========================================================== */
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetPanel = document.getElementById('tab-' + btn.dataset.tab);
+        if (!targetPanel) return;
+
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
+        btn.classList.add('active');
+        targetPanel.classList.add('active');
+      });
+    });
+
+    /* ==========================================================
+       DRAG & DROP + FILE INPUT
+       ========================================================== */
+    uploadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const f = files[0];
+        if (!f.type || f.type === 'application/pdf') {
+          handleFile(f);
+        } else {
+          alert('Solo se aceptan archivos PDF.');
+        }
+      }
+    });
+
+    /* ==========================================================
+       PROCESAR PDF
+       ========================================================== */
+    async function handleFile(file) {
+      // Validación
+      if (file.type && file.type !== 'application/pdf') {
+        alert('Solo se aceptan archivos PDF.');
+        return;
+      }
+
+      if (!window.pdfjsLib) {
+        alert('No se pudo cargar PDF.js. Revisa tu conexion o el script de PDF.js.');
+        return;
+      }
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      // Mostrar info del archivo
+      fileName.textContent = file.name;
+      fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2);
+      fileInfo.classList.add('visible');
+
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      pdfDoc = pdf;
+      pageCount.textContent = pdf.numPages;
+
+      // Extraer texto
+      let fullText = '';
+      const total = pdf.numPages;
+
+      for (let i = 1; i <= total; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map((item) => item.str).join(' ');
+        fullText += pageText + '\n';
+
+        const pct = Math.round((i / total) * 100);
+        progressFill.style.width = pct + '%';
+        progressLabel.textContent = `Extrayendo texto... ${pct}% (página ${i} de ${total})`;
+      }
+
+      window.pdfContent = fullText;
+      isPDFLoaded = true;
+
+      progressFill.style.width = '100%';
+      progressLabel.textContent = '✅ Texto extraído correctamente';
+
+      // Preview primeras 500 palabras
+      const words = fullText.split(/\s+/).filter(Boolean);
+      const preview = words.slice(0, 500).join(' ');
+      textPreview.textContent = preview + (words.length > 500 ? '...' : '');
+
+      // Actualizar estado
+      statusBadge.className = 'status-badge online';
+      statusText.textContent = 'IA Lista';
+
+      // Actualizar stats de resumen
+      statWords.textContent = words.length.toLocaleString();
+      statPages.textContent = total;
+      const charCount = fullText.replace(/\s/g, '').length;
+      statChars.textContent = charCount.toLocaleString();
+      const readMin = Math.max(1, Math.round(words.length / 200));
+      statReadTime.textContent = readMin + ' min';
+
+      // Mostrar panel
+      toolPanel.classList.add('visible');
+
+      // Mensaje de bienvenida en el chat
+      chatMessages.innerHTML = '';
+      addChatMessage('ai', `📄 He procesado exitosamente "${file.name}" (${total} páginas, ${words.length.toLocaleString()} palabras). ¡Hazme cualquier pregunta sobre tus apuntes!`);
+    }
+
+    /* ==========================================================
+       CHAT
+       ========================================================== */
+    function addChatMessage(role, text) {
+      // Eliminar empty state
+      const empty = chatMessages.querySelector('.empty-chat');
+      if (empty) empty.remove();
+
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.textContent = text;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+      const div = document.createElement('div');
+      div.className = 'message ai loading';
+      div.id = 'typingIndicator';
+      div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    async function handleChat() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      if (!isPDFLoaded) {
+        addChatMessage('ai', '⚠️ Primero debes subir un PDF para poder preguntar sobre su contenido.');
+        return;
+      }
+
+      addChatMessage('user', text);
+      chatInput.value = '';
+      chatInput.disabled = true;
+      chatSend.disabled = true;
+
+      addTypingIndicator();
+
+      /* ==========================================================
+         PUNTO DE CONEXIÓN IA — CHAT
+         window.askAI() recibe el prompt del usuario y debe retornar
+         la respuesta. Cuando conectes DeepSeek V4 Flash, reemplaza
+         la implementación de window.askAI() al inicio del script.
+         ========================================================== */
+      const contextPrompt = `Contexto del PDF:\n${window.pdfContent.slice(0, 4000)}\n\nPregunta: ${text}`;
+      const response = await window.askAI(contextPrompt);
+
+      removeTypingIndicator();
+      addChatMessage('ai', response);
+
+      chatInput.disabled = false;
+      chatSend.disabled = false;
+      chatInput.focus();
+    }
+
+    chatSend.addEventListener('click', handleChat);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleChat();
+    });
+
+    /* ==========================================================
+       PLAN DE ESTUDIO
+       ========================================================== */
+    // Set default date to 7 days from now
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 7);
+    planDate.value = tomorrow.toISOString().split('T')[0];
+
+    createPlanBtn.addEventListener('click', async () => {
+      if (!isPDFLoaded) {
+        alert('Primero sube un PDF para crear un plan de estudio personalizado.');
+        return;
+      }
+
+      const subject = planSubject.value.trim() || 'Materia';
+      const examDate = planDate.value;
+
+      /* ==========================================================
+         PUNTO DE CONEXIÓN IA — PLAN DE ESTUDIO
+         Reemplaza este bloque para generar un plan personalizado
+         con IA basado en el contenido del PDF y la fecha del examen.
+         ========================================================== */
+      if (!examDate) {
+        alert('Por favor selecciona una fecha para el examen.');
+        return;
+      }
+
+      createPlanBtn.disabled = true;
+      createPlanBtn.textContent = '⏳ Generando...';
+
+      try {
+        const res = await fetch('http://localhost:3000/api/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdfContent: window.pdfContent, materia: subject, fechaExamen: examDate })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          alert(data.error);
+          createPlanBtn.disabled = false;
+          createPlanBtn.textContent = 'Crear Plan';
+          return;
+        }
+
+        const tbody = document.getElementById('planBody');
+        tbody.innerHTML = '';
+
+        data.plan.forEach((item, i) => {
+          const d = new Date(item.fecha);
+          const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+          const tagClass = i < data.plan.length - 1 ? 'tag-cyan' : 'tag-purple';
+          const label = i < data.plan.length - 1 ? 'Por hacer' : '¡Hoy!';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>Día ${item.dia}</td>
+            <td>${dateStr}</td>
+            <td>${item.tema}</td>
+            <td>${item.tiempo}</td>
+            <td><span class="tag ${tagClass}">${label}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.querySelector('.study-plan-section p:last-child').textContent = `✅ Plan de estudio para "${subject}" — ${data.diasRestantes} días hasta el examen.`;
+      } catch (e) {
+        console.error('Plan error:', e);
+        alert('⚠️ Error al generar el plan de estudio. Intenta de nuevo.');
+      }
+
+      createPlanBtn.disabled = false;
+      createPlanBtn.textContent = 'Crear Plan';
+    });
+
+    /* ==========================================================
+       RESUMEN
+       ========================================================== */
+    genSummary.addEventListener('click', async () => {
+      if (!isPDFLoaded) {
+        alert('Primero sube un PDF para generar un resumen.');
+        return;
+      }
+
+      /* ==========================================================
+         PUNTO DE CONEXIÓN IA — RESUMEN
+         Reemplaza este bloque para generar un resumen real con IA.
+         ========================================================== */
+      genSummary.disabled = true;
+      genSummary.textContent = '⏳ Resumiendo...';
+      summaryText.innerHTML = '<p style="color:var(--text-muted);">⏳ Generando resumen inteligente...</p>';
+      try {
+        const res = await fetch('http://localhost:3000/api/resumen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdfContent: window.pdfContent })
+        });
+        if (!res.ok) throw new Error('Error en resumen');
+        const data = await res.json();
+        summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${data.text.replace(/\n/g, '<br>')}`;
+      } catch (e) {
+        console.error('Summary error:', e);
+        summaryText.innerHTML = '<p style="color:var(--text-muted);">⚠️ Error al generar el resumen. Intenta de nuevo.</p>';
+      }
+      genSummary.disabled = false;
+      genSummary.textContent = 'Generar Resumen';
+    });
+
+    /* ==========================================================
+       MODO EXAMEN
+       ========================================================== */
+    let startExam = document.getElementById('startExam');
+    const examContent = document.getElementById('examContent');
+    let examQuestions = [];
+    let examIndex = 0;
+    let examAnswers = [];
+    let selectedExamOption = null;
+
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getCorrectLetter(question) {
+      return String(question.respuesta_correcta || '').trim().charAt(0).toUpperCase();
+    }
+
+    function getOptionLetter(option, index) {
+      const match = String(option || '').trim().match(/^([A-D])\)/i);
+      return match ? match[1].toUpperCase() : String.fromCharCode(65 + index);
+    }
+
+    function normalizeExamQuestion(question) {
+      const options = Array.isArray(question.opciones) ? question.opciones.slice(0, 4) : [];
+      if (options.length < 4) return null;
+
+      return {
+        pregunta: question.pregunta || 'Pregunta sin texto',
+        opciones: options,
+        respuesta_correcta: getCorrectLetter(question)
+      };
+    }
+
+    function renderExamProgress() {
+      let html = '<div class="exam-progress">';
+      examQuestions.forEach((_, i) => {
+        const cls = i < examIndex ? 'done' : i === examIndex ? 'active' : '';
+        html += `<div class="step ${cls}">${i + 1}</div>`;
+      });
+      html += '</div>';
+      return html;
+    }
+
+    function renderExamQuestion() {
+      if (examIndex >= examQuestions.length) {
+        renderExamResults();
+        return;
+      }
+
+      selectedExamOption = null;
+      const q = examQuestions[examIndex];
+      const optionsHtml = q.opciones.map((option, i) => {
+        const letter = getOptionLetter(option, i);
+        return `<button class="exam-option" type="button" data-letter="${letter}">${escapeHTML(option)}</button>`;
+      }).join('');
+
+      examContent.innerHTML = `
+        ${renderExamProgress()}
+        <div class="exam-card">
+          <div class="exam-question-number">Pregunta ${examIndex + 1} de ${examQuestions.length}</div>
+          <div class="exam-question-text">${escapeHTML(q.pregunta)}</div>
+          <div class="exam-options">${optionsHtml}</div>
+          <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="confirmAnswer" disabled>Confirmar respuesta</button>
+          </div>
+          <div id="examFeedback"></div>
+        </div>
+      `;
+
+      const confirmBtn = document.getElementById('confirmAnswer');
+      document.querySelectorAll('.exam-option').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedExamOption = btn.dataset.letter;
+          document.querySelectorAll('.exam-option').forEach((optionBtn) => optionBtn.classList.remove('selected'));
+          btn.classList.add('selected');
+          confirmBtn.disabled = false;
+        });
+      });
+      confirmBtn.addEventListener('click', handleExamAnswer);
+    }
+
+    function handleExamAnswer() {
+      if (!selectedExamOption) return;
+
+      const q = examQuestions[examIndex];
+      const correctLetter = getCorrectLetter(q);
+      const isCorrect = selectedExamOption === correctLetter;
+
+      examAnswers.push({
+        pregunta: q.pregunta,
+        correcta: correctLetter,
+        usuario: selectedExamOption,
+        acierto: isCorrect
+      });
+
+      document.querySelectorAll('.exam-option').forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.remove('selected');
+        if (btn.dataset.letter === correctLetter) btn.classList.add('correct');
+        if (btn.dataset.letter === selectedExamOption && !isCorrect) btn.classList.add('incorrect');
+      });
+
+      document.getElementById('confirmAnswer').disabled = true;
+      const feedbackDiv = document.getElementById('examFeedback');
+      feedbackDiv.innerHTML = `
+        <div class="exam-feedback">
+          <div class="score ${isCorrect ? 'high' : 'low'}">${isCorrect ? 'Correcta' : 'Incorrecta'}</div>
+          <div class="fb-text">
+            ${isCorrect ? 'Bien hecho. Esa era la opcion correcta.' : `Tu respuesta fue ${selectedExamOption}. La respuesta correcta es ${correctLetter}.`}
+          </div>
+          <div style="margin-top:12px;">
+            <button class="btn btn-primary" id="nextQuestion">
+              ${examIndex < examQuestions.length - 1 ? 'Siguiente pregunta' : 'Ver resultados'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('nextQuestion').addEventListener('click', () => {
+        examIndex++;
+        renderExamQuestion();
+      });
+    }
+
+    function renderExamResults() {
+      const correctCount = examAnswers.filter(a => a.acierto).length;
+      const wrongCount = examAnswers.length - correctCount;
+      const resultsHtml = examAnswers.map((a) => {
+        const color = a.acierto ? '#22c55e' : '#ef4444';
+        return `<div class="result-item">
+          <span class="r-icon">${a.acierto ? 'OK' : 'X'}</span>
+          <span class="r-question">${escapeHTML(a.pregunta).substring(0, 70)}...</span>
+          <span style="font-weight:600;color:${color};">${a.usuario} / ${a.correcta}</span>
+        </div>`;
+      }).join('');
+
+      examContent.innerHTML = `
+        <div class="exam-results">
+          <div class="exam-progress">${examQuestions.map((_, i) => `<div class="step done">${i + 1}</div>`).join('')}</div>
+          <div style="text-align:center;margin:24px 0;">
+            <div style="color:var(--text-muted);font-size:14px;margin-bottom:4px;">Puntaje final</div>
+            <div class="final-score">${correctCount}/${examQuestions.length}</div>
+            <div style="margin-top:8px;font-size:14px;color:var(--text-secondary);">
+              ${correctCount} aciertos - ${wrongCount} errores
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <h4 style="margin-bottom:12px;text-align:left;">Resumen de aciertos y errores</h4>
+            ${resultsHtml}
+          </div>
+          <div class="exam-actions">
+            <button class="btn btn-primary" id="retryExam">Reintentar</button>
+            <button class="btn btn-secondary" id="backToExam">Nuevo examen</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('retryExam').addEventListener('click', () => {
+        examIndex = 0;
+        examAnswers = [];
+        selectedExamOption = null;
+        renderExamQuestion();
+      });
+
+      document.getElementById('backToExam').addEventListener('click', () => {
+        examQuestions = [];
+        examIndex = 0;
+        examAnswers = [];
+        selectedExamOption = null;
+        examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
+        startExam = document.getElementById('startExam');
+        startExam.addEventListener('click', handleStartExam);
+      });
+    }
+
+    async function handleStartExam() {
+      if (!isPDFLoaded) {
+        alert('Primero sube un PDF para iniciar el examen.');
+        return;
+      }
+
+      const triggerBtn = document.getElementById('startExam') || startExam;
+      triggerBtn.disabled = true;
+      triggerBtn.textContent = 'Generando examen...';
+
+      try {
+        const res = await fetch('http://localhost:3000/api/examen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdfContent: window.pdfContent })
+        });
+        if (!res.ok) throw new Error('Error en examen');
+        const data = await res.json();
+
+        examQuestions = (data.preguntas || []).map(normalizeExamQuestion).filter(Boolean).slice(0, 5);
+        if (examQuestions.length < 5) throw new Error('Examen sin 5 preguntas de opcion multiple');
+        examIndex = 0;
+        examAnswers = [];
+        selectedExamOption = null;
+        renderExamQuestion();
+      } catch (e) {
+        console.error('Start exam error:', e);
+        alert('Error al generar el examen. Intenta de nuevo.');
+        triggerBtn.disabled = false;
+        triggerBtn.textContent = 'Iniciar Examen';
+      }
+    }
+
+    startExam.addEventListener('click', handleStartExam);
+
+    /* ==========================================================
+       HISTORIAL DE SESIONES (localStorage)
+       ========================================================== */
+    const HISTORY_KEY = 'astro_studio_history';
+
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      } catch { return []; }
+    }
+
+    function saveToHistory(pdfName, messages) {
+      if (!pdfName || messages.length < 2) return;
+      const history = getHistory();
+      history.unshift({
+        id: Date.now(),
+        pdfName,
+        date: new Date().toISOString(),
+        messages: messages.slice(0, 20)
+      });
+      if (history.length > 10) history.length = 10;
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      const history = getHistory();
+
+      if (history.length === 0) {
+        list.innerHTML = '<div class="history-empty">Aún no hay sesiones guardadas.<br>Las conversaciones del chat se guardan automáticamente.</div>';
+        return;
+      }
+
+      list.innerHTML = history.map(s => {
+        const date = new Date(s.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const preview = s.messages.length > 0 ? s.messages[0].substring(0, 80) : '';
+        return `<div class="history-item" data-id="${s.id}">
+          <div class="h-name">📘 ${s.pdfName}</div>
+          <div class="h-date">${date}</div>
+          ${preview ? `<div class="h-preview">💬 "${preview}..."</div>` : ''}
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('.history-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = parseInt(el.dataset.id);
+          restoreSession(id);
+        });
+      });
+    }
+
+    function restoreSession(id) {
+      const history = getHistory();
+      const session = history.find(s => s.id === id);
+      if (!session) return;
+
+      // Switch to chat tab
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector('[data-tab="chat"]').classList.add('active');
+      document.getElementById('tab-chat').classList.add('active');
+
+      // Restore messages
+      chatMessages.innerHTML = '';
+      session.messages.forEach(m => {
+        const role = m.startsWith('user:') ? 'user' : 'ai';
+        const text = m.replace(/^(user:|ai:)/, '');
+        addChatMessage(role, text);
+      });
+
+      closeHistoryPanel();
+    }
+
+    function closeHistoryPanel() {
+      document.getElementById('historyPanel').classList.remove('open');
+      document.getElementById('historyOverlay').classList.remove('open');
+    }
+
+    // Save chat automatically when new message added
+    const origAddChatMessage = addChatMessage;
+    addChatMessage = function(role, text) {
+      origAddChatMessage(role, text);
+
+      // Auto-save after AI responds
+      if (role === 'ai' && isPDFLoaded) {
+        const pdfName = document.getElementById('fileName').textContent;
+        const msgs = [];
+        chatMessages.querySelectorAll('.message').forEach(m => {
+          const r = m.classList.contains('user') ? 'user:' : 'ai:';
+          msgs.push(r + m.textContent);
+        });
+        // Debounce: save after AI response
+        if (window._saveTimer) clearTimeout(window._saveTimer);
+        window._saveTimer = setTimeout(() => saveToHistory(pdfName, msgs), 2000);
+      }
+    };
+
+    // History panel controls
+    document.getElementById('historyBtn').addEventListener('click', () => {
+      renderHistory();
+      document.getElementById('historyPanel').classList.add('open');
+      document.getElementById('historyOverlay').classList.add('open');
+    });
+
+    document.getElementById('closeHistory').addEventListener('click', closeHistoryPanel);
+    document.getElementById('historyOverlay').addEventListener('click', closeHistoryPanel);
+
+    document.getElementById('clearHistory').addEventListener('click', () => {
+      if (confirm('¿Borrar todo el historial de sesiones?')) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistory();
+      }
+    });
+
+    console.log('🚀 Astro Studio AI — IA conectada');
+    console.log('🤖 Modelo: Gemma-4-31B-IT via NVIDIA NIM');
+    console.log('📌 Para cambiar de modelo, reemplaza window.askAI()');
+    console.log('📌 window.pdfContent contiene el texto extraído del PDF');
+  </script>
+
+</body>
+</html>
