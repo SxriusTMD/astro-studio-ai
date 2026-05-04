@@ -281,18 +281,27 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
 
-  const systemInstruction = 'Eres un asistente de estudio universitario. Tienes acceso al siguiente documento del estudiante. Responde siempre en espaÃ±ol, de forma clara y concisa, citando partes relevantes del documento cuando sea Ãºtil.';
+  const systemInstruction = 'Eres un asistente de estudio universitario. Tienes acceso al siguiente documento del estudiante. Responde siempre en español, de forma clara y concisa, citando partes relevantes del documento cuando sea útil.';
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
     : prompt;
 
   try {
+    // 1. Primero llamar a NVIDIA NIM
     const text = await callNVIDIA([
       { role: 'system', content: systemInstruction },
       { role: 'user', content: contextPrompt }
     ]);
-    res.json({ text });
+    
+    // 2. SOLO si NVIDIA responde exitosamente, incrementar el contador
+    const userId = req.user.id;
+    const result = await pool.query(
+      `UPDATE usuarios SET chat_count = chat_count + 1 WHERE google_id = $1 RETURNING chat_count`,
+      [userId]
+    );
+    
+    res.json({ text, chat_used: result.rows[0].chat_count });
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(502).json({ error: 'Error al conectar con la IA.' });

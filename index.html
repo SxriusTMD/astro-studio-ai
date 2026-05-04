@@ -2851,26 +2851,33 @@ doc.text(`Día ${item.dia}`, 20, yPos);
        necesitas reemplazar para conectar DeepSeek V4 Flash.
        AHORA CONECTADA A: Gemma-4-31B-IT via proxy NVIDIA NIM.
        ========================================================== */
-    window.askAI = async function (prompt) {
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt,
-            pdfContent: getCombinedContext()
-          })
-        });
-        if (!res.ok) {
-          throw new Error(`Proxy error (${res.status})`);
-        }
-        const data = await res.json();
-        return data.text;
-      } catch (err) {
-        console.error('askAI error:', err);
-        return '⚠️ Lo siento, hubo un error al conectar con la IA. Por favor intenta de nuevo.';
-      }
-    };
+window.askAI = async function (prompt) {
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        pdfContent: getCombinedContext()
+      })
+    });
+    if (!res.ok) {
+      throw new Error(`Proxy error (${res.status})`);
+    }
+    const data = await res.json();
+    
+    // Actualizar contador si viene en la respuesta
+    if (data.chat_used !== undefined && window.userLimits) {
+      window.userLimits.chat_used = data.chat_used;
+      updatePlanIndicator();
+    }
+    
+    return data.text;
+  } catch (err) {
+    console.error('askAI error:', err);
+    return '⚠️ Lo siento, hubo un error al conectar con la IA. Por favor intenta de nuevo.';
+  }
+};
 
     /* ==========================================================
        ESTRELLAS - Canvas Animation
@@ -3380,28 +3387,10 @@ if (!file._fromRestore) {
       // Check chat limit
       if (window.userLimits && window.userLimits.plan === 'free' && window.userLimits.chat_used >= 10) {
         showUpgradeModal('chat');
-        return;
-      }
+return;
+    }
 
-      // Increment chat counter
-      try {
-        const res = await fetch('/api/user/increment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'chat' })
-        });
-        const data = await res.json();
-        if (!data.allowed) {
-          showUpgradeModal('chat');
-          return;
-        }
-        if (window.userLimits) {
-          window.userLimits.chat_used = data.used;
-          updatePlanIndicator();
-        }
-      } catch (e) { console.error('Increment error:', e); }
-
-      addChatMessage('user', text);
+    addChatMessage('user', text);
       chatInput.value = '';
       chatInput.disabled = true;
       chatSend.disabled = true;
