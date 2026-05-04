@@ -2225,7 +2225,7 @@
 
   <script>
     if (window.location.protocol === 'file:') {
-      window.location.replace('http://localhost:3000/');
+      window.location.replace('http:///');
     }
 
     /* ==========================================================
@@ -2853,7 +2853,7 @@ doc.text(`Día ${item.dia}`, 20, yPos);
        ========================================================== */
     window.askAI = async function (prompt) {
       try {
-        const res = await fetch('http://localhost:3000/api/chat', {
+        const res = await fetch('http:///api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2973,7 +2973,7 @@ doc.text(`Día ${item.dia}`, 20, yPos);
 
     async function initAuth() {
       try {
-        const res = await fetch('http://localhost:3000/api/me', {
+        const res = await fetch('http:///api/me', {
           credentials: 'include'
         });
         const data = await res.json();
@@ -3003,14 +3003,14 @@ doc.text(`Día ${item.dia}`, 20, yPos);
 
     logoutBtn.addEventListener('click', () => {
       clearStorage();
-      window.location.href = 'http://localhost:3000/auth/logout';
+      window.location.href = 'http:///auth/logout';
     });
 
     // User dropdown menu
     document.getElementById('userAvatarContainer').addEventListener('click', toggleUserMenu);
     document.getElementById('menuLogout').addEventListener('click', () => {
       clearStorage();
-      window.location.href = 'http://localhost:3000/auth/logout';
+      window.location.href = 'http:///auth/logout';
     });
     document.getElementById('menuUpgrade').addEventListener('click', () => {
       showUpgradeModal('plan');
@@ -3101,7 +3101,7 @@ genFlashcards.addEventListener('click', async () => {
       genFlashcards.disabled = true;
       genFlashcards.textContent = '⏳ Generando...';
       try {
-        const res = await fetch('http://localhost:3000/api/flashcards', {
+        const res = await fetch('http:///api/flashcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pdfContent: getCombinedContext() })
@@ -3457,7 +3457,7 @@ if (!file._fromRestore) {
       createPlanBtn.textContent = '⏳ Generando...';
 
       try {
-        const res = await fetch('http://localhost:3000/api/plan', {
+        const res = await fetch('http:///api/plan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pdfContent: getCombinedContext(), materia: subject, fechaExamen: examDate })
@@ -3530,7 +3530,7 @@ genSummary.addEventListener('click', async () => {
       genSummary.textContent = '⏳ Resumiendo...';
       summaryText.innerHTML = '<p style="color:var(--text-muted);">⏳ Generando resumen inteligente...</p>';
       try {
-        const res = await fetch('http://localhost:3000/api/resumen', {
+        const res = await fetch('http:///api/resumen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pdfContent: getCombinedContext() })
@@ -3768,7 +3768,7 @@ genSummary.addEventListener('click', async () => {
       triggerBtn.textContent = 'Generando examen...';
 
       try {
-        const res = await fetch('http://localhost:3000/api/examen', {
+        const res = await fetch('http:///api/examen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pdfContent: getCombinedContext() })
