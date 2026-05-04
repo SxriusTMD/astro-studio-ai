@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -71,25 +72,45 @@
     .app-container {
       position: relative;
       z-index: 1;
+      width: 100%;
       max-width: 1100px;
       margin: 0 auto;
-      padding: 14px 20px 0;
+      padding: 0 24px;
       flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
     }
 
+    @media (min-width: 1200px) {
+      .app-container { max-width: 1300px; padding: 0 32px; }
+    }
+    @media (max-width: 768px) {
+      .app-container { padding: 0 12px; }
+    }
+
     /* ===== HEADER ===== */
     header {
-      padding: 12px 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      width: 100%;
+      background: rgba(10,10,26,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 10px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
     }
 
     .logo-section {
@@ -147,8 +168,24 @@
       transition: var(--transition);
     }
 
-    .status-badge.online .dot { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-    .status-badge.offline .dot { background: #64748b; box-shadow: 0 0 8px #64748b; }
+.status-badge.online .dot { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+.status-badge.offline .dot { background: #64748b; box-shadow: 0 0 8px #64748b; }
+
+.plan-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  white-space: nowrap;
+}
+
+.plan-indicator.premium {
+  color: #f59e0b;
+  background: rgba(245,158,11,0.1);
+}
+
 
     body.auth-checking .app-container,
     body.auth-checking .login-screen,
@@ -275,6 +312,118 @@
       white-space: nowrap;
     }
 
+    .user-avatar-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    /* User Dropdown Menu */
+.user-dropdown {
+      position: fixed;
+      top: 65px;
+      right: 16px;
+      left: auto;
+      background: #0f0f2a;
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 14px;
+      padding: 8px;
+      min-width: 260px;
+      z-index: 9999;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      animation: fadeInDown 0.15s ease;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translate(-50%, -8px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    .user-menu-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 8px;
+    }
+
+    .menu-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(139,92,246,0.5);
+      object-fit: cover;
+    }
+
+    .menu-username {
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .menu-email {
+      color: #888;
+      font-size: 12px;
+    }
+
+    .menu-plan-badge {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .menu-plan-badge.free {
+      color: #aaa;
+    }
+
+    .menu-plan-badge.premium {
+      color: #f59e0b;
+    }
+
+    .menu-usage {
+      padding: 4px 12px 8px;
+      font-size: 12px;
+      color: #888;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 4px 0;
+    }
+
+    .menu-item {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #ccc;
+      font-size: 13px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+
+    .menu-item:hover {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .menu-item-danger {
+      color: #f87171;
+    }
+
+    .menu-item-danger:hover {
+      background: rgba(248,113,113,0.1);
+    }
+
     .logout-btn {
       padding: 6px 10px;
       border-radius: 999px;
@@ -293,21 +442,35 @@
     }
 
     /* ===== DROP ZONE ===== */
-    .drop-zone {
+.drop-zone {
       position: relative;
       border: 2px dashed var(--border);
       border-radius: var(--radius);
       padding: 12px 20px;
       text-align: center;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.3s ease;
       background: var(--bg-card);
       overflow-y: auto;
       overflow-x: hidden;
       flex-shrink: 0;
-      height: 220px;
-      max-height: 220px;
-      margin-top: 12px;
+      min-height: 180px;
+      max-height: 200px;
+    }
+
+    .drop-zone.collapsed {
+      min-height: 0;
+      max-height: 0;
+      padding: 0 20px;
+      border-width: 0;
+      margin: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .drop-zone.collapsed + .tool-panel {
+      margin-top: 0;
     }
 
     .drop-zone::before {
@@ -499,12 +662,15 @@
       margin-top: 10px;
     }
 
+    .tool-panel.visible { display: flex; }
+
     .tabs {
       display: flex;
       gap: 4px;
-      background: var(--bg-card);
-      border-radius: var(--radius-sm);
-      padding: 4px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      padding: 8px 4px 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       flex-shrink: 0;
@@ -536,10 +702,17 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
-    .tab-content {
+.tab-content {
       display: none;
       animation: fadeIn 0.35s ease;
-      min-height: 0;
+      padding-top: 24px;
+    }
+
+    .tab-content.active {
+      display: block;
+      flex: 1;
+      min-height: 300px;
+      overflow-y: auto;
     }
 
     .tab-content.active {
@@ -598,6 +771,7 @@
       background: var(--gradient-primary);
       color: #fff;
       border-bottom-right-radius: 4px;
+      max-width: 70%;
     }
 
     .message.ai {
@@ -606,6 +780,7 @@
       color: var(--text-primary);
       border: 1px solid var(--border);
       border-bottom-left-radius: 4px;
+      max-width: 85%;
     }
 
     .message.ai.loading {
@@ -683,6 +858,21 @@
       text-align: center;
     }
 
+    .flashcards-actions,
+    .summary-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .study-plan-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
     .flashcards-section .section-header {
       margin-bottom: 24px;
     }
@@ -705,7 +895,7 @@
     .flashcard-container {
       width: 100%;
       max-width: 380px;
-      height: 240px;
+      min-height: 280px;
       perspective: 1000px;
     }
 
@@ -731,8 +921,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 28px;
+      padding: 24px 24px 48px 24px;
       text-align: center;
+      height: 100%;
+      box-sizing: border-box;
     }
 
     .flashcard-face.front {
@@ -759,9 +951,18 @@
     }
 
     .flashcard-face.front .card-question {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       line-height: 1.4;
+      color: #ffffff;
+      opacity: 1;
+      visibility: visible;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
     }
 
     .flashcard-face.back {
@@ -780,13 +981,28 @@
     .flashcard-face.back .card-answer {
       font-size: 16px;
       line-height: 1.5;
+      color: var(--text-primary);
+      opacity: 1;
+      visibility: visible;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      overflow: visible;
+      word-wrap: break-word;
     }
 
     .flashcard-face .flip-hint {
       position: absolute;
       bottom: 16px;
+      left: 0;
+      right: 0;
       font-size: 11px;
       opacity: 0.4;
+      text-align: center;
+      width: 100%;
     }
 
     .carousel-btn {
@@ -1306,12 +1522,275 @@
 
     .history-panel-footer .clear-btn:hover { color: #ef4444; }
 
+    /* ===== PDF TABS ===== */
+    #pdf-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      flex-shrink: 0;
+      min-height: 42px;
+    }
+    #pdf-tabs::-webkit-scrollbar { height: 4px; }
+    #pdf-tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .pdf-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px 10px 0 0;
+      font-size: 13px;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 200px;
+      color: var(--text-secondary);
+    }
+    .pdf-tab .tab-name {
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pdf-tab:hover { background: rgba(255,255,255,0.08); }
+    .pdf-tab.active {
+      background: rgba(139,92,246,0.2);
+      border-color: rgba(139,92,246,0.5);
+      color: #fff;
+    }
+    .pdf-tab .tab-close {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 14px;
+      opacity: 0.6;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+    }
+    .pdf-tab .tab-close:hover { opacity: 1; }
+
+    .pdf-tab-add {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px dashed rgba(139,92,246,0.8);
+      border-radius: 10px 10px 0 0;
+      font-size: 13px;
+      color: rgba(139,92,246,0.8);
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pdf-tab-add:hover {
+      background: rgba(139,92,246,0.1);
+      color: var(--accent-violet);
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .toast-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toast.simple-toast .toast-actions {
+      display: none;
+    }
+
+    /* ===== UPGRADE MODAL ===== */
+    .upgrade-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .upgrade-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .upgrade-modal {
+      background: #0f0f2a;
+      border: 1px solid rgba(139,92,246,0.4);
+      border-radius: 20px;
+      max-width: 480px;
+      width: 90%;
+      padding: 28px;
+      animation: modalIn 0.25s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .upgrade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .upgrade-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .upgrade-header button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .upgrade-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .upgrade-compare {
+      margin: 20px 0;
+    }
+
+    .upgrade-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .upgrade-table th {
+      text-align: left;
+      padding: 10px 8px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .upgrade-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .upgrade-table th:last-child,
+    .upgrade-table td:last-child {
+      text-align: center;
+    }
+
+    .upgrade-table th:nth-child(2),
+    .upgrade-table td:nth-child(2) {
+      color: var(--text-muted);
+    }
+
+    .upgrade-table th:nth-child(3),
+    .upgrade-table td:nth-child(3) {
+      color: var(--accent-violet);
+      font-weight: 600;
+    }
+
+    .upgrade-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .upgrade-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .upgrade-actions .btn-secondary {
+      border-color: rgba(255,255,255,0.2);
+    }
+
     /* ===== RESPONSIVE ===== */
-    @media (max-width: 768px) {
-      header {
+@media (max-width: 768px) {
+      header .header-inner {
         flex-direction: column;
         align-items: flex-start;
+        padding: 8px 12px;
       }
+
+      .status-badge { align-self: flex-start; }
+
+      .drop-zone { padding: 10px 14px; min-height: 150px; max-height: 160px; }
+      .drop-zone.collapsed { padding: 0 14px; }
+      .drop-zone .upload-icon { font-size: 28px; margin-bottom: 4px; }
+      .drop-zone h3 { font-size: 15px; }
+      .drop-zone p { font-size: 12px; margin-bottom: 8px; }
+
+      .tabs { gap: 2px; padding: 6px 4px 0; }
+
+      .tab-btn { padding: 8px 10px; font-size: 11px; }
+
+      .chat-messages { height: auto; min-height: 100px; }
+
+.message.user { max-width: 85%; }
+.message.ai { max-width: 90%; }
+
+.flashcard-container { max-width: 280px; min-height: 260px; }
+
+.flashcard-face .card-question { font-size: 16px; }
+
+      .study-plan-form input,
+      .study-plan-form select { min-width: 100%; }
+
+      .study-plan-table { font-size: 13px; }
+      .study-plan-table th,
+      .study-plan-table td { padding: 10px 12px; }
+
+      .app-container { padding: 0 12px; }
+
+      .history-panel { width: 300px; right: -320px; }
+    }
 
       .status-badge { align-self: flex-start; }
 
@@ -1351,13 +1830,14 @@
     @media (max-width: 480px) {
       .logo-text { font-size: 17px; }
       .logo-icon { width: 32px; height: 32px; font-size: 16px; }
-      header { padding: 8px 0; gap: 6px; }
-      .drop-zone { padding: 8px 10px; height: 220px; max-height: 220px; }
+      header .header-inner { padding: 6px 12px; gap: 6px; }
+      .drop-zone { padding: 8px 10px; min-height: 140px; max-height: 180px; }
+      .drop-zone.collapsed { padding: 0 10px; }
       .drop-zone .upload-icon { font-size: 24px; margin-bottom: 2px; }
       .drop-zone h3 { font-size: 14px; }
       .drop-zone p { font-size: 11px; margin-bottom: 6px; }
 
-      .flashcard-container { max-width: 240px; height: 180px; }
+      .flashcard-container { max-width: 240px; min-height: 240px; }
 
       .stat-card .stat-value { font-size: 18px; }
 
@@ -1369,7 +1849,7 @@
       .exam-card .exam-question-text { font-size: 15px; }
       .history-panel { width: 100%; right: -100%; }
     }
-  </style>
+</style>
 </head>
 <body class="auth-checking">
 
@@ -1377,21 +1857,21 @@
   <canvas id="stars-canvas"></canvas>
 
   <main class="login-screen" id="loginScreen">
+
     <div class="login-content">
       <div class="login-logo">🚀</div>
       <div class="login-title">Astro Studio AI</div>
-      <div class="login-tagline">Tu asistente de estudio inteligente 🚀</div>
-      <a class="google-login-btn" href="http://localhost:3000/auth/google">
+      <div class="login-tagline">Tu asistente de estudio inteligente</div>
+      <a href="/auth/google" class="google-login-btn">
         <span class="google-icon">G</span>
-        <span>Continuar con Google</span>
+        Iniciar sesión con Google
       </a>
     </div>
   </main>
 
-  <div class="app-container">
-
-    <!-- ===== HEADER ===== -->
-    <header>
+  <!-- ===== HEADER ===== -->
+  <header>
+    <div class="header-inner">
       <div class="logo-section">
         <div class="logo-icon">🚀</div>
         <div>
@@ -1399,19 +1879,49 @@
           <div class="tagline">Tu asistente de estudio inteligente</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="user-menu" id="userMenu">
+<div style="display:flex;align-items:center;gap:10px;">
+      <div class="user-menu" id="userMenu">
+        <div class="user-avatar-container" id="userAvatarContainer">
           <img class="user-avatar" id="userAvatar" alt="">
           <span class="user-name" id="userName"></span>
-          <button class="logout-btn" id="logoutBtn" type="button">Cerrar sesión</button>
         </div>
-        <button class="btn btn-secondary btn-small" id="historyBtn" title="Historial de sesiones">🕒</button>
-        <div class="status-badge offline" id="status-badge">
-          <span class="dot"></span>
-          <span id="status-text">Sin PDF</span>
-        </div>
+        <button class="logout-btn" id="logoutBtn" type="button">Cerrar sesión</button>
       </div>
-    </header>
+      <button class="btn btn-secondary btn-small" id="libraryBtn" title="Biblioteca de documentos">📚 Biblioteca</button>
+      <button class="btn btn-secondary btn-small" id="historyBtn" title="Historial de sesiones">🕒</button>
+      <button class="btn btn-secondary btn-small" id="exportAllBtn" title="Exportar todo a PDF" disabled>⬇️ Exportar</button>
+    </div>
+    <div class="status-badge offline" id="status-badge">
+      <span class="dot"></span>
+      <span id="status-text">Sin PDF</span>
+    </div>
+    <div class="plan-indicator" id="planIndicator"></div>
+  </div>
+</header>
+
+<!-- User Dropdown Menu - Fixed position -->
+<div id="userDropdown" class="user-dropdown" style="display:none;">
+  <div class="user-menu-header">
+    <img class="menu-avatar" id="menuAvatar" src="" alt="">
+    <div>
+      <div class="menu-username" id="menuUsername"></div>
+      <div class="menu-email" id="menuEmail"></div>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-plan-badge" id="menuPlanBadge"></div>
+  <div class="menu-usage" id="menuUsage"></div>
+  <div class="menu-divider"></div>
+  <button class="menu-item" id="menuUpgrade">
+    Mejorar a Premium
+  </button>
+  <div class="menu-divider"></div>
+  <button class="menu-item menu-item-danger" id="menuLogout">
+    Cerrar sesión
+  </button>
+</div>
+
+  <div class="app-container">
 
       <!-- DROP ZONE -->
       <section class="drop-zone" id="dropZone">
@@ -1445,7 +1955,10 @@
       <!-- TOOL PANEL -->
       <section class="tool-panel" id="toolPanel">
 
-        <!-- Tabs -->
+        <!-- PDF Tabs -->
+        <div id="pdf-tabs"></div>
+
+        <!-- Module Tabs -->
         <div class="tabs" id="tabs">
           <button class="tab-btn active" data-tab="chat">💬 Chat con tu PDF</button>
           <button class="tab-btn" data-tab="flashcards">⚡ Flashcards</button>
@@ -1472,14 +1985,19 @@
 
         <!-- TAB 2: FLASHCARDS -->
         <div class="tab-content" id="tab-flashcards">
-          <div class="flashcards-section">
-            <div class="section-header">
-              <h2>⚡ Flashcards</h2>
-              <p>Las flashcards reales serán generadas por IA</p>
-            </div>
-            <button class="btn btn-primary" id="genFlashcards">
-              Generar Flashcards
-            </button>
+<div class="flashcards-section">
+      <div class="section-header">
+        <h2>⚡ Flashcards</h2>
+        <p>Las flashcards reales serán generadas por IA</p>
+      </div>
+      <div class="flashcards-actions">
+        <button class="btn btn-primary" id="genFlashcards">
+          Generar Flashcards
+        </button>
+        <button class="btn btn-secondary" id="exportFlashcards" style="display:none;">
+          ⬇️ Exportar PDF
+        </button>
+      </div>
             <div style="margin-top:24px;">
               <div class="flashcard-carousel">
                 <button class="carousel-btn" id="prevCard">‹</button>
@@ -1516,11 +2034,14 @@
               <h2>📅 Plan de Estudio</h2>
               <p>Organiza tu estudio con un plan personalizado</p>
             </div>
-            <div class="study-plan-form">
-              <input type="text" id="planSubject" placeholder="Materia (ej: Álgebra Lineal)" value="Álgebra Lineal">
-              <input type="date" id="planDate">
-              <button class="btn btn-primary" id="createPlan">Crear Plan</button>
-            </div>
+<div class="study-plan-form">
+      <input type="text" id="planSubject" placeholder="Materia (ej: Álgebra Lineal)" value="Álgebra Lineal">
+      <input type="date" id="planDate">
+      <div class="study-plan-actions">
+        <button class="btn btn-primary" id="createPlan">Crear Plan</button>
+        <button class="btn btn-secondary" id="exportPlan" style="display:none;">⬇️ Exportar PDF</button>
+      </div>
+    </div>
             <div class="study-plan-table-wrap">
               <table class="study-plan-table" id="planTable">
                 <thead>
@@ -1574,11 +2095,14 @@
         <!-- TAB 4: SUMMARY -->
         <div class="tab-content" id="tab-summary">
           <div class="summary-section">
-            <div class="section-header">
-              <h2>📊 Resumen</h2>
-              <p>Genera un resumen inteligente de tus apuntes</p>
-            </div>
-            <button class="btn btn-primary" id="genSummary">Generar Resumen</button>
+<div class="section-header">
+      <h2>📊 Resumen</h2>
+      <p>Genera un resumen inteligente de tus apuntes</p>
+    </div>
+    <div class="summary-actions">
+      <button class="btn btn-primary" id="genSummary">Generar Resumen</button>
+      <button class="btn btn-secondary" id="exportSummary" style="display:none;">⬇️ Exportar PDF</button>
+    </div>
 
             <div class="summary-stats" style="margin-top:24px;">
               <div class="stat-card">
@@ -1637,6 +2161,62 @@
       </div>
     </div>
 
+    <!-- ===== TOAST ===== -->
+    <div id="toast" class="toast">
+      <div class="toast-content">
+        <span>📘</span>
+        <span id="toastText">¿Guardar este documento en tu biblioteca?</span>
+      </div>
+      <div class="toast-actions">
+        <button class="btn btn-primary btn-small" id="toastSave">Guardar</button>
+        <button class="btn btn-secondary btn-small" id="toastDismiss">No por ahora</button>
+      </div>
+    </div>
+
+    <!-- ===== LIBRARY PANEL ===== -->
+    <div class="history-overlay" id="libraryOverlay"></div>
+    <div class="history-panel" id="libraryPanel">
+      <div class="history-panel-header">
+        <h3>📚 Mi Biblioteca</h3>
+        <button id="closeLibrary">✕</button>
+      </div>
+      <div class="history-list" id="libraryList">
+        <div class="history-empty">Aún no hay documentos guardados.</div>
+      </div>
+    </div>
+
+    <!-- ===== UPGRADE MODAL ===== -->
+    <div class="history-overlay" id="upgradeOverlay">
+      <div class="upgrade-modal">
+        <div class="upgrade-header">
+          <h2>🚀 Desbloquea todo con Premium</h2>
+          <button id="closeUpgrade">✕</button>
+        </div>
+        <p class="upgrade-desc" id="upgradeDesc">Alcanzaste tu límite gratuito.</p>
+        
+        <div class="upgrade-compare">
+          <table class="upgrade-table">
+            <thead>
+              <tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>PDFs simultáneos</td><td>3</td><td>Ilimitados</td></tr>
+              <tr><td>Chat por día</td><td>10</td><td>Ilimitado</td></tr>
+              <tr><td>Exámenes por día</td><td>3</td><td>Ilimitado</td></tr>
+              <tr><td>Flashcards</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Resumen</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Plan de Estudio</td><td>✅</td><td>✅</td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="upgrade-actions">
+          <button class="btn btn-primary" id="getPremiumBtn">⭐ Obtener Premium — $X/mes</button>
+          <button class="btn btn-secondary" id="backFreeBtn">Volver al límite gratuito</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== FOOTER ===== -->
     <footer>
       Astro Studio AI — Construido para estudiantes que van en serio 🚀
@@ -1656,11 +2236,614 @@
     }
 
     /* ==========================================================
-       GLOBAL: texto extraído del PDF
+       GLOBAL: docs y helper
        ========================================================== */
-    window.pdfContent = '';
-    let pdfDoc = null;
-    let isPDFLoaded = false;
+    window.pdfDocs = [];
+    window.activeDocId = null;
+    window.userLimits = null;
+    window.flashcardsData = null;
+    window.planData = null;
+    window.summaryData = null;
+
+    // Fetch user limits on load
+    async function fetchUserLimits() {
+      try {
+        const res = await fetch('/api/user/limits');
+        if (res.ok) {
+          window.userLimits = await res.json();
+          console.log('📊 userLimits:', window.userLimits);
+          updatePlanIndicator();
+          restoreFromStorage();
+        }
+      } catch (e) { console.error('Limits error:', e); }
+    }
+    fetchUserLimits();
+
+    function updatePlanIndicator() {
+      const indicator = document.getElementById('planIndicator');
+      if (!indicator || !window.userLimits) return;
+      
+      const { plan, chat_used, chat_limit } = window.userLimits;
+      if (plan === 'premium') {
+        indicator.className = 'plan-indicator premium';
+        indicator.textContent = '⭐ Premium';
+      } else {
+        const remaining = Math.max(0, (chat_limit || 10) - chat_used);
+        indicator.className = 'plan-indicator';
+        indicator.textContent = `💬 ${remaining}/${chat_limit}`;
+      }
+      
+      // Actualizar menú si está abierto
+      updateUserMenu();
+    }
+
+    // ==========================================================
+    // PERSISTENCIA DE SESIÓN — localStorage
+    // ==========================================================
+    function getStorageKey(key) {
+      const googleId = window.userLimits?.google_id || 'anon';
+      return `astro_${googleId}_${key}`;
+    }
+
+    function saveToStorage(key, data) {
+      try {
+        if (key === 'chat') {
+          localStorage.setItem(getStorageKey(key), JSON.stringify(data));
+        } else if (key === 'flashcards') {
+          localStorage.setItem(getStorageKey(key), JSON.stringify(data));
+        } else if (key === 'plan') {
+          localStorage.setItem(getStorageKey(key), JSON.stringify(data));
+        } else if (key === 'summary') {
+          localStorage.setItem(getStorageKey(key), JSON.stringify(data));
+        }
+      } catch (e) {
+        console.error('Error guardando en localStorage:', e);
+      }
+    }
+
+    function loadFromStorage(key) {
+      try {
+        const data = localStorage.getItem(getStorageKey(key));
+        return data ? JSON.parse(data) : null;
+      } catch (e) {
+        console.error('Error cargando de localStorage:', e);
+        return null;
+      }
+    }
+
+    function clearStorage() {
+      const googleId = window.userLimits?.google_id || 'anon';
+      const prefix = `astro_${googleId}_`;
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(prefix)) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+
+    function restoreFromStorage() {
+      let restored = false;
+      
+      // Restaurar chat
+      const chatData = loadFromStorage('chat');
+      if (chatData && chatData.length > 0) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+          // Agregar separador
+          const separator = document.createElement('div');
+          separator.className = 'session-separator';
+          separator.textContent = '── Sesión anterior ──';
+          separator.style.cssText = 'text-align:center;color:var(--text-muted);font-size:12px;margin:12px 0;opacity:0.6;';
+          chatMessages.appendChild(separator);
+          
+          // Restaurar mensajes
+          chatData.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = `message ${msg.role}`;
+            div.textContent = msg.text;
+            chatMessages.appendChild(div);
+          });
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          restored = true;
+        }
+      }
+      
+// Restaurar flashcards
+    const flashcards = loadFromStorage('flashcards');
+    if (flashcards && flashcards.length > 0) {
+      window.flashcardsData = flashcards;
+      renderFlashcards(flashcards);
+      document.getElementById('exportFlashcards').style.display = 'inline-block';
+      updateExportAllButton();
+      restored = true;
+    }
+      
+      // Restaurar plan
+      const plan = loadFromStorage('plan');
+      if (plan && plan.items && plan.items.length > 0) {
+        window.planData = plan;
+        document.getElementById('planSubject').value = plan.subject || '';
+        document.getElementById('planDate').value = plan.examDate || '';
+        document.getElementById('exportPlan').style.display = 'inline-block';
+        updateExportAllButton();
+        restored = true;
+      }
+      
+      // Restaurar resumen
+      const summary = loadFromStorage('summary');
+      if (summary && summary.text) {
+        window.summaryData = summary;
+        const summaryText = document.getElementById('summaryText');
+        if (summaryText) {
+          summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${summary.text.replace(/\n/g, '<br>')}`;
+        }
+        document.getElementById('exportSummary').style.display = 'inline-block';
+        updateExportAllButton();
+        restored = true;
+      }
+      
+      if (restored) {
+        mostrarToast('✅ Tu sesión anterior fue restaurada');
+      }
+    }
+
+    // ==========================================================
+    // USER DROPDOWN MENU
+    // ==========================================================
+let userMenuOpen = false;
+
+function toggleUserMenu() {
+  const dropdown = document.getElementById('userDropdown');
+  const userNameEl = document.getElementById('userName');
+  if (!dropdown || !userNameEl) return;
+
+  if (userMenuOpen) {
+    dropdown.style.display = 'none';
+    userMenuOpen = false;
+    return;
+  }
+
+  userMenuOpen = true;
+  
+  // Calcular posición dinámica
+  const rect = userNameEl.getBoundingClientRect();
+  dropdown.style.position = 'fixed';
+  dropdown.style.top = (rect.bottom + 8) + 'px';
+  dropdown.style.left = (rect.left + rect.width / 2) + 'px';
+  dropdown.style.transform = 'translateX(-50%)';
+dropdown.style.display = 'block';
+
+  updateUserMenu();
+}
+
+function updateUserMenu() {
+      if (!userMenuOpen || !window.userLimits) return;
+
+      const user = window.userLimits;
+      const menuAvatar = document.getElementById('menuAvatar');
+      const menuUsername = document.getElementById('menuUsername');
+      const menuEmail = document.getElementById('menuEmail');
+      const menuPlanBadge = document.getElementById('menuPlanBadge');
+      const menuUsage = document.getElementById('menuUsage');
+      const menuUpgrade = document.getElementById('menuUpgrade');
+      const userNameEl = document.getElementById('userName');
+      
+      // Obtener nombre real del DOM
+      const userNameText = userNameEl ? userNameEl.textContent : '';
+
+      if (menuAvatar) menuAvatar.src = user.photo || '';
+      if (menuUsername) menuUsername.textContent = userNameText || user.email || 'Usuario';
+      if (menuEmail) menuEmail.textContent = user.email || '';
+      
+      if (menuPlanBadge) {
+        if (user.plan === 'premium') {
+          menuPlanBadge.className = 'menu-plan-badge premium';
+          menuPlanBadge.textContent = '⭐ Plan Premium';
+        } else {
+          menuPlanBadge.className = 'menu-plan-badge free';
+          menuPlanBadge.textContent = '🆓 Plan Gratuito';
+        }
+      }
+      
+      if (menuUsage) {
+        const chatLimit = user.plan === 'premium' ? 'Ilimitado' : `${user.chat_used} / 10`;
+        const examLimit = user.plan === 'premium' ? 'Ilimitado' : `${user.exam_used} / 3`;
+        menuUsage.innerHTML = `
+          <div>💬 Chat: ${chatLimit} hoy</div>
+          <div>📝 Exámenes: ${examLimit} hoy</div>
+        `;
+      }
+      
+      // Ocultar botón upgrade si es premium
+      if (menuUpgrade) {
+        menuUpgrade.style.display = user.plan === 'premium' ? 'none' : 'flex';
+      }
+    }
+
+    function closeUserMenu() {
+      userMenuOpen = false;
+      const menu = document.getElementById('userDropdown');
+      if (menu) menu.style.display = 'none';
+    }
+
+    function getCombinedContext() {
+      if (!window.pdfDocs || window.pdfDocs.length === 0) return '';
+      return window.pdfDocs.map((doc, i) =>
+        `=== DOCUMENTO ${i + 1}: ${doc.name} ===\n${doc.content}`
+      ).join('\n\n');
+    }
+
+    function mostrarToast(msg) {
+  const el = document.getElementById('toast');
+  const txt = document.getElementById('toastText');
+  const actions = document.querySelector('.toast-actions');
+  if (el && txt) {
+    txt.textContent = msg;
+    if (actions) actions.style.display = 'none';
+    el.classList.add('show');
+    setTimeout(() => {
+      el.classList.remove('show');
+      if (actions) actions.style.display = '';
+    }, 3500);
+  }
+}
+
+    function showUpgradeModal(type) {
+      const overlay = document.getElementById('upgradeOverlay');
+      const desc = document.getElementById('upgradeDesc');
+      if (!overlay || !desc) return;
+
+      const messages = {
+        chat: 'Alcanzaste tus 10 preguntas de hoy. Vuelve mañana o hazte Premium.',
+        exam: 'Alcanzaste tus 3 exámenes de hoy. Vuelve mañana o hazte Premium.',
+        pdf: 'El plan gratuito permite hasta 3 PDFs. Hazte Premium para más.'
+      };
+      desc.textContent = messages[type] || messages.chat;
+      overlay.classList.add('open');
+    }
+
+    function closeUpgradeModal() {
+      document.getElementById('upgradeOverlay').classList.remove('open');
+    }
+
+    // ==========================================================
+    // EXPORTAR A PDF — jsPDF
+    // ==========================================================
+    const { jsPDF } = window.jspdf;
+
+    function updateExportAllButton() {
+      const btn = document.getElementById('exportAllBtn');
+      if (!btn) return;
+      const hasContent = window.flashcardsData?.length > 0 || window.summaryData || window.planData?.items?.length > 0;
+      btn.disabled = !hasContent;
+      btn.style.opacity = hasContent ? '1' : '0.5';
+      btn.style.cursor = hasContent ? 'pointer' : 'not-allowed';
+    }
+
+    function exportFlashcardsPDF() {
+      if (!window.flashcardsData || window.flashcardsData.length === 0) {
+        mostrarToast('Genera flashcards primero');
+        return;
+      }
+      if (!window.jspdf) { mostrarToast('Error: jsPDF no cargado'); return; }
+      
+      const doc = new jsPDF({ format: 'A4' });
+      const pdfName = 'AstroStudio_Flashcards_' + new Date().toISOString().split('T')[0] + '.pdf';
+      
+      // Header
+      drawHeader(doc, 'Flashcards de Estudio');
+      
+      // Subtitle
+      doc.setFontSize(10);
+      doc.setTextColor(102, 102, 102);
+      const pdfs = window.pdfDocs.map(d => d.name).join(', ');
+      doc.text(`Basadas en: ${pdfs || 'PDFs cargados'}`, 15, 28);
+      
+      let yPos = 35;
+      const pageHeight = doc.internal.pageSize.height;
+      
+      window.flashcardsData.forEach((card, i) => {
+        // Check if need new page
+        if (yPos > 250) {
+          doc.addPage();
+          drawHeader(doc, 'Flashcards de Estudio (cont.)');
+          yPos = 35;
+        }
+        
+        // Card number
+        doc.setFontSize(9);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`Tarjeta ${i + 1} / ${window.flashcardsData.length}`, 15, yPos);
+        yPos += 5;
+        
+        // Question box
+        drawBox(doc, 15, yPos, 180, 20, 'PREGUNTA', card.pregunta, '#8b5cf6');
+        yPos += 25;
+        
+        // Answer box
+        drawBox(doc, 15, yPos, 180, 20, 'RESPUESTA', card.respuesta, '#10b981');
+        yPos += 30;
+        
+        // Separator
+        if (i < window.flashcardsData.length - 1) {
+          doc.setLineHeightFactor(1);
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineDash([1, 2]);
+          doc.line(15, yPos - 5, 195, yPos - 5);
+          doc.setLineDash([]);
+        }
+      });
+      
+      drawFooter(doc, pdfName);
+      doc.save(pdfName);
+    }
+
+    function exportSummaryPDF() {
+      if (!window.summaryData) {
+        mostrarToast('Genera resumen primero');
+        return;
+      }
+      if (!window.jspdf) { mostrarToast('Error: jsPDF no cargado'); return; }
+      
+      const doc = new jsPDF({ format: 'A4' });
+      const pdfName = 'AstroStudio_Resumen_' + new Date().toISOString().split('T')[0] + '.pdf';
+      
+      drawHeader(doc, 'Resumen de Estudio');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(102, 102, 102);
+      const dateStr = new Date().toLocaleDateString('es-ES');
+      doc.text(`Basado en: ${window.summaryData.pdfs.join(', ')} | ${dateStr}`, 15, 28);
+      
+      let yPos = 40;
+      const lines = doc.splitTextToSize(window.summaryData.text, 180);
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (yPos > 270) {
+          doc.addPage();
+          drawHeader(doc, 'Resumen de Estudio (cont.)');
+          yPos = 35;
+        }
+        doc.setFontSize(11);
+        doc.setTextColor(26, 26, 26);
+        doc.text(lines[i], 15, yPos);
+        yPos += 6;
+      }
+      
+      drawFooter(doc, pdfName);
+      doc.save(pdfName);
+    }
+
+    function exportPlanPDF() {
+      if (!window.planData || !window.planData.items || window.planData.items.length === 0) {
+        mostrarToast('Genera plan primero');
+        return;
+      }
+      if (!window.jspdf) { mostrarToast('Error: jsPDF no cargado'); return; }
+      
+      const doc = new jsPDF({ format: 'A4' });
+      const pdfName = 'AstroStudio_Plan_' + new Date().toISOString().split('T')[0] + '.pdf';
+      
+      drawHeader(doc, 'Plan de Estudio');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(102, 102, 102);
+      doc.text(`Materia: ${window.planData.subject} | Examen: ${new Date(window.planData.examDate).toLocaleDateString('es-ES')}`, 15, 28);
+      
+      let yPos = 40;
+      
+      // Table header
+      doc.setFontSize(10);
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(139, 92, 246);
+      doc.rect(15, yPos - 10, 180, 8, 'F');
+      doc.text('Día', 20, yPos - 5);
+      doc.text('Fecha', 50, yPos - 5);
+      doc.text('Tema', 90, yPos - 5);
+      doc.text('Duración', 145, yPos - 5);
+      doc.text('Estado', 175, yPos - 5);
+      yPos += 5;
+      
+      // Table rows
+      window.planData.items.forEach((item, i) => {
+        if (yPos > 250) {
+          doc.addPage();
+          drawHeader(doc, 'Plan de Estudio (cont.)');
+          yPos = 50;
+        }
+        
+        const isLast = i === window.planData.items.length - 1;
+        const bgColor = isLast ? '#fef3c7' : (i % 2 === 0 ? '#ffffff' : '#f8f7ff');
+        const textColor = isLast ? '#92400e' : '#1a1a1a';
+        
+        doc.setFillColor(...hexToRgb(bgColor));
+        doc.rect(15, yPos - 5, 180, 8, 'F');
+        
+        doc.setFontSize(10);
+        doc.setTextColor(...hexToRgb(textColor));
+        
+        const d = new Date(item.fecha);
+        const dateStr = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+        
+doc.text(`Día ${item.dia}`, 20, yPos);
+      doc.text(dateStr, 50, yPos);
+      doc.text(item.tema.substring(0, 25), 90, yPos);
+      doc.text(item.tiempo, 145, yPos);
+      doc.text(isLast ? 'Examen' : 'Por hacer', 175, yPos);
+        
+        yPos += 10;
+      });
+      
+      drawFooter(doc, pdfName);
+      doc.save(pdfName);
+    }
+
+    function drawHeader(doc, title) {
+      // Background
+      doc.setFillColor(15, 15, 42);
+      doc.rect(0, 0, doc.internal.pageSize.width, 20, 'F');
+      
+      // Logo
+      doc.setFontSize(14);
+      doc.setTextColor(139, 92, 246);
+      doc.text('Astro Studio AI', 15, 12);
+      
+      // Subtitle
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text('Tu asistente de estudio inteligente', 15, 17);
+      
+      // Module title
+      doc.setFontSize(10);
+      doc.setTextColor(255, 255, 255);
+      doc.text(title, doc.internal.pageSize.width - 20, 12, { align: 'right' });
+      
+      // Separator line
+      doc.setDrawColor(139, 92, 246);
+      doc.setLineWidth(0.5);
+      doc.line(15, 21, doc.internal.pageSize.width - 15, 21);
+    }
+
+    function drawFooter(doc, filename) {
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      
+      // Separator line
+      doc.setDrawColor(139, 92, 246);
+      doc.setLineWidth(0.3);
+      doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
+      
+      doc.setFontSize(7);
+      doc.setTextColor(102, 102, 102);
+      
+      // Date
+      doc.text(new Date().toLocaleDateString('es-ES'), 15, pageHeight - 10);
+      
+      // Footer text
+      doc.text('Generado por Astro Studio AI - astrostudio.ai', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      
+      // Page number
+      const pageCount = doc.internal.getNumberOfPages();
+      doc.text('Pagina ' + doc.internal.getCurrentPageInfo().pageNumber + ' de ' + pageCount, pageWidth - 15, pageHeight - 10, { align: 'right' });
+    }
+
+    function drawBox(doc, x, y, width, height, label, text, colorHex) {
+      const color = hexToRgb(colorHex);
+      
+      // Border
+      doc.setDrawColor(...color);
+      doc.setLineWidth(1);
+      doc.rect(x, y, width, height);
+      
+      // Label background
+      doc.setFillColor(255, 255, 255);
+      const labelWidth = doc.getTextWidth(label) + 4;
+      doc.rect(x + 2, y - 5, labelWidth, 5, 'F');
+      
+      // Label text
+      doc.setFontSize(8);
+      doc.setTextColor(...color);
+      doc.text(label, x + 4, y - 1);
+      
+      // Content
+      doc.setFontSize(11);
+      doc.setTextColor(26, 26, 26);
+      const lines = doc.splitTextToSize(text, width - 10);
+      let textY = y + 10;
+      for (let i = 0; i < lines.length && textY < y + height; i++) {
+        doc.text(lines[i], x + 5, textY);
+        textY += 4;
+      }
+    }
+
+    function hexToRgb(hex) {
+      if (hex.startsWith('#')) hex = hex.slice(1);
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return [r, g, b];
+    }
+
+    function exportAllPDF() {
+      if (!window.jspdf) { mostrarToast('Error: jsPDF no cargado'); return; }
+      
+      const hasFlashcards = window.flashcardsData?.length > 0;
+      const hasSummary = window.summaryData;
+      const hasPlan = window.planData?.items?.length > 0;
+      
+      if (!hasFlashcards && !hasSummary && !hasPlan) {
+        mostrarToast('No hay contenido para exportar');
+        return;
+      }
+      
+      const doc = new jsPDF({ format: 'A4' });
+      const pdfName = 'AstroStudio_Completo_' + new Date().toISOString().split('T')[0] + '.pdf';
+      let isFirst = true;
+      
+      if (hasFlashcards) {
+        if (!isFirst) doc.addPage();
+        drawHeader(doc, 'Flashcards');
+        let yPos = 35;
+        window.flashcardsData.forEach((card, i) => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 35;
+          }
+          doc.setFontSize(9);
+          doc.setTextColor(128, 128, 128);
+          doc.text(`Tarjeta ${i + 1}`, 15, yPos);
+          yPos += 5;
+          drawBox(doc, 15, yPos, 180, 20, 'PREGUNTA', card.pregunta, '#8b5cf6');
+          yPos += 25;
+          drawBox(doc, 15, yPos, 180, 20, 'RESPUESTA', card.respuesta, '#10b981');
+          yPos += 30;
+        });
+        isFirst = false;
+      }
+      
+      if (hasSummary) {
+        if (!isFirst) doc.addPage();
+        drawHeader(doc, 'Resumen');
+        let yPos = 40;
+        const lines = doc.splitTextToSize(window.summaryData.text, 180);
+        for (let i = 0; i < lines.length; i++) {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 35;
+          }
+          doc.setFontSize(11);
+          doc.setTextColor(26, 26, 26);
+          doc.text(lines[i], 15, yPos);
+          yPos += 6;
+        }
+        isFirst = false;
+      }
+      
+      if (hasPlan) {
+        if (!isFirst) doc.addPage();
+        drawHeader(doc, 'Plan de Estudio');
+        let yPos = 40;
+        window.planData.items.forEach((item, i) => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 40;
+          }
+          const isLast = i === window.planData.items.length - 1;
+          doc.setFontSize(10);
+          doc.setTextColor(isLast ? '#92400e' : '#1a1a1a');
+          const d = new Date(item.fecha);
+          const dateStr = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+          doc.text(`${item.dia} | ${dateStr} | ${item.tema} | ${item.tiempo}`, 15, yPos);
+          yPos += 10;
+        });
+      }
+      
+      drawFooter(doc, pdfName);
+      doc.save(pdfName);
+    }
 
     /* ==========================================================
        GLOBAL: placeholder para IA
@@ -1675,7 +2858,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt,
-            pdfContent: window.pdfContent
+            pdfContent: getCombinedContext()
           })
         });
         if (!res.ok) {
@@ -1819,7 +3002,28 @@
     }
 
     logoutBtn.addEventListener('click', () => {
+      clearStorage();
       window.location.href = 'http://localhost:3000/auth/logout';
+    });
+
+    // User dropdown menu
+    document.getElementById('userAvatarContainer').addEventListener('click', toggleUserMenu);
+    document.getElementById('menuLogout').addEventListener('click', () => {
+      clearStorage();
+      window.location.href = 'http://localhost:3000/auth/logout';
+    });
+    document.getElementById('menuUpgrade').addEventListener('click', () => {
+      showUpgradeModal('plan');
+      closeUserMenu();
+    });
+    
+    // Click fuera del menú para cerrar
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('userDropdown');
+      const container = document.getElementById('userAvatarContainer');
+      if (dropdown && container && !dropdown.contains(e.target) && !container.contains(e.target)) {
+        closeUserMenu();
+      }
     });
 
     initAuth();
@@ -1834,21 +3038,42 @@
     ];
     let currentCard = 0;
 
-    function updateCard(i) {
-      currentCard = i;
-      const d = flashcardData[i];
-      cardQuestion.textContent = d.q;
-      cardAnswer.textContent = d.a;
-      cardIndex.textContent = `${i + 1} / ${flashcardData.length}`;
-      flashcard.classList.remove('flipped');
+function updateCard(i) {
+  currentCard = i;
+  const d = flashcardData[i];
+  cardQuestion.textContent = d.q;
+  cardAnswer.textContent = d.a;
+  cardIndex.textContent = `${i + 1} / ${flashcardData.length}`;
+  flashcard.classList.remove('flipped');
 
-      document.querySelectorAll('#cardDots .dot').forEach((dot, idx) => {
-        dot.classList.toggle('active', idx === i);
-      });
+  document.querySelectorAll('#cardDots .dot').forEach((dot, idx) => {
+    dot.classList.toggle('active', idx === i);
+  });
+}
 
-      prevCard.disabled = i === 0;
-      nextCard.disabled = i === flashcardData.length - 1;
-    }
+function renderFlashcards(cards) {
+  if (!cards || cards.length === 0) return;
+  
+  // Limpiar dots existentes
+  document.querySelectorAll('#cardDots .dot').forEach(d => d.remove());
+  
+  // Llenar flashcardData con los nuevos datos
+  flashcardData.length = 0;
+  cards.forEach(c => flashcardData.push({ q: c.pregunta, a: c.respuesta }));
+  
+  // Crear dots
+  const dotsContainer = document.getElementById('cardDots');
+  flashcardData.forEach((_, i) => {
+    const dot = document.createElement('span');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.dataset.i = i;
+    dot.addEventListener('click', () => updateCard(parseInt(dot.dataset.i)));
+    dotsContainer.appendChild(dot);
+  });
+  
+  // Actualizar a la primera tarjeta
+  updateCard(0);
+}
 
     flashcard.addEventListener('click', () => {
       flashcard.classList.toggle('flipped');
@@ -1868,39 +3093,33 @@
 
     updateCard(0);
 
-    genFlashcards.addEventListener('click', async () => {
-      if (!isPDFLoaded) {
-        alert('Primero sube un PDF para generar flashcards.');
+genFlashcards.addEventListener('click', async () => {
+      if (!window.pdfDocs || window.pdfDocs.length === 0) {
+        mostrarToast('⚠️ Carga al menos un PDF para continuar');
         return;
       }
-      /* ==========================================================
-         PUNTO DE CONEXIÓN IA — FLASHCARDS
-         Reemplaza este bloque para generar flashcards reales con IA.
-         ========================================================== */
       genFlashcards.disabled = true;
       genFlashcards.textContent = '⏳ Generando...';
       try {
         const res = await fetch('http://localhost:3000/api/flashcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pdfContent: window.pdfContent })
+          body: JSON.stringify({ pdfContent: getCombinedContext() })
         });
         if (!res.ok) throw new Error('Error en flashcards');
         const data = await res.json();
-        if (data.cards && data.cards.length > 0) {
-          flashcardData.length = 0;
-          data.cards.forEach(c => flashcardData.push({ q: c.pregunta, a: c.respuesta }));
-          document.querySelectorAll('#cardDots .dot').forEach(d => d.remove());
-          const dotsContainer = document.getElementById('cardDots');
-          flashcardData.forEach((_, i) => {
-            const dot = document.createElement('span');
-            dot.className = 'dot' + (i === 0 ? ' active' : '');
-            dot.dataset.i = i;
-            dot.addEventListener('click', () => updateCard(parseInt(dot.dataset.i)));
-            dotsContainer.appendChild(dot);
-          });
-          updateCard(0);
-        }
+if (data.cards && data.cards.length > 0) {
+        // Renderizar flashcards
+        renderFlashcards(data.cards);
+        
+        // Guardar datos para exportación
+        window.flashcardsData = data.cards.map(c => ({ pregunta: c.pregunta, respuesta: c.respuesta }));
+        saveToStorage('flashcards', window.flashcardsData);
+        
+        // Mostrar botón de exportar
+        document.getElementById('exportFlashcards').style.display = 'inline-block';
+        updateExportAllButton();
+      }
       } catch (e) {
         console.error('Flashcards error:', e);
         alert('⚠️ Error al generar flashcards. Intenta de nuevo.');
@@ -1977,6 +3196,21 @@
         return;
       }
 
+      // Verificar duplicado
+      if (window.pdfDocs.some(d => d.name === file.name)) {
+        mostrarToast(`📄 '${file.name}' ya está cargado`);
+        return;
+      }
+      // Check PDF limit for free users
+      if (window.userLimits && window.userLimits.plan === 'free' && window.pdfDocs.length >= 3) {
+        showUpgradeModal('pdf');
+        return;
+      }
+      if (window.pdfDocs.length >= 10) {
+        mostrarToast('Máximo 10 documentos simultáneos');
+        return;
+      }
+
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
       // Mostrar info del archivo
@@ -1987,7 +3221,6 @@
       const arrayBuffer = await file.arrayBuffer();
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const pdf = await loadingTask.promise;
-      pdfDoc = pdf;
       pageCount.textContent = pdf.numPages;
 
       // Extraer texto
@@ -2005,13 +3238,14 @@
         progressLabel.textContent = `Extrayendo texto... ${pct}% (página ${i} de ${total})`;
       }
 
-      window.pdfContent = fullText;
-      isPDFLoaded = true;
+      const newDoc = { id: Date.now(), name: file.name, content: fullText, pages: total };
+      window.pdfDocs.push(newDoc);
+      window.activeDocId = newDoc.id;
 
       progressFill.style.width = '100%';
       progressLabel.textContent = '✅ Texto extraído correctamente';
 
-      // Preview primeras 500 palabras
+      // Preview primeras 500 palabras del doc activo
       const words = fullText.split(/\s+/).filter(Boolean);
       const preview = words.slice(0, 500).join(' ');
       textPreview.textContent = preview + (words.length > 500 ? '...' : '');
@@ -2021,24 +3255,93 @@
       statusText.textContent = 'IA Lista';
 
       // Actualizar stats de resumen
-      statWords.textContent = words.length.toLocaleString();
-      statPages.textContent = total;
-      const charCount = fullText.replace(/\s/g, '').length;
+      const combined = getCombinedContext();
+      const allWords = combined.split(/\s+/).filter(Boolean);
+      statWords.textContent = allWords.length.toLocaleString();
+      statPages.textContent = window.pdfDocs.reduce((s, d) => s + (d.pages || 0), 0);
+      const charCount = combined.replace(/\s/g, '').length;
       statChars.textContent = charCount.toLocaleString();
-      const readMin = Math.max(1, Math.round(words.length / 200));
+      const readMin = Math.max(1, Math.round(allWords.length / 200));
       statReadTime.textContent = readMin + ' min';
 
       // Mostrar panel
       toolPanel.classList.add('visible');
 
+      renderTabs();
+
       // Mensaje de bienvenida en el chat
       chatMessages.innerHTML = '';
       addChatMessage('ai', `📄 He procesado exitosamente "${file.name}" (${total} páginas, ${words.length.toLocaleString()} palabras). ¡Hazme cualquier pregunta sobre tus apuntes!`);
+
+      /// Mostrar toast para guardar en biblioteca
+if (!file._fromRestore) {
+  document.getElementById('toastText').textContent = `¿Guardar "${file.name}" en tu biblioteca?`;
+  document.getElementById('toast').classList.add('show');
+}
     }
 
     /* ==========================================================
-       CHAT
+       RENDER TABS PDF + REMOVE DOC
        ========================================================== */
+    function renderTabs() {
+      const container = document.getElementById('pdf-tabs');
+      if (!container) return;
+      let html = '';
+      (window.pdfDocs || []).forEach(doc => {
+        const isActive = doc.id === window.activeDocId;
+        html += `<div class="pdf-tab ${isActive ? 'active' : ''}" data-id="${doc.id}">
+          <span>📄</span><span class="tab-name">${doc.name}</span>
+          <button class="tab-close" data-id="${doc.id}" title="Cerrar">✕</button>
+        </div>`;
+      });
+      html += `<div class="pdf-tab-add" id="addPdfTab">+ Agregar PDF</div>`;
+      container.innerHTML = html;
+
+      container.querySelectorAll('.pdf-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          if (e.target.classList.contains('tab-close')) return;
+          window.activeDocId = parseInt(tab.dataset.id);
+          renderTabs();
+        });
+      });
+      container.querySelectorAll('.tab-close').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeDoc(parseInt(btn.dataset.id));
+        });
+      });
+      const addBtn = document.getElementById('addPdfTab');
+      if (addBtn) addBtn.addEventListener('click', () => fileInput.click());
+    }
+
+    function removeDoc(id) {
+      window.pdfDocs = (window.pdfDocs || []).filter(d => d.id !== id);
+      if (window.activeDocId === id) {
+        window.activeDocId = window.pdfDocs.length > 0 ? window.pdfDocs[0].id : null;
+      }
+      if (window.pdfDocs.length === 0) {
+        window.activeDocId = null;
+        document.getElementById('toolPanel').classList.remove('visible');
+        document.getElementById('fileInfo').classList.remove('visible');
+        document.getElementById('status-badge').className = 'status-badge offline';
+        document.getElementById('status-text').textContent = 'Sin PDF';
+        document.getElementById('dropZone').classList.remove('collapsed');
+      } else {
+        const active = window.pdfDocs.find(d => d.id === window.activeDocId) || window.pdfDocs[0];
+        window.activeDocId = active.id;
+        document.getElementById('fileName').textContent = active.name;
+        const words = active.content.split(/\s+/).filter(Boolean);
+        document.getElementById('textPreview').textContent = words.slice(0, 500).join(' ') + (words.length > 500 ? '...' : '');
+        document.getElementById('pageCount').textContent = active.pages || '?';
+        const combined = getCombinedContext();
+        const allWords = combined.split(/\s+/).filter(Boolean);
+        document.getElementById('statWords').textContent = allWords.length.toLocaleString();
+        document.getElementById('statPages').textContent = window.pdfDocs.reduce((s, d) => s + (d.pages || 0), 0);
+        document.getElementById('statChars').textContent = combined.replace(/\s/g, '').length.toLocaleString();
+        document.getElementById('statReadTime').textContent = Math.max(1, Math.round(allWords.length / 200)) + ' min';
+      }
+      renderTabs();
+    }
     function addChatMessage(role, text) {
       // Eliminar empty state
       const empty = chatMessages.querySelector('.empty-chat');
@@ -2069,10 +3372,34 @@
       const text = chatInput.value.trim();
       if (!text) return;
 
-      if (!isPDFLoaded) {
-        addChatMessage('ai', '⚠️ Primero debes subir un PDF para poder preguntar sobre su contenido.');
+      if (!window.pdfDocs || window.pdfDocs.length === 0) {
+        mostrarToast('⚠️ Carga al menos un PDF para continuar');
         return;
       }
+
+      // Check chat limit
+      if (window.userLimits && window.userLimits.plan === 'free' && window.userLimits.chat_used >= 10) {
+        showUpgradeModal('chat');
+        return;
+      }
+
+      // Increment chat counter
+      try {
+        const res = await fetch('/api/user/increment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'chat' })
+        });
+        const data = await res.json();
+        if (!data.allowed) {
+          showUpgradeModal('chat');
+          return;
+        }
+        if (window.userLimits) {
+          window.userLimits.chat_used = data.used;
+          updatePlanIndicator();
+        }
+      } catch (e) { console.error('Increment error:', e); }
 
       addChatMessage('user', text);
       chatInput.value = '';
@@ -2081,13 +3408,9 @@
 
       addTypingIndicator();
 
-      /* ==========================================================
-         PUNTO DE CONEXIÓN IA — CHAT
-         window.askAI() recibe el prompt del usuario y debe retornar
-         la respuesta. Cuando conectes DeepSeek V4 Flash, reemplaza
-         la implementación de window.askAI() al inicio del script.
-         ========================================================== */
-      const contextPrompt = `Contexto del PDF:\n${window.pdfContent.slice(0, 4000)}\n\nPregunta: ${text}`;
+      const docsInfo = window.pdfDocs.map(d => d.name).join(', ');
+      const systemBlock = `El usuario ha cargado ${window.pdfDocs.length} documento(s): ${docsInfo}. Cuando respondas, indica entre corchetes de qué documento viene cada información. Ejemplo: [nombre.pdf]`;
+      const contextPrompt = `${systemBlock}\n\nContexto del PDF:\n${getCombinedContext().slice(0, 4000)}\n\nPregunta: ${text}`;
       const response = await window.askAI(contextPrompt);
 
       removeTypingIndicator();
@@ -2112,8 +3435,8 @@
     planDate.value = tomorrow.toISOString().split('T')[0];
 
     createPlanBtn.addEventListener('click', async () => {
-      if (!isPDFLoaded) {
-        alert('Primero sube un PDF para crear un plan de estudio personalizado.');
+      if (!window.pdfDocs || window.pdfDocs.length === 0) {
+        mostrarToast('⚠️ Carga al menos un PDF para continuar');
         return;
       }
 
@@ -2137,7 +3460,7 @@
         const res = await fetch('http://localhost:3000/api/plan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pdfContent: window.pdfContent, materia: subject, fechaExamen: examDate })
+          body: JSON.stringify({ pdfContent: getCombinedContext(), materia: subject, fechaExamen: examDate })
         });
         const data = await res.json();
 
@@ -2151,11 +3474,21 @@
         const tbody = document.getElementById('planBody');
         tbody.innerHTML = '';
 
+if (data.fallback && data.planTexto) {
+        // Mostrar como texto formateado
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="5" style="white-space:pre-wrap;color:var(--text-secondary);font-size:13px;line-height:1.7;padding:16px;">${data.planTexto.replace(/\n/g, '<br>')}</td>`;
+        tbody.appendChild(tr);
+        window.planData = { items: [], subject, examDate, fallback: true, text: data.planTexto };
+        saveToStorage('plan', window.planData);
+      } else if (data.plan && data.plan.length) {
+        window.planData = { items: data.plan, subject, examDate };
+        saveToStorage('plan', window.planData);
         data.plan.forEach((item, i) => {
           const d = new Date(item.fecha);
           const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
           const tagClass = i < data.plan.length - 1 ? 'tag-cyan' : 'tag-purple';
-          const label = i < data.plan.length - 1 ? 'Por hacer' : '¡Hoy!';
+          const label = i < data.plan.length - 1 ? 'Por hacer' : '📝 Examen';
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>Día ${item.dia}</td>
@@ -2166,6 +3499,13 @@
           `;
           tbody.appendChild(tr);
         });
+      }
+      
+      // Mostrar botón de exportar si hay datos
+      if (window.planData && window.planData.items && window.planData.items.length > 0) {
+        document.getElementById('exportPlan').style.display = 'inline-block';
+        updateExportAllButton();
+      }
 
         document.querySelector('.study-plan-section p:last-child').textContent = `✅ Plan de estudio para "${subject}" — ${data.diasRestantes} días hasta el examen.`;
       } catch (e) {
@@ -2180,16 +3520,12 @@
     /* ==========================================================
        RESUMEN
        ========================================================== */
-    genSummary.addEventListener('click', async () => {
-      if (!isPDFLoaded) {
-        alert('Primero sube un PDF para generar un resumen.');
+genSummary.addEventListener('click', async () => {
+      if (!window.pdfDocs || window.pdfDocs.length === 0) {
+        mostrarToast('⚠️ Carga al menos un PDF para continuar');
         return;
       }
 
-      /* ==========================================================
-         PUNTO DE CONEXIÓN IA — RESUMEN
-         Reemplaza este bloque para generar un resumen real con IA.
-         ========================================================== */
       genSummary.disabled = true;
       genSummary.textContent = '⏳ Resumiendo...';
       summaryText.innerHTML = '<p style="color:var(--text-muted);">⏳ Generando resumen inteligente...</p>';
@@ -2197,11 +3533,17 @@
         const res = await fetch('http://localhost:3000/api/resumen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pdfContent: window.pdfContent })
+          body: JSON.stringify({ pdfContent: getCombinedContext() })
         });
         if (!res.ok) throw new Error('Error en resumen');
         const data = await res.json();
         summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${data.text.replace(/\n/g, '<br>')}`;
+        
+        // Guardar datos para exportación
+        window.summaryData = { text: data.text, pdfs: window.pdfDocs.map(d => d.name) };
+        saveToStorage('summary', window.summaryData);
+        document.getElementById('exportSummary').style.display = 'inline-block';
+        updateExportAllButton();
       } catch (e) {
         console.error('Summary error:', e);
         summaryText.innerHTML = '<p style="color:var(--text-muted);">⚠️ Error al generar el resumen. Intenta de nuevo.</p>';
@@ -2392,10 +3734,34 @@
     }
 
     async function handleStartExam() {
-      if (!isPDFLoaded) {
-        alert('Primero sube un PDF para iniciar el examen.');
+      if (!window.pdfDocs || window.pdfDocs.length === 0) {
+        mostrarToast('⚠️ Carga al menos un PDF para continuar');
         return;
       }
+
+      // Check exam limit
+      if (window.userLimits && window.userLimits.plan === 'free' && window.userLimits.exam_used >= 3) {
+        showUpgradeModal('exam');
+        return;
+      }
+
+      // Increment exam counter
+      try {
+        const res = await fetch('/api/user/increment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'exam' })
+        });
+        const data = await res.json();
+        if (!data.allowed) {
+          showUpgradeModal('exam');
+          return;
+        }
+        if (window.userLimits) {
+          window.userLimits.exam_used = data.used;
+          updatePlanIndicator();
+        }
+      } catch (e) { console.error('Increment error:', e); }
 
       const triggerBtn = document.getElementById('startExam') || startExam;
       triggerBtn.disabled = true;
@@ -2405,7 +3771,7 @@
         const res = await fetch('http://localhost:3000/api/examen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pdfContent: window.pdfContent })
+          body: JSON.stringify({ pdfContent: getCombinedContext() })
         });
         if (!res.ok) throw new Error('Error en examen');
         const data = await res.json();
@@ -2511,7 +3877,7 @@
       origAddChatMessage(role, text);
 
       // Auto-save after AI responds
-      if (role === 'ai' && isPDFLoaded) {
+      if (role === 'ai' && window.pdfDocs && window.pdfDocs.length > 0) {
         const pdfName = document.getElementById('fileName').textContent;
         const msgs = [];
         chatMessages.querySelectorAll('.message').forEach(m => {
@@ -2521,6 +3887,16 @@
         // Debounce: save after AI response
         if (window._saveTimer) clearTimeout(window._saveTimer);
         window._saveTimer = setTimeout(() => saveToHistory(pdfName, msgs), 2000);
+        
+        // Guardar en localStorage para persistencia de sesión
+        const chatData = [];
+        chatMessages.querySelectorAll('.message').forEach(m => {
+          chatData.push({
+            role: m.classList.contains('user') ? 'user' : 'ai',
+            text: m.textContent
+          });
+        });
+        saveToStorage('chat', chatData);
       }
     };
 
@@ -2541,10 +3917,170 @@
       }
     });
 
+    /* ==========================================================
+       BIBLIOTECA - Documentos guardados
+       ========================================================== */
+    function closeLibrary() {
+      document.getElementById('libraryPanel').classList.remove('open');
+      document.getElementById('libraryOverlay').classList.remove('open');
+    }
+
+    async function loadLibrary() {
+      const list = document.getElementById('libraryList');
+      list.innerHTML = '<div class="history-empty">Cargando...</div>';
+      try {
+        const res = await fetch('/api/documentos');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          list.innerHTML = `<div class="history-empty">⚠️ ${errData.error || 'Error al cargar'}</div>`;
+          return;
+        }
+        const data = await res.json();
+        if (!data.documentos || data.documentos.length === 0) {
+          list.innerHTML = '<div class="history-empty">Aún no hay documentos guardados.</div>';
+          return;
+        }
+        list.innerHTML = data.documentos.map(doc => {
+          const date = new Date(doc.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+          const size = doc.tamanio ? (doc.tamanio / (1024 * 1024)).toFixed(2) + ' MB' : '—';
+          return `<div class="history-item" data-id="${doc.id}">
+            <div class="h-name">📘 ${doc.nombre}</div>
+            <div class="h-date">${date} · ${doc.paginas || '?'} págs · ${size}</div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="btn btn-primary btn-small load-doc" data-id="${doc.id}">Cargar</button>
+              <button class="btn btn-secondary btn-small delete-doc" data-id="${doc.id}">Eliminar</button>
+            </div>
+          </div>`;
+        }).join('');
+
+        list.querySelectorAll('.load-doc').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await loadDocument(parseInt(btn.dataset.id));
+          });
+        });
+        list.querySelectorAll('.delete-doc').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!confirm('¿Eliminar este documento?')) return;
+            await fetch(`/api/documentos/${btn.dataset.id}`, { method: 'DELETE' });
+            loadLibrary();
+          });
+        });
+      } catch (e) {
+        console.error('Library error:', e);
+        list.innerHTML = '<div class="history-empty">Error al cargar la biblioteca.</div>';
+      }
+    }
+
+async function loadDocument(docId) {
+      closeLibrary();
+      try {
+        const res = await fetch(`/api/documentos/${docId}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+const doc = await res.json();
+    if (!doc.contenido_texto) throw new Error('El documento no tiene contenido');
+    
+    // Verificar si ya está cargado
+    const yaExiste = window.pdfDocs.some(d => d.name === doc.nombre);
+    if (yaExiste) {
+      mostrarToast('📄 Este documento ya está cargado');
+      return;
+    }
+    
+    const newDoc = { id: Date.now(), name: doc.nombre, content: doc.contenido_texto, pages: doc.paginas || 0 };
+    window.pdfDocs.push(newDoc);
+        window.activeDocId = newDoc.id;
+        document.getElementById('fileName').textContent = doc.nombre;
+        document.getElementById('pageCount').textContent = doc.paginas || '?';
+        document.getElementById('fileSize').textContent = doc.tamanio ? (doc.tamanio / (1024 * 1024)).toFixed(2) : '?';
+        document.getElementById('fileInfo').classList.add('visible');
+        document.getElementById('status-badge').className = 'status-badge online';
+        document.getElementById('status-text').textContent = 'IA Lista';
+        const words = doc.contenido_texto.split(/\s+/).filter(Boolean);
+        document.getElementById('textPreview').textContent = words.slice(0, 500).join(' ') + (words.length > 500 ? '...' : '');
+        const combined = getCombinedContext();
+        const allWords = combined.split(/\s+/).filter(Boolean);
+        document.getElementById('statWords').textContent = allWords.length.toLocaleString();
+        document.getElementById('statPages').textContent = window.pdfDocs.reduce((s, d) => s + (d.pages || 0), 0);
+        document.getElementById('statChars').textContent = combined.replace(/\s/g, '').length.toLocaleString();
+        document.getElementById('statReadTime').textContent = Math.max(1, Math.round(allWords.length / 200)) + ' min';
+        document.getElementById('toolPanel').classList.add('visible');
+        document.getElementById('chatMessages').innerHTML = '';
+        renderTabs();
+        document.getElementById('dropZone').classList.add('collapsed');
+        addChatMessage('ai', `📄 Documento "${doc.nombre}" cargado desde tu biblioteca.`);
+      } catch (e) {
+        console.error('Load document error:', e);
+        alert('Error al cargar el documento: ' + e.message);
+      }
+    }
+
+    // Toast controls
+    document.getElementById('toastSave').addEventListener('click', async () => {
+      document.getElementById('toast').classList.remove('show');
+      const activeDoc = window.pdfDocs.find(d => d.id === window.activeDocId);
+      if (!activeDoc) return;
+      const nombre = activeDoc.name;
+      const paginas = activeDoc.pages || 0;
+      const tamanio = 0;
+      try {
+        const res = await fetch('/api/documentos/guardar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre,
+            contenidoTexto: activeDoc.content.slice(0, 50000),
+            tamanio,
+            paginas
+          })
+        });
+        if (res.ok) {
+          addChatMessage('ai', '✅ Documento guardado en tu biblioteca.');
+        }
+      } catch (e) {
+        console.error('Save document error:', e);
+      }
+    });
+
+    document.getElementById('toastDismiss').addEventListener('click', () => {
+      document.getElementById('toast').classList.remove('show');
+    });
+
+    // Library panel controls
+    document.getElementById('libraryBtn').addEventListener('click', () => {
+      loadLibrary();
+      document.getElementById('libraryPanel').classList.add('open');
+      document.getElementById('libraryOverlay').classList.add('open');
+    });
+
+    document.getElementById('closeLibrary').addEventListener('click', closeLibrary);
+    document.getElementById('libraryOverlay').addEventListener('click', closeLibrary);
+
+    // Upgrade modal controls
+    document.getElementById('closeUpgrade').addEventListener('click', closeUpgradeModal);
+    document.getElementById('upgradeOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('upgradeOverlay')) closeUpgradeModal();
+    });
+    document.getElementById('getPremiumBtn').addEventListener('click', () => {
+      mostrarToast('¡Próximamente! Pagos en camino 🚀');
+      closeUpgradeModal();
+    });
+    document.getElementById('backFreeBtn').addEventListener('click', closeUpgradeModal);
+
+    // Export buttons
+    document.getElementById('exportFlashcards').addEventListener('click', exportFlashcardsPDF);
+    document.getElementById('exportSummary').addEventListener('click', exportSummaryPDF);
+    document.getElementById('exportPlan').addEventListener('click', exportPlanPDF);
+    document.getElementById('exportAllBtn').addEventListener('click', exportAllPDF);
+
     console.log('🚀 Astro Studio AI — IA conectada');
     console.log('🤖 Modelo: Gemma-4-31B-IT via NVIDIA NIM');
     console.log('📌 Para cambiar de modelo, reemplaza window.askAI()');
-    console.log('📌 window.pdfContent contiene el texto extraído del PDF');
+    console.log('📌 window.pdfDocs tiene', window.pdfDocs?.length || 0, 'documentos cargados');
   </script>
 
 </body>

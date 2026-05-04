@@ -4,12 +4,64 @@ const path = require('path');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = 3000;
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 app.use(express.json());
+
+// PostgreSQL
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+let dbOk = false;
+
+(async () => {
+  try {
+    await pool.connect();
+    dbOk = true;
+    console.log('✅ PostgreSQL conectado');
+
+await pool.query(`
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id SERIAL PRIMARY KEY,
+      google_id VARCHAR(255) UNIQUE NOT NULL,
+      nombre VARCHAR(255),
+      email VARCHAR(255) UNIQUE,
+      foto VARCHAR(500),
+      plan VARCHAR(50) DEFAULT 'free',
+      chat_count INT DEFAULT 0,
+      exam_count INT DEFAULT 0,
+      last_reset DATE DEFAULT CURRENT_DATE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS documentos (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+        nombre VARCHAR(255),
+        contenido_texto TEXT,
+        tamanio INTEGER,
+        paginas INTEGER,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sesiones_chat (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+        documento_id INTEGER REFERENCES documentos(id) ON DELETE SET NULL,
+        mensajes JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log('✅ Tablas creadas/verificadas');
+  } catch (err) {
+    console.error('⚠️ PostgreSQL no disponible:', err.message);
+    console.log('⚠️ La app funcionará sin BD');
+  }
+})();
 app.use(session({
   secret: process.env.SESSION_SECRET || 'astro-studio-ai-dev-secret',
   resave: false,
@@ -27,14 +79,29 @@ passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: 'http://localhost:3000/auth/google/callback'
-}, (accessToken, refreshToken, profile, done) => {
-  const user = {
+}, async (accessToken, refreshToken, profile, done) => {
+  const userProfile = {
     id: profile.id,
     displayName: profile.displayName,
     email: profile.emails?.[0]?.value || '',
     photo: profile.photos?.[0]?.value || ''
   };
-  done(null, user);
+
+  // Guardar/actualizar usuario en BD si está disponible
+  if (dbOk) {
+    try {
+      await pool.query(`
+        INSERT INTO usuarios (google_id, nombre, email, foto)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (google_id) DO UPDATE
+        SET nombre = EXCLUDED.nombre, email = EXCLUDED.email, foto = EXCLUDED.foto
+      `, [userProfile.id, userProfile.displayName, userProfile.email, userProfile.photo]);
+    } catch (err) {
+      console.error('Error guardando usuario:', err.message);
+    }
+  }
+
+  done(null, userProfile);
 }));
 
 passport.serializeUser((user, done) => done(null, user));
@@ -74,6 +141,7 @@ app.get('/api/me', (req, res) => {
   res.json({ user: req.user || null });
 });
 
+// Helper: call NVIDIA NIM API
 async function callNVIDIA(messages) {
   const nvidiaRes = await fetch(NVIDIA_API_URL, {
     method: 'POST',
@@ -93,6 +161,85 @@ async function callNVIDIA(messages) {
   const data = await nvidiaRes.json();
   return data.choices[0].message.content;
 }
+
+// Helper: reset daily counters if needed
+async function resetDailyCounters(googleId) {
+  const result = await pool.query(
+    `UPDATE usuarios SET chat_count = 0, exam_count = 0, last_reset = CURRENT_DATE 
+     WHERE google_id = $1 AND last_reset < CURRENT_DATE 
+     RETURNING last_reset`,
+    [googleId]
+  );
+  if (result.rows.length > 0) {
+    console.log('✅ Contadores reseteados para', googleId, 'last_reset:', result.rows[0].last_reset);
+  }
+}
+
+// GET /api/user/limits - returns current plan and usage
+app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await resetDailyCounters(userId);
+    
+    const result = await pool.query(
+      `SELECT plan, chat_count, exam_count FROM usuarios WHERE google_id = $1`,
+      [userId]
+    );
+    const row = result.rows[0];
+    const isPremium = row.plan === 'premium';
+    
+    console.log('📊 Limits:', row);
+    
+    res.json({
+      plan: row.plan,
+      chat_used: row.chat_count,
+      exam_used: row.exam_count,
+      chat_limit: isPremium ? null : 10,
+      exam_limit: isPremium ? null : 3,
+      pdf_limit: isPremium ? null : 3
+    });
+  } catch (err) {
+    console.error('User limits error:', err);
+    res.status(500).json({ error: 'Error obteniendo límites' });
+  }
+});
+
+// POST /api/user/increment - increments chat or exam counter
+app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
+  const { type } = req.body;
+  if (!type || !['chat', 'exam'].includes(type)) {
+    return res.status(400).json({ error: 'Tipo inválido' });
+  }
+  
+  try {
+    const userId = req.user.id;
+    await resetDailyCounters(userId);
+    
+    const result = await pool.query(
+      `SELECT plan, chat_count, exam_count FROM usuarios WHERE google_id = $1`,
+      [userId]
+    );
+    const row = result.rows[0];
+    const isPremium = row.plan === 'premium';
+    const currentCount = type === 'chat' ? row.chat_count : row.exam_count;
+    const limit = type === 'chat' ? 10 : 3;
+    
+    if (!isPremium && currentCount >= limit) {
+      return res.json({ allowed: false, used: currentCount, limit });
+    }
+    
+    const field = type === 'chat' ? 'chat_count' : 'exam_count';
+    await pool.query(
+      `UPDATE usuarios SET ${field} = ${field} + 1 WHERE google_id = $1`,
+      [userId]
+    );
+    
+    res.json({ allowed: true, used: currentCount + 1, limit: isPremium ? null : limit });
+  } catch (err) {
+    console.error('Increment error:', err);
+    res.status(500).json({ error: 'Error incrementando contador' });
+  }
+});
 
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
@@ -190,12 +337,88 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No se encontrÃ³ JSON en la respuesta');
-    const plan = JSON.parse(jsonMatch[0]);
-    res.json({ plan, diasRestantes: diffDays });
+    if (jsonMatch) {
+      try {
+        const plan = JSON.parse(jsonMatch[0]);
+        return res.json({ plan, diasRestantes: diffDays });
+      } catch (parseErr) {
+        console.error('Plan JSON parse error:', parseErr.message);
+      }
+    }
+    // Fallback: devolver el texto plano como plan legible
+    return res.json({ planTexto: text, diasRestantes: diffDays, fallback: true });
   } catch (err) {
-    console.error('Plan error:', err);
+    console.error('Plan error:', err.message, err.stack);
+    console.error('Request body:', JSON.stringify(req.body).slice(0, 200));
     res.status(502).json({ error: 'Error al generar el plan de estudio.' });
+  }
+});
+
+app.post('/api/documentos/guardar', ensureAuthenticated, async (req, res) => {
+  if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
+  const { nombre, contenidoTexto, tamanio, paginas } = req.body;
+  if (!nombre || !contenidoTexto) return res.status(400).json({ error: 'nombre y contenidoTexto requeridos' });
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO documentos (usuario_id, nombre, contenido_texto, tamanio, paginas)
+       VALUES ((SELECT id FROM usuarios WHERE google_id = $1), $2, $3, $4, $5)
+       RETURNING id`,
+      [req.user.id, nombre, contenidoTexto, tamanio || 0, paginas || 0]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    console.error('Guardar documento error:', err);
+    res.status(500).json({ error: 'Error al guardar documento' });
+  }
+});
+
+app.get('/api/documentos', ensureAuthenticated, async (req, res) => {
+  if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
+
+  try {
+    const result = await pool.query(
+      `SELECT id, nombre, paginas, tamanio, created_at
+       FROM documentos WHERE usuario_id = (SELECT id FROM usuarios WHERE google_id = $1)
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ documentos: result.rows });
+  } catch (err) {
+    console.error('Listar documentos error:', err);
+    res.status(500).json({ error: 'Error al listar documentos' });
+  }
+});
+
+app.get('/api/documentos/:id', ensureAuthenticated, async (req, res) => {
+  if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
+
+  try {
+    const result = await pool.query(
+      `SELECT id, nombre, contenido_texto, paginas, tamanio, created_at
+       FROM documentos WHERE id = $1 AND usuario_id = (SELECT id FROM usuarios WHERE google_id = $2)`,
+      [req.params.id, req.user.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Documento no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Obtener documento error:', err);
+    res.status(500).json({ error: 'Error al obtener documento' });
+  }
+});
+
+app.delete('/api/documentos/:id', ensureAuthenticated, async (req, res) => {
+  if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
+
+  try {
+    await pool.query(
+      `DELETE FROM documentos WHERE id = $1 AND usuario_id = (SELECT id FROM usuarios WHERE google_id = $2)`,
+      [req.params.id, req.user.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Eliminar documento error:', err);
+    res.status(500).json({ error: 'Error al eliminar documento' });
   }
 });
 
