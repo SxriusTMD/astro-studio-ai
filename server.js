@@ -62,13 +62,16 @@ await pool.query(`
     console.log('⚠️ La app funcionará sin BD');
   }
 })();
+app.set('trust proxy', 1);
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'astro-studio-ai-dev-secret',
+  secret: process.env.SESSION_SECRET || "astro-studio-ai-dev-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: 'lax'
+    secure: true,       // 🔥 CLAVE
+    sameSite: "none"    // 🔥 CLAVE
   }
 }));
 app.use(passport.initialize());
