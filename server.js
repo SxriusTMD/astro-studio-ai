@@ -146,23 +146,57 @@ app.get('/api/me', (req, res) => {
 
 // Helper: call NVIDIA NIM API
 async function callNVIDIA(messages) {
-  const nvidiaRes = await fetch(NVIDIA_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.NVIDIA_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'google/gemma-4-31b-it',
-      messages
-    })
-  });
-  if (!nvidiaRes.ok) {
-    const errText = await nvidiaRes.text();
-    throw new Error(`NVIDIA API error (${nvidiaRes.status}): ${errText}`);
+  const maxRetries = 2;
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000);
+      
+      const nvidiaRes = await fetch(NVIDIA_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NVIDIA_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'google/gemma-4-31b-it',
+          messages
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      if (!nvidiaRes.ok) {
+        const errText = await nvidiaRes.text();
+        // Reintentar solo en errores 503
+        if (nvidiaRes.status === 503 && attempt < maxRetries) {
+          console.log(`NVIDIA API 503 - intento ${attempt + 1}, reintentando...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          continue;
+        }
+        throw new Error(`NVIDIA API error (${nvidiaRes.status}): ${errText}`);
+      }
+      
+      const data = await nvidiaRes.json();
+      return data.choices[0].message.content;
+    } catch (err) {
+      lastError = err;
+      // Si es AbortError o 503 y quedan reintentos
+      if (err.name === 'AbortError' || (err.message.includes('503') && attempt < maxRetries)) {
+        console.log(`NVIDIA API timeout/503 - intento ${attempt + 1}, reintentando...`);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          continue;
+        }
+      }
+      throw lastError;
+    }
   }
-  const data = await nvidiaRes.json();
-  return data.choices[0].message.content;
+  
+  throw lastError || new Error('NVIDIA API error después de reintentos');
 }
 
 // Helper: reset daily counters if needed
