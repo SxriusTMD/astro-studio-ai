@@ -89,18 +89,77 @@
       .app-container { padding: 0 12px; }
     }
 
-    /* ===== HEADER ===== */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      width: 100%;
-      background: rgba(10,10,26,0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+/* ===== HEADER ===== */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  background: rgba(10,10,26,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 60px;
+  bottom: 0;
+  width: 260px;
+  background: #080818;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  z-index: 100;
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.sidebar-header {
+  margin-bottom: 8px;
+}
+
+.new-chat-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(139,92,246,0.2);
+  border: 1px solid rgba(139,92,246,0.4);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.new-chat-btn:hover {
+  background: rgba(139,92,246,0.3);
+}
+
+.sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.session-item {
+  padding: 10px 14px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+  color: #ddd;
+}
+
+.session-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.session-item.active {
+  background: rgba(139,92,246,0.2);
+}
 
     .header-inner {
       max-width: 1400px;
@@ -198,9 +257,21 @@
       display: flex;
     }
 
-    body.unauthenticated .login-screen {
-      display: flex;
-    }
+body.unauthenticated .login-screen {
+  display: flex;
+}
+
+body.authenticated .sidebar {
+  display: flex;
+}
+
+body.authenticated .app-container {
+  margin-left: 260px;
+}
+
+body.unauthenticated .app-container {
+  margin-left: 0;
+}
 
     .login-screen {
       position: relative;
@@ -1898,6 +1969,14 @@
     <div class="plan-indicator" id="planIndicator"></div>
   </div>
 </header>
+
+<!-- Sidebar - Panel lateral izquierdo -->
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <button id="newChatBtn" class="new-chat-btn">+ Nueva sesión</button>
+  </div>
+  <div class="sidebar-list" id="sessionList"></div>
+</div>
 
 <!-- User Dropdown Menu - Fixed position -->
 <div id="userDropdown" class="user-dropdown" style="display:none;">
