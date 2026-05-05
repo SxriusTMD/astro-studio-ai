@@ -1584,20 +1584,20 @@ body:not(.sidebar-closed) .app-container {
 
     .history-overlay.open { opacity: 1; pointer-events: auto; }
 
-    .history-panel {
-      position: fixed;
-      top: 0;
-      right: -380px;
-      width: 360px;
-      height: 100vh;
-      background: var(--bg-card);
-      border-left: 1px solid var(--border);
-      z-index: 101;
-      transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-    }
+.history-panel {
+  position: fixed;
+  top: 0;
+  right: -380px;
+  width: 360px;
+  height: 100vh;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  z-index: 100000;
+  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
 
     .history-panel.open { right: 0; }
 
@@ -4464,8 +4464,9 @@ genSummary.addEventListener('click', async () => {
     }
 
 async function loadDocument(docId) {
-      closeLibrary();
       try {
+        document.getElementById('libraryPanel').classList.remove('open');
+        mostrarToast('⏳ Cargando documento...');
         const res = await fetch(`/api/documentos/${docId}`);
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
@@ -4477,6 +4478,7 @@ const doc = await res.json();
     // Verificar si ya está cargado
     const yaExiste = window.pdfDocs.some(d => d.name === doc.nombre);
     if (yaExiste) {
+      closeLibrary();
       mostrarToast('📄 Este documento ya está cargado');
       return;
     }
@@ -4507,12 +4509,14 @@ renderTabs();
     
     document.getElementById('dropZone').classList.add('collapsed');
         addChatMessage('ai', `📄 Documento "${doc.nombre}" cargado desde tu biblioteca.`);
+        closeLibrary();
       } catch (e) {
         console.error('Load document error:', e);
+        closeLibrary();
         alert('Error al cargar el documento: ' + e.message);
       }
-    }
-
+}
+    
     // Toast controls
     document.getElementById('toastSave').addEventListener('click', async () => {
       document.getElementById('toast').classList.remove('show');
