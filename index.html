@@ -151,6 +151,7 @@ header {
   transition: background 0.15s;
   font-size: 13px;
   color: #ddd;
+  position: relative;
 }
 
 .session-item:hover {
@@ -159,6 +160,51 @@ header {
 
 .session-item.active {
   background: rgba(139,92,246,0.2);
+}
+
+.session-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.session-date {
+  font-size: 11px;
+  color: #666;
+}
+
+.session-pdfs {
+  font-size: 11px;
+  color: #8b5cf6;
+  margin-top: 2px;
+}
+
+.session-delete {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.session-item:hover .session-delete {
+  opacity: 1;
+}
+
+.session-delete:hover {
+  color: #f87171;
+}
+
+.session-empty {
+  padding: 14px;
+  text-align: center;
+  color: #666;
+  font-size: 13px;
 }
 
     .header-inner {
@@ -2323,6 +2369,8 @@ body.unauthenticated .app-container {
     window.flashcardsData = null;
     window.planData = null;
     window.summaryData = null;
+    window.currentSessionId = null;
+    let saveDebounceTimer = null;
 
     // Fetch user limits on load
     async function fetchUserLimits() {
@@ -2463,6 +2511,195 @@ body.unauthenticated .app-container {
       
       if (restored) {
         mostrarToast('✅ Tu sesión anterior fue restaurada');
+      }
+    }
+
+    // ==========================================================
+    // CHAT SESSIONS - Historial
+    // ==========================================================
+    async function loadSessions() {
+      try {
+        const res = await fetch('/api/sessions', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        renderSessionList(data.sessions || []);
+      } catch(e) {
+        console.error('Load sessions error:', e);
+      }
+    }
+
+    function renderSessionList(sessions) {
+      const list = document.getElementById('sessionList');
+      if (!list) return;
+      
+      if (sessions.length === 0) {
+        list.innerHTML = '<div class="session-empty">Sin sesiones guardadas</div>';
+        return;
+      }
+      
+      list.innerHTML = sessions.map(session => {
+        const date = new Date(session.updated_at || session.created_at).toLocaleDateString('es-ES', { 
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+        const title = session.title ? session.title.substring(0, 30) : 'Sin título';
+        const pdfNames = session.pdfs && session.pdfs.length > 0 
+          ? session.pdfs.map(p => p.name).slice(0, 2).join(', ').substring(0, 30) + (session.pdfs.length > 2 ? '...' : '')
+          : '';
+        const isActive = window.currentSessionId === session.id;
+        
+        return `
+          <div class="session-item ${isActive ? 'active' : ''}" data-id="${session.id}">
+            <div class="session-title">${title}</div>
+            <div class="session-date">${date}</div>
+            ${pdfNames ? `<div class="session-pdfs">${pdfNames}</div>` : ''}
+            <button class="session-delete" data-id="${session.id}">✕</button>
+          </div>
+        `;
+      }).join('');
+      
+      // Event listeners
+      list.querySelectorAll('.session-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.classList.contains('session-delete')) return;
+          loadSession(item.dataset.id);
+        });
+      });
+      
+      list.querySelectorAll('.session-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteSession(btn.dataset.id);
+        });
+      });
+    }
+
+    async function loadSession(id) {
+      try {
+        const res = await fetch(`/api/sessions/${id}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const session = data.session || data;
+        
+        // Restaurar PDFs
+        window.pdfDocs = session.pdfs || [];
+        window.activeDocId = window.pdfDocs[0]?.id || null;
+        
+        // Restaurar mensajes del chat
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+          chatMessages.innerHTML = '';
+          if (session.messages && session.messages.length > 0) {
+            session.messages.forEach(msg => {
+              addChatMessage(msg.role, msg.text);
+            });
+          }
+        }
+        
+        // Renderizar tabs y actualizar UI
+        renderTabs();
+        window.currentSessionId = id;
+        
+        // Marcar sesión activa
+        document.querySelectorAll('.session-item').forEach(el => {
+          el.classList.toggle('active', el.dataset.id == id);
+        });
+      } catch (e) {
+        console.error('Load session error:', e);
+      }
+    }
+
+    async function saveCurrentSession() {
+      if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = setTimeout(async () => {
+        try {
+          // Obtener mensajes actuales
+          const chatMessages = document.getElementById('chatMessages');
+          const messages = [];
+          if (chatMessages) {
+            chatMessages.querySelectorAll('.message').forEach(msg => {
+              messages.push({
+                role: msg.classList.contains('user') ? 'user' : 'ai',
+                text: msg.textContent
+              });
+            });
+          }
+          
+          // Generar título
+          let title = 'Nueva sesión';
+          if (window.pdfDocs.length > 0) {
+            title = window.pdfDocs[0].name.replace(/\.pdf$/i, '');
+          } else if (messages.length > 0) {
+            title = messages[0].text.substring(0, 40);
+          }
+          
+          const payload = {
+            title,
+            messages,
+            pdfs: window.pdfDocs.map(doc => ({
+              id: doc.id,
+              name: doc.name,
+              content: doc.content,
+              pages: doc.pages
+            }))
+          };
+          
+          let res;
+          if (window.currentSessionId) {
+            res = await fetch(`/api/sessions/${window.currentSessionId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              credentials: 'include'
+            });
+          } else {
+            res = await fetch('/api/sessions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.id) {
+              window.currentSessionId = data.id;
+            }
+          }
+          
+          if (res.ok) {
+            loadSessions();
+          }
+        } catch (e) {
+          console.error('Save session error:', e);
+        }
+      }, 2000);
+    }
+
+    function newSession() {
+      window.pdfDocs = [];
+      window.activeDocId = null;
+      window.currentSessionId = null;
+      document.getElementById('chatMessages').innerHTML = '';
+      renderTabs();
+      document.getElementById('dropZone').classList.remove('collapsed');
+      document.querySelector('.tool-panel')?.classList.remove('visible');
+      loadSessions();
+    }
+
+    async function deleteSession(id) {
+      if (!confirm('¿Eliminar esta sesión?')) return;
+      try {
+        const res = await fetch(`/api/sessions/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        if (res.ok) {
+          if (window.currentSessionId === id) {
+            newSession();
+          } else {
+            loadSessions();
+          }
+        }
+      } catch (e) {
+        console.error('Delete session error:', e);
       }
     }
 
@@ -2943,14 +3180,17 @@ window.askAI = async function (prompt) {
     if (!res.ok) {
       throw new Error(`Proxy error (${res.status})`);
     }
-    const data = await res.json();
-    
+const data = await res.json();
+
     // Actualizar contador si viene en la respuesta
     if (data.chat_used !== undefined && window.userLimits) {
       window.userLimits.chat_used = data.chat_used;
       updatePlanIndicator();
     }
     
+    // Guardar sesión después de respuesta exitosa
+    saveCurrentSession();
+
     return data.text;
   } catch (err) {
     console.error('askAI error:', err);
@@ -3078,8 +3318,11 @@ window.askAI = async function (prompt) {
           userAvatar.style.display = 'none';
         }
 
-        document.body.classList.remove('auth-checking', 'unauthenticated');
-        document.body.classList.add('authenticated');
+document.body.classList.remove('auth-checking', 'unauthenticated');
+      document.body.classList.add('authenticated');
+      
+      // Cargar sesiones del usuario
+      loadSessions();
       } catch (err) {
         console.error('Auth check error:', err);
         document.body.classList.remove('auth-checking', 'authenticated');
@@ -3353,9 +3596,12 @@ if (data.cards && data.cards.length > 0) {
       // Mostrar panel
       toolPanel.classList.add('visible');
 
-      renderTabs();
+renderTabs();
 
-      // Mensaje de bienvenida en el chat
+    // Guardar sesión después de cargar PDF
+    saveCurrentSession();
+
+    // Mensaje de bienvenida en el chat
       chatMessages.innerHTML = '';
       addChatMessage('ai', `📄 He procesado exitosamente "${file.name}" (${total} páginas, ${words.length.toLocaleString()} palabras). ¡Hazme cualquier pregunta sobre tus apuntes!`);
 
@@ -4078,8 +4324,12 @@ const doc = await res.json();
         document.getElementById('statReadTime').textContent = Math.max(1, Math.round(allWords.length / 200)) + ' min';
         document.getElementById('toolPanel').classList.add('visible');
         document.getElementById('chatMessages').innerHTML = '';
-        renderTabs();
-        document.getElementById('dropZone').classList.add('collapsed');
+renderTabs();
+    
+    // Guardar sesión después de cargar PDF desde biblioteca
+    saveCurrentSession();
+    
+    document.getElementById('dropZone').classList.add('collapsed');
         addChatMessage('ai', `📄 Documento "${doc.nombre}" cargado desde tu biblioteca.`);
       } catch (e) {
         console.error('Load document error:', e);
@@ -4144,6 +4394,9 @@ const doc = await res.json();
     document.getElementById('exportSummary').addEventListener('click', exportSummaryPDF);
     document.getElementById('exportPlan').addEventListener('click', exportPlanPDF);
     document.getElementById('exportAllBtn').addEventListener('click', exportAllPDF);
+
+    // Chat sessions
+    document.getElementById('newChatBtn').addEventListener('click', newSession);
 
     console.log('🚀 Astro Studio AI — IA conectada');
     console.log('🤖 Modelo: Gemma-4-31B-IT via NVIDIA NIM');
