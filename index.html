@@ -2612,17 +2612,25 @@ body.unauthenticated .app-container {
       if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
       saveDebounceTimer = setTimeout(async () => {
         try {
-          // Obtener mensajes actuales
+          // Obtener mensajes actuales (solo usuario e IA, no sistema)
           const chatMessages = document.getElementById('chatMessages');
           const messages = [];
           if (chatMessages) {
             chatMessages.querySelectorAll('.message').forEach(msg => {
-              messages.push({
-                role: msg.classList.contains('user') ? 'user' : 'ai',
-                text: msg.textContent
-              });
+              const isUser = msg.classList.contains('user');
+              const isAI = msg.classList.contains('ai');
+              // Solo guardar mensajes reales de usuario e IA, no loading ni sistema
+              if (isUser || (isAI && !msg.classList.contains('loading'))) {
+                messages.push({
+                  role: isUser ? 'user' : 'ai',
+                  text: msg.textContent
+                });
+              }
             });
           }
+          
+          // Debug: verificar qué se está guardando
+          console.log('💾 Guardando sesión:', { messagesCount: messages.length, messages });
           
           // Generar título
           let title = 'Nueva sesión';
@@ -2642,6 +2650,8 @@ body.unauthenticated .app-container {
               pages: doc.pages
             }))
           };
+          
+          console.log('📦 Payload:', payload);
           
           let res;
           if (window.currentSessionId) {

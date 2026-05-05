@@ -500,17 +500,23 @@ app.get('/api/sessions', ensureAuthenticated, async (req, res) => {
 
 app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
-  
+
   try {
     const result = await pool.query(
-      `SELECT * FROM chat_sessions 
+      `SELECT * FROM chat_sessions
        WHERE id = $1 AND google_id = $2`,
       [req.params.id, req.user.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Sesión no encontrada' });
     }
-    res.json(result.rows[0]);
+    const session = result.rows[0];
+    console.log('📤 GET session:', { 
+      id: session.id, 
+      messagesCount: session.messages?.length,
+      messages: session.messages?.slice(0, 3)
+    });
+    res.json({ session });
   } catch (err) {
     console.error('Get session error:', err);
     res.status(500).json({ error: 'Error al obtener sesión' });
@@ -519,13 +525,19 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
 
 app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
-  
+
   const { title, messages, pdfs } = req.body;
   
+  console.log('📥 POST /api/sessions', { 
+    title, 
+    messagesCount: messages?.length,
+    messages: messages?.slice(0, 3)
+  });
+
   try {
     const result = await pool.query(
-      `INSERT INTO chat_sessions (google_id, title, messages, pdfs) 
-       VALUES ($1, $2, $3, $4) 
+      `INSERT INTO chat_sessions (google_id, title, messages, pdfs)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
       [req.user.id, title, JSON.stringify(messages || []), JSON.stringify(pdfs || [])]
     );
@@ -538,13 +550,20 @@ app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
 
 app.put('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
-  
+
   const { messages, pdfs, title } = req.body;
   
+  console.log('📥 PUT /api/sessions/:id', { 
+    id: req.params.id, 
+    messagesCount: messages?.length, 
+    messages: messages?.slice(0, 3), // primeros 3 mensajes
+    title 
+  });
+
   try {
     await pool.query(
-      `UPDATE chat_sessions 
-       SET messages = $1, pdfs = $2, updated_at = NOW(), title = $3 
+      `UPDATE chat_sessions
+       SET messages = $1, pdfs = $2, updated_at = NOW(), title = $3
        WHERE id = $4 AND google_id = $5`,
       [JSON.stringify(messages), JSON.stringify(pdfs), title, req.params.id, req.user.id]
     );
