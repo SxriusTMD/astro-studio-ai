@@ -626,20 +626,21 @@ body.unauthenticated .app-container {
 
     /* ===== DROP ZONE ===== */
 .drop-zone {
-      position: relative;
-      border: 2px dashed var(--border);
-      border-radius: var(--radius);
-      padding: 12px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: var(--bg-card);
-      overflow-y: auto;
-      overflow-x: hidden;
-      flex-shrink: 0;
-      min-height: 180px;
-      max-height: 200px;
-    }
+  position: relative;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--bg-card);
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  min-height: 180px;
+  max-height: 200px;
+  margin: 0 auto;
+}
 
     .drop-zone.collapsed {
       min-height: 0;
