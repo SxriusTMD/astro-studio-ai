@@ -5,12 +5,25 @@ const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = 3000;
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 app.use(express.json());
+
+
+// Nodemailer transport (Gmail SMTP)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // PostgreSQL
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -68,6 +81,19 @@ await pool.query(`
   )
   `);
     console.log('✅ Tablas creadas/verificadas');
+    
+    // Migración: columnas para auth por email
+    try {
+      await pool.query(`ALTER TABLE usuarios ALTER COLUMN google_id DROP NOT NULL`);
+      await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`);
+      await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255)`);
+      await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false`);
+      await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(255) UNIQUE`);
+      await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS auth_method VARCHAR(50) DEFAULT 'google'`);
+      console.log('✅ Migración email auth completada');
+    } catch (err) {
+      console.error('⚠️ Migración email auth:', err.message);
+    }
   } catch (err) {
     console.error('⚠️ PostgreSQL no disponible:', err.message);
     console.log('⚠️ La app funcionará sin BD');
@@ -153,6 +179,154 @@ app.get('/auth/logout', (req, res, next) => {
 
 app.get('/api/me', (req, res) => {
   res.json({ user: req.user || null });
+});
+
+// ===== EMAIL/PASSWORD AUTH ENDPOINTS =====
+
+// POST /api/auth/register - Paso 1: crear cuenta con email + password
+app.post('/api/auth/register', async (req, res) => {
+  if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return res.status(400).json({ error: 'Formato de email inválido' });
+  if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+
+  try {
+    const existente = await pool.query(`SELECT id FROM usuarios WHERE email = $1`, [email]);
+    if (existente.rows.length > 0) return res.status(409).json({ error: 'Este email ya está registrado' });
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const verification_token = crypto.randomBytes(32).toString('hex');
+
+    await pool.query(`
+      INSERT INTO usuarios (google_id, email, password_hash, verification_token, is_verified, auth_method, nombre)
+      VALUES ($1, $2, $3, $4, false, 'email', $5)
+    `, [crypto.randomUUID(), email, password_hash, verification_token, email.split('@')[0]]);
+
+    // Enviar correo de verificación
+    const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
+    await transporter.sendMail({
+      from: `"Astro Studio AI" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Verifica tu correo - Astro Studio AI',
+      html: `
+        <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
+          <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+          <h1 style="color:#8b5cf6;">Astro Studio AI</h1>
+          <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botón para verificar tu correo:</p>
+          <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
+          <p style="margin-top:24px;font-size:13px;color:#9090b8;">Si no creaste esta cuenta, ignora este mensaje.</p>
+        </div>
+      `
+    });
+
+    res.json({ ok: true, message: 'Revisa tu correo para verificar la cuenta' });
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'Error al registrar' });
+  }
+});
+
+// GET /api/auth/verify-email?token=xxx - Paso 2: verificar correo
+app.get('/api/auth/verify-email', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).send('Token requerido');
+
+  try {
+    const result = await pool.query(
+      `SELECT id FROM usuarios WHERE verification_token = $1 AND is_verified = false`,
+      [token]
+    );
+    if (result.rows.length === 0) return res.status(400).send('Token inválido o ya verificado');
+
+    await pool.query(
+      `UPDATE usuarios SET is_verified = true, verification_token = NULL WHERE id = $1`,
+      [result.rows[0].id]
+    );
+
+    res.redirect('/?verified=true');
+  } catch (err) {
+    console.error('Verify error:', err);
+    res.status(500).send('Error al verificar');
+  }
+});
+
+// POST /api/auth/login - Iniciar sesión con email + password
+app.post('/api/auth/login', async (req, res) => {
+  if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+
+  try {
+    const result = await pool.query(
+      `SELECT id, google_id, email, password_hash, is_verified, username, nombre, foto FROM usuarios WHERE email = $1 AND auth_method = 'email'`,
+      [email]
+    );
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales inválidas' });
+
+    const user = result.rows[0];
+    if (!user.is_verified) return res.status(403).json({ error: 'Correo no verificado', needsVerification: true });
+    if (!user.password_hash) return res.status(401).json({ error: 'Credenciales inválidas' });
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: 'Credenciales inválidas' });
+
+    const needsUsername = !user.username;
+
+    req.login({
+      id: user.google_id,
+      email: user.email,
+      displayName: user.username || user.nombre || email.split('@')[0],
+      photo: user.foto || '',
+      authMethod: 'email',
+      dbId: user.id,
+      needsUsername
+    }, (err) => {
+      if (err) return res.status(500).json({ error: 'Error al iniciar sesión' });
+      res.json({ ok: true, needsUsername });
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Error al iniciar sesión' });
+  }
+});
+
+// GET /api/auth/check-username?username=xxx - Verificar disponibilidad
+app.get('/api/auth/check-username', async (req, res) => {
+  const { username } = req.query;
+  if (!username || username.length < 3) return res.json({ available: false });
+  try {
+    const result = await pool.query(`SELECT id FROM usuarios WHERE username = $1`, [username]);
+    res.json({ available: result.rows.length === 0 });
+  } catch (err) {
+    res.json({ available: false });
+  }
+});
+
+// POST /api/auth/set-username - Establecer username (requiere auth)
+app.post('/api/auth/set-username', ensureAuthenticated, async (req, res) => {
+  const { username } = req.body;
+  if (!username || username.length < 3) return res.status(400).json({ error: 'El username debe tener al menos 3 caracteres' });
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Solo letras, números y guión bajo' });
+
+  try {
+    const duplicado = await pool.query(`SELECT id FROM usuarios WHERE username = $1`, [username]);
+    if (duplicado.rows.length > 0) return res.status(409).json({ error: 'Este nombre de usuario ya está en uso' });
+
+    await pool.query(
+      `UPDATE usuarios SET username = $1, nombre = $1 WHERE google_id = $2`,
+      [username, req.user.id]
+    );
+
+    req.user.displayName = username;
+    req.user.needsUsername = false;
+
+    res.json({ ok: true, username });
+  } catch (err) {
+    console.error('Set username error:', err);
+    res.status(500).json({ error: 'Error al establecer username' });
+  }
 });
 
 // Helper: call NVIDIA NIM API

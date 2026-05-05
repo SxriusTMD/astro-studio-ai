@@ -448,6 +448,95 @@ body:not(.sidebar-closed) .app-container {
       font-family: Arial, sans-serif;
     }
 
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border-radius: var(--radius-xs);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .auth-tab.active {
+      background: var(--accent-purple);
+      color: #fff;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+      box-sizing: border-box;
+    }
+    .auth-input:focus {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .auth-input::placeholder { color: var(--text-muted); }
+
+    .auth-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-xs);
+      background: var(--gradient-primary);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .auth-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .auth-msg {
+      font-size: 13px;
+      min-height: 0;
+      transition: var(--transition);
+    }
+    .auth-msg.error { color: #f87171; }
+    .auth-msg.success { color: #34d399; }
+
     .user-menu {
       display: flex;
       align-items: center;
@@ -2090,16 +2179,54 @@ body:not(.sidebar-closed) .app-container {
 
   <main class="login-screen" id="loginScreen">
 
-    <div class="login-content">
-      <div class="login-logo">🚀</div>
-      <div class="login-title">Astro Studio AI</div>
-      <div class="login-tagline">Tu asistente de estudio inteligente</div>
-      <a href="/auth/google" class="google-login-btn">
-        <span class="google-icon">G</span>
-        Iniciar sesión con Google
-      </a>
-</div>
-</div>
+  <div class="login-content" id="loginContent">
+    <div class="login-logo">🚀</div>
+    <div class="login-title">Astro Studio AI</div>
+    <div class="login-tagline">Tu asistente de estudio inteligente</div>
+
+    <!-- Google login -->
+    <a href="/auth/google" class="google-login-btn">
+      <span class="google-icon">G</span>
+      Iniciar sesión con Google
+    </a>
+
+    <div class="login-divider"><span>o</span></div>
+
+    <!-- Tabs: Login | Register -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" data-tab="login">Iniciar sesión</button>
+      <button class="auth-tab" id="tabRegister" data-tab="register">Registrarse</button>
+    </div>
+
+    <!-- Login form -->
+    <form class="auth-form" id="loginForm">
+      <input type="email" class="auth-input" id="loginEmail" placeholder="Correo electrónico" autocomplete="email" required>
+      <input type="password" class="auth-input" id="loginPass" placeholder="Contraseña" autocomplete="current-password" required>
+      <div class="auth-msg" id="loginMsg"></div>
+      <button type="submit" class="auth-btn" id="loginBtn">Iniciar sesión</button>
+    </form>
+
+    <!-- Register form -->
+    <form class="auth-form" id="registerForm" style="display:none">
+      <input type="email" class="auth-input" id="regEmail" placeholder="Correo electrónico" autocomplete="email" required>
+      <input type="password" class="auth-input" id="regPass" placeholder="Contraseña (mín. 6 caracteres)" autocomplete="new-password" required>
+      <input type="password" class="auth-input" id="regPassConfirm" placeholder="Confirmar contraseña" autocomplete="new-password" required>
+      <div class="auth-msg" id="regMsg"></div>
+      <button type="submit" class="auth-btn" id="regBtn">Crear cuenta</button>
+    </form>
+  </div>
+
+  <!-- Username setup (shown after verification) -->
+  <div class="login-content" id="usernameContent" style="display:none">
+    <div class="login-logo">🚀</div>
+    <div class="login-title">Elige tu nombre de usuario</div>
+    <div class="login-tagline">Este será tu identificador único en Astro Studio AI</div>
+    <form class="auth-form" id="usernameForm">
+      <input type="text" class="auth-input" id="usernameInput" placeholder="Nombre de usuario" autocomplete="username" required>
+      <div class="auth-msg" id="usernameMsg"></div>
+      <button type="submit" class="auth-btn" id="usernameBtn">Confirmar</button>
+    </form>
+  </div>
 </main>
 
 <!-- ===== UPGRADE MODAL ===== -->
@@ -3439,8 +3566,17 @@ async function initAuth() {
       if (!data.user) {
         document.body.classList.remove('auth-checking', 'authenticated');
         document.body.classList.add('unauthenticated');
-        // Ocultar sidebar cuando no está autenticado
         if (sidebar) sidebar.style.display = 'none';
+        showLoginScreen();
+        return;
+      }
+
+      // Email user needs to set username
+      if (data.user.needsUsername) {
+        document.body.classList.remove('auth-checking', 'authenticated');
+        document.body.classList.add('unauthenticated');
+        if (sidebar) sidebar.style.display = 'none';
+        showUsernameScreen();
         return;
       }
 
@@ -3505,6 +3641,120 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarToggleBtn.addEventListener('click', toggleSidebar);
   }
 });
+
+// ===== EMAIL/PASSWORD AUTH UI =====
+
+function showLoginScreen() {
+  document.getElementById('loginContent').style.display = 'block';
+  document.getElementById('usernameContent').style.display = 'none';
+}
+
+function showUsernameScreen() {
+  document.getElementById('loginContent').style.display = 'none';
+  document.getElementById('usernameContent').style.display = 'block';
+}
+
+// Tab switching
+document.getElementById('tabLogin').addEventListener('click', () => {
+  document.getElementById('tabLogin').classList.add('active');
+  document.getElementById('tabRegister').classList.remove('active');
+  document.getElementById('loginForm').style.display = 'flex';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginMsg').textContent = '';
+  document.getElementById('regMsg').textContent = '';
+});
+document.getElementById('tabRegister').addEventListener('click', () => {
+  document.getElementById('tabRegister').classList.add('active');
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('registerForm').style.display = 'flex';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('loginMsg').textContent = '';
+  document.getElementById('regMsg').textContent = '';
+});
+
+// Login form
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Iniciando sesión...';
+  msg.className = 'auth-msg'; msg.textContent = '';
+  try {
+    const res = await fetch('/api/auth/login', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+    const data = await res.json();
+    if (!res.ok) {
+      if (data.needsVerification) { msg.className='auth-msg error'; msg.textContent='Correo no verificado. Revisa tu bandeja de entrada.'; return; }
+      throw new Error(data.error || 'Error al iniciar sesión');
+    }
+    if (data.needsUsername) { window.location.reload(); return; }
+    window.location.reload();
+  } catch (err) {
+    msg.className='auth-msg error'; msg.textContent=err.message;
+  } finally { btn.disabled=false; btn.textContent='Iniciar sesión'; }
+});
+
+// Register form
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPass').value;
+  const confirm = document.getElementById('regPassConfirm').value;
+  const msg = document.getElementById('regMsg');
+  const btn = document.getElementById('regBtn');
+  if (password !== confirm) { msg.className='auth-msg error'; msg.textContent='Las contraseñas no coinciden'; return; }
+  btn.disabled = true; btn.textContent = 'Creando cuenta...';
+  msg.className = 'auth-msg'; msg.textContent = '';
+  try {
+    const res = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al registrar');
+    msg.className='auth-msg success'; msg.textContent='✅ Revisa tu correo para verificar la cuenta.';
+    document.getElementById('regEmail').value=''; document.getElementById('regPass').value=''; document.getElementById('regPassConfirm').value='';
+  } catch (err) {
+    msg.className='auth-msg error'; msg.textContent=err.message;
+  } finally { btn.disabled=false; btn.textContent='Crear cuenta'; }
+});
+
+// Username form
+document.getElementById('usernameForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('usernameInput').value.trim();
+  const msg = document.getElementById('usernameMsg');
+  const btn = document.getElementById('usernameBtn');
+  if (username.length < 3) { msg.className='auth-msg error'; msg.textContent='Mínimo 3 caracteres'; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { msg.className='auth-msg error'; msg.textContent='Solo letras, números y _'; return; }
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  msg.className = 'auth-msg'; msg.textContent = '';
+  try {
+    const res = await fetch('/api/auth/set-username', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username}) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    window.location.reload();
+  } catch (err) {
+    msg.className='auth-msg error'; msg.textContent=err.message;
+  } finally { btn.disabled=false; btn.textContent='Confirmar'; }
+});
+
+// Real-time username availability check
+document.getElementById('usernameInput').addEventListener('input', async (e) => {
+  const val = e.target.value.trim();
+  const msg = document.getElementById('usernameMsg');
+  if (val.length < 3) { msg.className='auth-msg'; msg.textContent=''; return; }
+  try {
+    const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(val)}`);
+    const data = await res.json();
+    msg.className = data.available ? 'auth-msg success' : 'auth-msg error';
+    msg.textContent = data.available ? '✅ Disponible' : '❌ No disponible';
+  } catch { /* ignore */ }
+});
+
+// Check if returning from email verification
+if (window.location.search.includes('verified=true')) {
+  document.getElementById('loginMsg').className = 'auth-msg success';
+  document.getElementById('loginMsg').textContent = '✅ Correo verificado. Ahora inicia sesión.';
+}
 
 logoutBtn.addEventListener('click', () => {
       clearStorage();
