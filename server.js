@@ -292,7 +292,7 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
 
-  const systemInstruction = 'Eres un asistente de estudio universitario. Tienes acceso al siguiente documento del estudiante. Responde siempre en español, de forma clara y concisa, citando partes relevantes del documento cuando sea útil.';
+  const systemInstruction = 'Eres un asistente de estudio universitario. Tienes acceso al siguiente documento del estudiante. Responde siempre en español, de forma clara y concisa, citando partes relevantes del documento cuando sea útil. FORMATO DE CITAS: Usa exclusivamente corchetes con el número del documento, por ejemplo [1], [2]. Está prohibido escribir el nombre completo del archivo o su extensión en el cuerpo del texto. Al final de tu respuesta, incluye una leyenda con la correspondencia: [1] Nombre simplificado del documento, [2] Otro documento, etc.';
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
