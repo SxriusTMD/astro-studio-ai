@@ -247,6 +247,25 @@ header {
   margin-right: 8px;
 }
 
+#sidebarToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(108, 59, 210, 0.2);
+  border: 1px solid rgba(108, 59, 210, 0.4);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+#sidebarToggle:hover {
+  background: rgba(108, 59, 210, 0.3);
+  border-color: rgba(108, 59, 210, 0.6);
+}
+
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -347,10 +366,6 @@ body:not(.sidebar-closed) .sidebar {
 
 body:not(.sidebar-closed) .app-container {
   margin-left: 260px;
-}
-
-body.authenticated .sidebar {
-  display: flex;
 }
 
 body.authenticated .app-container {
@@ -1566,16 +1581,16 @@ body.unauthenticated .app-container {
 
     .exam-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
 
-    /* ===== HISTORY PANEL ===== */
-    .history-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
+/* ===== HISTORY PANEL ===== */
+.history-overlay {
+  position: fixed !important;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 99999 !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
 
     .history-overlay.open { opacity: 1; pointer-events: auto; }
 
@@ -2093,14 +2108,48 @@ body.unauthenticated .app-container {
         <span class="google-icon">G</span>
         Iniciar sesión con Google
       </a>
-    </div>
-  </main>
+</div>
+</div>
+</main>
+
+<!-- ===== UPGRADE MODAL ===== -->
+<div class="history-overlay" id="upgradeOverlay">
+<div class="upgrade-modal">
+<div class="upgrade-header">
+<h2>🚀 Desbloquea todo con Premium</h2>
+<button id="closeUpgrade">✕</button>
+</div>
+<p class="upgrade-desc" id="upgradeDesc">Alcanzaste tu límite gratuito.</p>
+
+<div class="upgrade-compare">
+<table class="upgrade-table">
+<thead>
+<tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
+</thead>
+<tbody>
+<tr><td>PDFs simultáneos</td><td>3</td><td>Ilimitados</td></tr>
+<tr><td>Chat por día</td><td>10</td><td>Ilimitado</td></tr>
+<tr><td>Exámenes por día</td><td>3</td><td>Ilimitado</td></tr>
+<tr><td>Flashcards</td><td>✅</td><td>✅</td></tr>
+<tr><td>Resumen</td><td>✅</td><td>✅</td></tr>
+<tr><td>Plan de Estudio</td><td>✅</td><td>✅</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="upgrade-actions">
+<button class="btn btn-primary" id="getPremiumBtn">⭐ Obtener Premium — $X/mes</button>
+<button class="btn btn-secondary" id="backFreeBtn">Volver al límite gratuito</button>
+</div>
+</div>
+</div>
 
 <!-- ===== HEADER ===== -->
 <header>
-  <div class="header-inner">
-    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
-    <div class="logo-section">
+<div class="header-inner">
+  <button class="btn btn-secondary btn-small" id="sidebarToggle" type="button" title="Alternar sidebar" style="margin-right:10px;">☰</button>
+  <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
+  <div class="logo-section">
       <div class="logo-icon">🚀</div>
       <div>
         <div class="logo-text">Astro Studio AI</div>
@@ -2131,7 +2180,7 @@ body.unauthenticated .app-container {
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <!-- Sidebar - Panel lateral izquierdo -->
-<div id="sidebar" class="sidebar">
+<div id="sidebar" class="sidebar" style="display:none">
   <div class="sidebar-header">
     <button id="newChatBtn" class="new-chat-btn">+ Nueva sesión</button>
   </div>
@@ -2418,45 +2467,13 @@ body.unauthenticated .app-container {
       <div class="history-panel-header">
         <h3>📚 Mi Biblioteca</h3>
         <button id="closeLibrary">✕</button>
-      </div>
-      <div class="history-list" id="libraryList">
-        <div class="history-empty">Aún no hay documentos guardados.</div>
-      </div>
-    </div>
+</div>
+<div class="history-list" id="libraryList">
+<div class="history-empty">Aún no hay documentos guardados.</div>
+</div>
+</div>
 
-    <!-- ===== UPGRADE MODAL ===== -->
-    <div class="history-overlay" id="upgradeOverlay">
-      <div class="upgrade-modal">
-        <div class="upgrade-header">
-          <h2>🚀 Desbloquea todo con Premium</h2>
-          <button id="closeUpgrade">✕</button>
-        </div>
-        <p class="upgrade-desc" id="upgradeDesc">Alcanzaste tu límite gratuito.</p>
-        
-        <div class="upgrade-compare">
-          <table class="upgrade-table">
-            <thead>
-              <tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>PDFs simultáneos</td><td>3</td><td>Ilimitados</td></tr>
-              <tr><td>Chat por día</td><td>10</td><td>Ilimitado</td></tr>
-              <tr><td>Exámenes por día</td><td>3</td><td>Ilimitado</td></tr>
-              <tr><td>Flashcards</td><td>✅</td><td>✅</td></tr>
-              <tr><td>Resumen</td><td>✅</td><td>✅</td></tr>
-              <tr><td>Plan de Estudio</td><td>✅</td><td>✅</td></tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="upgrade-actions">
-          <button class="btn btn-primary" id="getPremiumBtn">⭐ Obtener Premium — $X/mes</button>
-          <button class="btn btn-secondary" id="backFreeBtn">Volver al límite gratuito</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== FOOTER ===== -->
+<!-- ===== FOOTER ===== -->
     <footer>
       Astro Studio AI — Construido para estudiantes que van en serio 🚀
     </footer>
@@ -3455,10 +3472,10 @@ async function initAuth() {
         // Por defecto abierto si no hay estado guardado
         if (sidebarOpen === null || sidebarOpen === 'true') {
           sidebar.style.display = 'flex';
-          document.body.classList.remove('sidebar-closed');
+          document.querySelector('.app-container').style.marginLeft = '260px';
         } else {
           sidebar.style.display = 'none';
-          document.body.classList.add('sidebar-closed');
+          document.querySelector('.app-container').style.marginLeft = '0';
         }
       }
 
@@ -3471,9 +3488,37 @@ async function initAuth() {
       const sidebar = document.getElementById('sidebar');
       if (sidebar) sidebar.style.display = 'none';
     }
-  }
+}
 
-    logoutBtn.addEventListener('click', () => {
+// Toggle sidebar function
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const appContainer = document.querySelector('.app-container');
+  
+  if (!sidebar || !appContainer) return;
+  
+  const isOpen = sidebar.style.display === 'flex';
+  
+  if (isOpen) {
+    sidebar.style.display = 'none';
+    appContainer.style.marginLeft = '0';
+    localStorage.setItem('sidebarOpen', 'false');
+  } else {
+    sidebar.style.display = 'flex';
+    appContainer.style.marginLeft = '260px';
+    localStorage.setItem('sidebarOpen', 'true');
+  }
+}
+
+// Event listener for sidebar toggle button
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebarToggleBtn = document.getElementById('sidebarToggle');
+  if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', toggleSidebar);
+  }
+});
+
+logoutBtn.addEventListener('click', () => {
       clearStorage();
       window.location.href = '/auth/logout';
     });
