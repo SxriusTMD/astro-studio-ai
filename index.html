@@ -224,17 +224,41 @@ header {
       gap: 12px;
     }
 
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: var(--gradient-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 0 20px rgba(108, 59, 210, 0.3);
-    }
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 0 20px rgba(108, 59, 210, 0.3);
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-right: 8px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
+  backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.open {
+  display: block;
+}
 
     .logo-text {
       font-family: 'Space Grotesk', sans-serif;
@@ -1868,34 +1892,99 @@ body.unauthenticated .app-container {
       border-color: rgba(255,255,255,0.2);
     }
 
-    /* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-      header .header-inner {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 8px 12px;
-      }
-
-      .status-badge { align-self: flex-start; }
-
-      .drop-zone { padding: 10px 14px; min-height: 150px; max-height: 160px; }
-      .drop-zone.collapsed { padding: 0 14px; }
-      .drop-zone .upload-icon { font-size: 28px; margin-bottom: 4px; }
-      .drop-zone h3 { font-size: 15px; }
-      .drop-zone p { font-size: 12px; margin-bottom: 8px; }
-
-      .tabs { gap: 2px; padding: 6px 4px 0; }
-
-      .tab-btn { padding: 8px 10px; font-size: 11px; }
-
-      .chat-messages { height: auto; min-height: 100px; }
-
-.message.user { max-width: 85%; }
-.message.ai { max-width: 90%; }
-
-.flashcard-container { max-width: 280px; min-height: 260px; }
-
-.flashcard-face .card-question { font-size: 16px; }
+  /* Header - mostrar hamburguesa */
+  .menu-toggle {
+    display: block;
+  }
+  
+  header .header-inner {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+  
+  .logo-section {
+    flex: 1;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .tagline {
+    display: none;
+  }
+  
+  /* Ocultar botones secundarios en header */
+  #libraryBtn, #historyBtn, #exportAllBtn {
+    display: none;
+  }
+  
+  /* Sidebar como drawer en móvil */
+  .sidebar {
+    width: 80%;
+    max-width: 300px;
+    right: -300px;
+    left: auto;
+    top: 60px;
+    transition: right 0.3s ease;
+  }
+  
+  .sidebar.open {
+    right: 0;
+  }
+  
+  /* App container sin margen en móvil */
+  body.authenticated .app-container {
+    margin-left: 0;
+  }
+  
+  /* Tabs con scroll horizontal */
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab-btn {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  /* Chat input pegado al fondo */
+  .chat-input-container {
+    position: sticky;
+    bottom: 0;
+  }
+  
+  .message.user {
+    max-width: 90%;
+  }
+  
+  .message.ai {
+    max-width: 90%;
+  }
+  
+  /* Stats responsive */
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Flashcards más pequeñas */
+  .flashcard-container {
+    max-width: 100%;
+    min-height: 200px;
+  }
+  
+  .flashcard-face .card-question {
+    font-size: 14px;
+  }
+  
+  .flashcard-face .card-answer {
+    font-size: 14px;
+  }
 
       .study-plan-form input,
       .study-plan-form select { min-width: 100%; }
@@ -1986,17 +2075,18 @@ body.unauthenticated .app-container {
     </div>
   </main>
 
-  <!-- ===== HEADER ===== -->
-  <header>
-    <div class="header-inner">
-      <div class="logo-section">
-        <div class="logo-icon">🚀</div>
-        <div>
-          <div class="logo-text">Astro Studio AI</div>
-          <div class="tagline">Tu asistente de estudio inteligente</div>
-        </div>
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="header-inner">
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
+    <div class="logo-section">
+      <div class="logo-icon">🚀</div>
+      <div>
+        <div class="logo-text">Astro Studio AI</div>
+        <div class="tagline">Tu asistente de estudio inteligente</div>
       </div>
-<div style="display:flex;align-items:center;gap:10px;">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
       <div class="user-menu" id="userMenu">
         <div class="user-avatar-container" id="userAvatarContainer">
           <img class="user-avatar" id="userAvatar" alt="">
@@ -2015,6 +2105,9 @@ body.unauthenticated .app-container {
     <div class="plan-indicator" id="planIndicator"></div>
   </div>
 </header>
+
+<!-- Sidebar Overlay (móvil) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <!-- Sidebar - Panel lateral izquierdo -->
 <div id="sidebar" class="sidebar">
@@ -4407,6 +4500,34 @@ renderTabs();
 
     // Chat sessions
     document.getElementById('newChatBtn').addEventListener('click', newSession);
+    
+    // Mobile menu toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (menuToggle && sidebar && sidebarOverlay) {
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('open');
+      });
+      
+      // Cerrar al hacer click en overlay
+      sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      });
+      
+      // Cerrar al cargar una sesión
+      document.querySelectorAll('.session-item').forEach(item => {
+        item.addEventListener('click', () => {
+          if (window.innerWidth <= 768) {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+          }
+        });
+      });
+    }
 
     console.log('🚀 Astro Studio AI — IA conectada');
     console.log('🤖 Modelo: Gemma-4-31B-IT via NVIDIA NIM');
