@@ -1778,19 +1778,19 @@ body.unauthenticated .app-container {
       display: none;
     }
 
-    /* ===== UPGRADE MODAL ===== */
-    .upgrade-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 300;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
+/* ===== UPGRADE MODAL ===== */
+.upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
 
     .upgrade-overlay.open {
       display: flex;
