@@ -3421,38 +3421,57 @@ const data = await res.json();
       const statChars = document.getElementById('statChars');
       const statReadTime = document.getElementById('statReadTime');
 
-    async function initAuth() {
-      try {
-        const res = await fetch('/api/me', {
-          credentials: 'include'
-        });
-        const data = await res.json();
+async function initAuth() {
+    try {
+      const res = await fetch('/api/me', {
+        credentials: 'include'
+      });
+      const data = await res.json();
 
-        if (!data.user) {
-          document.body.classList.remove('auth-checking', 'authenticated');
-          document.body.classList.add('unauthenticated');
-          return;
-        }
+      const sidebar = document.getElementById('sidebar');
 
-        userName.textContent = data.user.displayName || data.user.email || 'Usuario';
-        if (data.user.photo) {
-          userAvatar.src = data.user.photo;
-          userAvatar.style.display = 'block';
-        } else {
-          userAvatar.style.display = 'none';
-        }
-
-document.body.classList.remove('auth-checking', 'unauthenticated');
-      document.body.classList.add('authenticated');
-      
-      // Cargar sesiones del usuario
-      loadSessions();
-      } catch (err) {
-        console.error('Auth check error:', err);
+      if (!data.user) {
         document.body.classList.remove('auth-checking', 'authenticated');
         document.body.classList.add('unauthenticated');
+        // Ocultar sidebar cuando no está autenticado
+        if (sidebar) sidebar.style.display = 'none';
+        return;
       }
+
+      userName.textContent = data.user.displayName || data.user.email || 'Usuario';
+      if (data.user.photo) {
+        userAvatar.src = data.user.photo;
+        userAvatar.style.display = 'block';
+      } else {
+        userAvatar.style.display = 'none';
+      }
+
+      document.body.classList.remove('auth-checking', 'unauthenticated');
+      document.body.classList.add('authenticated');
+      
+      // Mostrar sidebar según estado guardado en localStorage
+      if (sidebar) {
+        const sidebarOpen = localStorage.getItem('sidebarOpen');
+        // Por defecto abierto si no hay estado guardado
+        if (sidebarOpen === null || sidebarOpen === 'true') {
+          sidebar.style.display = 'flex';
+          document.body.classList.remove('sidebar-closed');
+        } else {
+          sidebar.style.display = 'none';
+          document.body.classList.add('sidebar-closed');
+        }
+      }
+
+      // Cargar sesiones del usuario
+      loadSessions();
+    } catch (err) {
+      console.error('Auth check error:', err);
+      document.body.classList.remove('auth-checking', 'authenticated');
+      document.body.classList.add('unauthenticated');
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) sidebar.style.display = 'none';
     }
+  }
 
     logoutBtn.addEventListener('click', () => {
       clearStorage();
@@ -4528,8 +4547,9 @@ renderTabs();
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     
     // Estado inicial del sidebar desde localStorage
-    const sidebarClosed = localStorage.getItem('sidebarClosed');
-    if (sidebarClosed === 'true' && window.innerWidth > 768) {
+    const sidebarOpen = localStorage.getItem('sidebarOpen');
+    // Por defecto abierto si no hay estado guardado
+    if (sidebarOpen === 'false' && window.innerWidth > 768) {
       document.body.classList.add('sidebar-closed');
     }
     
@@ -4537,8 +4557,9 @@ renderTabs();
       menuToggle.addEventListener('click', () => {
         // En desktop: toggle class en body
         if (window.innerWidth > 768) {
-          document.body.classList.toggle('sidebar-closed');
-          localStorage.setItem('sidebarClosed', document.body.classList.contains('sidebar-closed'));
+          const isClosed = document.body.classList.toggle('sidebar-closed');
+          // Guardar estado invertido (sidebarOpen)
+          localStorage.setItem('sidebarOpen', !isClosed ? 'true' : 'false');
         } else {
           // En móvil: abrir/cerrar drawer
           sidebar.classList.toggle('open');
