@@ -324,12 +324,29 @@ header {
       display: none;
     }
 
-    body.authenticated .app-container {
-      display: flex;
-    }
+body.authenticated .app-container {
+  display: flex;
+}
 
 body.unauthenticated .login-screen {
   display: flex;
+}
+
+/* Sidebar toggle state */
+body.sidebar-closed .sidebar {
+  display: none;
+}
+
+body.sidebar-closed .app-container {
+  margin-left: 0;
+}
+
+body:not(.sidebar-closed) .sidebar {
+  display: flex;
+}
+
+body:not(.sidebar-closed) .app-container {
+  margin-left: 260px;
 }
 
 body.authenticated .sidebar {
@@ -1781,7 +1798,10 @@ body.unauthenticated .app-container {
 /* ===== UPGRADE MODAL ===== */
 .upgrade-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0,0,0,0.7);
   backdrop-filter: blur(4px);
   z-index: 9999;
@@ -4502,24 +4522,37 @@ renderTabs();
     // Chat sessions
     document.getElementById('newChatBtn').addEventListener('click', newSession);
     
-    // Mobile menu toggle
+    // Sidebar toggle (desktop y móvil)
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     
+    // Estado inicial del sidebar desde localStorage
+    const sidebarClosed = localStorage.getItem('sidebarClosed');
+    if (sidebarClosed === 'true' && window.innerWidth > 768) {
+      document.body.classList.add('sidebar-closed');
+    }
+    
     if (menuToggle && sidebar && sidebarOverlay) {
       menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        sidebarOverlay.classList.toggle('open');
+        // En desktop: toggle class en body
+        if (window.innerWidth > 768) {
+          document.body.classList.toggle('sidebar-closed');
+          localStorage.setItem('sidebarClosed', document.body.classList.contains('sidebar-closed'));
+        } else {
+          // En móvil: abrir/cerrar drawer
+          sidebar.classList.toggle('open');
+          sidebarOverlay.classList.toggle('open');
+        }
       });
       
-      // Cerrar al hacer click en overlay
+      // Cerrar al hacer click en overlay (móvil)
       sidebarOverlay.addEventListener('click', () => {
         sidebar.classList.remove('open');
         sidebarOverlay.classList.remove('open');
       });
       
-      // Cerrar al cargar una sesión
+      // Cerrar al cargar una sesión (móvil)
       document.querySelectorAll('.session-item').forEach(item => {
         item.addEventListener('click', () => {
           if (window.innerWidth <= 768) {
