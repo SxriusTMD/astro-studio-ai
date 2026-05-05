@@ -358,24 +358,12 @@ body.sidebar-closed .sidebar {
   display: none;
 }
 
-body.sidebar-closed .app-container {
-  margin-left: 0;
-}
-
 body:not(.sidebar-closed) .sidebar {
   display: flex;
 }
 
 body:not(.sidebar-closed) .app-container {
   margin-left: 260px;
-}
-
-body.authenticated .app-container {
-  margin-left: 260px;
-}
-
-body.unauthenticated .app-container {
-  margin-left: 0;
 }
 
     .login-screen {
@@ -3473,10 +3461,10 @@ async function initAuth() {
         // Por defecto abierto si no hay estado guardado
         if (sidebarOpen === null || sidebarOpen === 'true') {
           sidebar.style.display = 'flex';
-          document.querySelector('.app-container').style.marginLeft = '260px';
+          document.body.classList.remove('sidebar-closed');
         } else {
           sidebar.style.display = 'none';
-          document.querySelector('.app-container').style.marginLeft = '0';
+          document.body.classList.add('sidebar-closed');
         }
       }
 
@@ -3494,19 +3482,18 @@ async function initAuth() {
 // Toggle sidebar function
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
-  const appContainer = document.querySelector('.app-container');
   
-  if (!sidebar || !appContainer) return;
+  if (!sidebar) return;
   
   const isOpen = sidebar.style.display === 'flex';
   
   if (isOpen) {
     sidebar.style.display = 'none';
-    appContainer.style.marginLeft = '0';
+    document.body.classList.add('sidebar-closed');
     localStorage.setItem('sidebarOpen', 'false');
   } else {
     sidebar.style.display = 'flex';
-    appContainer.style.marginLeft = '260px';
+    document.body.classList.remove('sidebar-closed');
     localStorage.setItem('sidebarOpen', 'true');
   }
 }
