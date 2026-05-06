@@ -28,8 +28,10 @@ const transporter = nodemailer.createTransport({
   },
   family: 4,
   opportunisticTLS: true,
+  keepAlive: true,
   connectionTimeout: 15000,
   greetingTimeout: 15000,
+  socketTimeout: 30000,
   tls: {
     rejectUnauthorized: false,
     minVersion: 'TLSv1.2'
