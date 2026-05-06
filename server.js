@@ -6,7 +6,6 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 require('dns').setDefaultResultOrder('ipv4first');
 
@@ -17,37 +16,9 @@ const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 app.use(express.json());
 
 
-// Nodemailer transport (Gmail SMTP - puerto 587 STARTTLS)
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  family: 4,
-  opportunisticTLS: true,
-  keepAlive: true,
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 30000,
-  tls: {
-    rejectUnauthorized: false,
-    minVersion: 'TLSv1.2'
-  },
-  logger: true,
-  debug: true
-});
-
-// Verificar conexión SMTP al iniciar
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error('❌ Nodemailer SMTP error:', error.message);
-  } else {
-    console.log('✅ Nodemailer SMTP listo');
-  }
-});
+// ===== EMAIL CONFIG (Brevo API) =====
+const { BrevoClient } = require('@getbrevo/brevo');
+const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
 
 // PostgreSQL
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -234,13 +205,13 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Enviar correo de verificación
     try {
-      console.log(`📧 Intentando enviar correo de verificación a ${email} vía IPv4:587...`);
+      console.log(`📧 Enviando verificación a ${email} vía Brevo API...`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
-      await transporter.sendMail({
-        from: `"Astro Studio AI" <${process.env.EMAIL_USER}>`,
-        to: email,
+      await brevoClient.transactionalEmails.sendTransacEmail({
+        sender: { email: process.env.EMAIL_USER, name: 'Astro Studio AI' },
+        to: [{ email }],
         subject: 'Verifica tu correo - Astro Studio AI',
-        html: `
+        htmlContent: `
           <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
             <div style="font-size:48px;margin-bottom:16px;">🚀</div>
             <h1 style="color:#8b5cf6;">Astro Studio AI</h1>
@@ -250,7 +221,7 @@ app.post('/api/auth/register', async (req, res) => {
           </div>
         `
       });
-      console.log(`✅ Correo de verificación enviado a ${email}`);
+      console.log(`✅ Correo de verificación enviado vía Brevo a ${email}`);
     } catch (mailErr) {
       console.error('❌ Error enviando correo a', email, ':', mailErr.message);
       return res.status(500).json({ error: 'Error al enviar el correo de verificación. Intenta de nuevo más tarde.' });
