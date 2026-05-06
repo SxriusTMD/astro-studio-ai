@@ -171,6 +171,10 @@ app.get('/auth/email', (req, res) => {
   res.sendFile(path.join(__dirname, 'auth-email.html'));
 });
 
+app.get('/complete-profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'complete-profile.html'));
+});
+
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['email', 'profile'] })
 );
@@ -527,7 +531,7 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
 
-  const systemInstruction = 'Eres un asistente de estudio universitario. Tienes acceso al siguiente documento del estudiante. Responde siempre en español, de forma clara y concisa, citando partes relevantes del documento cuando sea útil. FORMATO DE CITAS: Usa exclusivamente corchetes con el número del documento, por ejemplo [1], [2]. Está prohibido escribir el nombre completo del archivo o su extensión en el cuerpo del texto. Al final de tu respuesta, incluye una leyenda con la correspondencia: [1] Nombre simplificado del documento, [2] Otro documento, etc.';
+  const systemInstruction = 'Eres un asistente de estudio universitario experto en Astro Studio AI. Tienes acceso al siguiente documento del estudiante. Responde siempre en español.\n\nREGLAS DE FORMATO:\n1. Usa SIEMPRE Markdown enriquecido para estructurar tus respuestas.\n2. Separa cada párrafo con un doble salto de línea (\\n\\n). Está prohibido crear bloques densos de texto sin separación.\n3. Usa encabezados (###), negritas (**texto**) y listas con viñetas (- o *) para desglosar información técnica.\n4. Incluye iconos temáticos (🚀, 🌌, ☄️, 🛰️, 📘, ⚡) al inicio de secciones clave para reforzar la identidad del proyecto.\n\nFORMATO DE CITAS: Usa exclusivamente corchetes con el número del documento, por ejemplo [1], [2]. Está prohibido escribir el nombre completo del archivo o su extensión en el cuerpo del texto. Al final de tu respuesta, incluye una leyenda con la correspondencia: [1] Nombre simplificado del documento, [2] Otro documento, etc.';
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`

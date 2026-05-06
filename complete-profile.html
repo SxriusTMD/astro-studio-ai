@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completa tu perfil - Astro Studio AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg-deep: #07071a; --bg-card: #0e0e2a; --border: #1e1e4a;
+    --text-primary: #e8e8f0; --text-secondary: #9090b8; --text-muted: #606088;
+    --accent-cyan: #00e5ff; --accent-violet: #8b5cf6; --accent-purple: #6c3bd2;
+    --gradient-primary: linear-gradient(135deg,#6c3bd2,#4f46e5);
+    --gradient-accent: linear-gradient(135deg,#00e5ff,#8b5cf6);
+    --radius-xs: 6px; --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  body {
+    font-family: 'Inter', sans-serif; background: var(--bg-deep); color: var(--text-primary);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    position: relative;
+  }
+  #stars { position: fixed; inset:0; z-index:0; width:100%; height:100%; pointer-events:none; }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  .glass-card {
+    position:relative; z-index:1; width:min(420px,94%); padding:40px 36px;
+    background:rgba(14,14,42,0.6); backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,0.06); border-radius:24px;
+    text-align:center; animation:fadeScale 0.6s ease-out;
+  }
+  .logo { width:56px; height:56px; margin:0 auto 14px; border-radius:16px; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center; font-size:28px; box-shadow:0 0 24px rgba(108,59,210,0.35); }
+  h1 { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; background:var(--gradient-accent); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:4px; }
+  .subtitle { color:var(--text-secondary); font-size:14px; margin-bottom:24px; }
+  .auth-form { display:flex; flex-direction:column; gap:12px; }
+  .auth-input { width:100%; padding:13px 16px; border-radius:var(--radius-xs); border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--text-primary); font-family:'Inter',sans-serif; font-size:14px; outline:none; transition:var(--transition); box-sizing:border-box; }
+  .auth-input:focus { border-color:var(--accent-violet); box-shadow:0 0 0 3px rgba(139,92,246,0.15); }
+  .auth-input::placeholder { color:var(--text-muted); }
+  .auth-btn { width:100%; padding:13px; border:none; border-radius:var(--radius-xs); background:var(--gradient-primary); color:#fff; font-family:'Inter',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:var(--transition); }
+  .auth-btn:hover { opacity:0.92; transform:translateY(-1px); }
+  .auth-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .auth-msg { font-size:13px; min-height:20px; text-align:center; }
+  .auth-msg.error { color:#f87171; }
+  .auth-msg.success { color:#34d399; }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="glass-card">
+  <div class="logo">🚀</div>
+  <h1>Completa tu perfil</h1>
+  <p class="subtitle">Elige un nombre de usuario único</p>
+  <form class="auth-form" id="usernameForm">
+    <input type="text" class="auth-input" id="usernameInput" placeholder="Nombre de usuario" autocomplete="username" required>
+    <div class="auth-msg" id="usernameMsg"></div>
+    <button type="submit" class="auth-btn" id="usernameBtn">Finalizar</button>
+  </form>
+</div>
+<script>
+const canvas=document.getElementById('stars'),ctx=canvas.getContext('2d');let stars=[];
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+for(let i=0;i<180;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.3,a:Math.random()*6.28});
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{s.a+=0.004;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fillStyle=`rgba(255,255,255,${0.25+Math.sin(s.a)*0.25})`;ctx.fill()});requestAnimationFrame(draw)}
+draw();
+
+document.getElementById('usernameForm').addEventListener('submit',async e=>{
+  e.preventDefault();const u=document.getElementById('usernameInput').value.trim(),m=document.getElementById('usernameMsg'),b=document.getElementById('usernameBtn');
+  if(u.length<3){m.className='auth-msg error';m.textContent='Mínimo 3 caracteres';return}
+  if(!/^[a-zA-Z0-9_]+$/.test(u)){m.className='auth-msg error';m.textContent='Solo letras, números y _';return}
+  b.disabled=true;b.textContent='Guardando...';m.className='auth-msg';m.textContent='';
+  try{
+    const r=await fetch('/api/auth/set-username',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Error');
+    window.location.href='/';
+  }catch(e){m.className='auth-msg error';m.textContent=e.message}
+  finally{b.disabled=false;b.textContent='Finalizar'}
+});
+document.getElementById('usernameInput').addEventListener('input',async e=>{
+  const v=e.target.value.trim(),m=document.getElementById('usernameMsg');
+  if(v.length<3){m.className='auth-msg';m.textContent='';return}
+  try{
+    const r=await fetch(`/api/auth/check-username?username=${encodeURIComponent(v)}`);
+    const d=await r.json();
+    m.className=d.available?'auth-msg success':'auth-msg error';
+    m.textContent=d.available?'✅ Disponible':'❌ No disponible';
+  }catch{}
+});
+</script>
+</body>
+</html>
