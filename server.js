@@ -20,6 +20,22 @@ app.use(express.json());
 const { BrevoClient } = require('@getbrevo/brevo');
 const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
 
+// Health check Brevo al iniciar
+(async () => {
+  try {
+    const result = await brevoClient.transactionalEmails.sendTransacEmail({
+      sender: { email: 'astrosecurityincorporation@gmail.com', name: 'Astro Security' },
+      to: [{ email: 'astrosecurityincorporation@gmail.com' }],
+      subject: '✅ Brevo API conectada - Astro Studio AI',
+      htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
+    });
+    console.log('✅ Brevo API Health Check exitoso');
+  } catch (err) {
+    console.error('❌ Brevo API Health Check falló:', err.message);
+    if (err.body) console.error('Detalle:', JSON.stringify(err.body, null, 2));
+  }
+})();
+
 // PostgreSQL
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 let dbOk = false;
@@ -208,7 +224,7 @@ app.post('/api/auth/register', async (req, res) => {
       console.log(`📧 Enviando verificación a ${email} vía Brevo API...`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       await brevoClient.transactionalEmails.sendTransacEmail({
-        sender: { email: process.env.EMAIL_USER, name: 'Astro Studio AI' },
+        sender: { email: 'astrosecurityincorporation@gmail.com', name: 'Astro Security' },
         to: [{ email }],
         subject: 'Verifica tu correo - Astro Studio AI',
         htmlContent: `
@@ -229,7 +245,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     res.json({ ok: true, message: 'Revisa tu correo para verificar la cuenta' });
   } catch (err) {
-    console.error('Register error:', err);
+    console.error('❌ ERROR EN REGISTRO:', err);
+    if (err.body) console.error('Detalle Brevo:', JSON.stringify(err.body, null, 2));
     res.status(500).json({ error: 'Error al registrar' });
   }
 });
