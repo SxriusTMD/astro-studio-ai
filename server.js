@@ -24,7 +24,9 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  logger: true,
+  debug: true
 });
 
 // Verificar conexión SMTP al iniciar
