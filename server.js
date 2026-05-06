@@ -8,6 +8,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+require('dns').setDefaultResultOrder('ipv4first');
 
 const app = express();
 const PORT = 3000;
@@ -16,19 +17,22 @@ const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 app.use(express.json());
 
 
-// Nodemailer transport (Gmail SMTP - configuración explícita)
+// Nodemailer transport (Gmail SMTP - puerto 587 STARTTLS)
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
+  family: 4,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
   tls: {
+    ciphers: 'SSLv3',
     rejectUnauthorized: false
   },
-  family: 4,
   logger: true,
   debug: true
 });
