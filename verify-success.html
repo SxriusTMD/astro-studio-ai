@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificado - Astro Studio AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg-deep: #07071a;
+    --accent-cyan: #00e5ff;
+    --accent-violet: #8b5cf6;
+    --accent-purple: #6c3bd2;
+    --gradient-accent: linear-gradient(135deg, #00e5ff, #8b5cf6);
+    --gradient-primary: linear-gradient(135deg, #6c3bd2, #4f46e5);
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-deep);
+    color: #e8e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  #stars {
+    position: fixed; inset: 0; z-index: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  @keyframes fadeScale {
+    0% { opacity: 0; transform: scale(0.92) translateY(20px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-14px) rotate(-3deg); }
+  }
+  @keyframes flame {
+    0%, 100% { opacity: 0.7; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.15); }
+  }
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.1); }
+    50% { box-shadow: 0 0 50px rgba(139,92,246,0.4), 0 0 80px rgba(139,92,246,0.2); }
+  }
+  @keyframes progressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+
+  .glass-card {
+    position: relative; z-index: 1;
+    width: min(440px, 92%);
+    padding: 48px 36px 40px;
+    background: rgba(14,14,42,0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 24px;
+    text-align: center;
+    animation: fadeScale 0.7s ease-out;
+    box-shadow: 0 0 60px rgba(108,59,210,0.1);
+  }
+
+  .rocket-container {
+    width: 120px; height: 140px;
+    margin: 0 auto 24px;
+    animation: float 2.5s ease-in-out infinite;
+  }
+  .rocket-container svg { width: 100%; height: 100%; }
+
+  .flame {
+    animation: flame 0.4s ease-in-out infinite;
+    transform-origin: top center;
+  }
+  .sparkle {
+    animation: sparkle 1.2s ease-in-out infinite;
+  }
+  .sparkle:nth-child(2) { animation-delay: 0.4s; }
+  .sparkle:nth-child(3) { animation-delay: 0.8s; }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 700;
+    background: var(--gradient-accent);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  p {
+    color: #9090b8; font-size: 15px;
+    margin-bottom: 24px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.2);
+    color: var(--accent-cyan);
+    font-size: 13px; font-weight: 500;
+    margin-bottom: 28px;
+  }
+  .progress-bar {
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: var(--gradient-primary);
+    border-radius: 4px;
+    animation: progressFill 3s linear forwards;
+  }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<div class="glass-card">
+  <div class="rocket-container">
+    <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Fins -->
+      <path d="M60 100 L30 130 L60 115 Z" fill="#4f46e5" opacity="0.8"/>
+      <path d="M60 100 L90 130 L60 115 Z" fill="#4f46e5" opacity="0.8"/>
+      <!-- Body -->
+      <ellipse cx="60" cy="65" rx="26" ry="48" fill="url(#bodyGrad)"/>
+      <!-- Nose cone -->
+      <path d="M60 8 Q34 35 34 50 Q34 60 60 65 Q86 60 86 50 Q86 35 60 8 Z" fill="url(#noseGrad)"/>
+      <!-- Window -->
+      <circle cx="60" cy="48" r="11" fill="#0a0a2a" stroke="rgba(0,229,255,0.4)" stroke-width="2"/>
+      <circle cx="60" cy="48" r="6" fill="rgba(0,229,255,0.15)"/>
+      <circle cx="58" cy="46" r="2" fill="rgba(0,229,255,0.5)"/>
+      <!-- Stripe -->
+      <rect x="34" y="70" width="52" height="6" rx="3" fill="rgba(0,229,255,0.2)"/>
+      <!-- Flame -->
+      <path class="flame" d="M60 112 Q48 128 44 140 Q52 130 60 140 Q68 130 76 140 Q72 128 60 112 Z" fill="url(#flameGrad)"/>
+      <!-- Sparks -->
+      <circle class="sparkle" cx="40" cy="130" r="2.5" fill="#00e5ff"/>
+      <circle class="sparkle" cx="80" cy="125" r="2" fill="#8b5cf6"/>
+      <circle class="sparkle" cx="64" cy="138" r="1.8" fill="#00e5ff"/>
+      <defs>
+        <linearGradient id="bodyGrad" x1="60" y1="17" x2="60" y2="113">
+          <stop offset="0%" stop-color="#8b5cf6"/>
+          <stop offset="50%" stop-color="#6c3bd2"/>
+          <stop offset="100%" stop-color="#4f46e5"/>
+        </linearGradient>
+        <linearGradient id="noseGrad" x1="60" y1="8" x2="60" y2="65">
+          <stop offset="0%" stop-color="#a78bfa"/>
+          <stop offset="100%" stop-color="#8b5cf6"/>
+        </linearGradient>
+        <linearGradient id="flameGrad" x1="60" y1="112" x2="60" y2="140">
+          <stop offset="0%" stop-color="#f97316"/>
+          <stop offset="40%" stop-color="#ef4444"/>
+          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <h1>¡Identidad Confirmada!</h1>
+  <p>Preparando tu entrada a la base...</p>
+
+  <div class="badge">
+    <span>✓</span> Correo verificado con éxito
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+for (let i = 0; i < 180; i++) {
+  stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, a: Math.random() * Math.PI * 2 });
+}
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    s.a += 0.004;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${0.25 + Math.sin(s.a) * 0.25})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+
+setTimeout(() => { window.location.href = '/'; }, 3000);
+</script>
+</body>
+</html>

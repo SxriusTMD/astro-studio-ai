@@ -259,17 +259,37 @@ app.get('/api/auth/verify-email', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id FROM usuarios WHERE verification_token = $1 AND is_verified = false`,
+      `SELECT id, email FROM usuarios WHERE verification_token = $1 AND is_verified = false`,
       [token]
     );
     if (result.rows.length === 0) return res.status(400).send('Token inválido o ya verificado');
 
+    const userId = result.rows[0].id;
+
     await pool.query(
       `UPDATE usuarios SET is_verified = true, verification_token = NULL WHERE id = $1`,
-      [result.rows[0].id]
+      [userId]
     );
 
-    res.redirect('/?verified=true');
+    // Iniciar sesión automáticamente para que al llegar a / ya esté autenticado
+    const userResult = await pool.query(
+      `SELECT google_id, email, username, nombre, foto FROM usuarios WHERE id = $1`,
+      [userId]
+    );
+    const user = userResult.rows[0];
+
+    req.login({
+      id: user.google_id,
+      email: user.email,
+      displayName: user.username || user.nombre || user.email.split('@')[0],
+      photo: user.foto || '',
+      authMethod: 'email',
+      dbId: userId,
+      needsUsername: !user.username
+    }, (err) => {
+      if (err) return res.redirect('/?verified=true');
+      res.sendFile(path.join(__dirname, 'verify-success.html'));
+    });
   } catch (err) {
     console.error('Verify error:', err);
     res.status(500).send('Error al verificar');
