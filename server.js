@@ -24,8 +24,8 @@ const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
 (async () => {
   try {
     const result = await brevoClient.transactionalEmails.sendTransacEmail({
-      sender: { email: 'astrosecurityincorporation@gmail.com', name: 'Astro Security' },
-      to: [{ email: 'astrosecurityincorporation@gmail.com' }],
+      sender: { email: 'astrostudioai@gmail.com', name: 'Astro Studio AI' },
+      to: [{ email: 'astrostudioai@gmail.com' }],
       subject: '✅ Brevo API conectada - Astro Studio AI',
       htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
     });
@@ -224,7 +224,7 @@ app.post('/api/auth/register', async (req, res) => {
       console.log(`📧 Enviando verificación a ${email} vía Brevo API...`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       await brevoClient.transactionalEmails.sendTransacEmail({
-        sender: { email: 'astrosecurityincorporation@gmail.com', name: 'Astro Security' },
+        sender: { email: 'astrostudioai@gmail.com', name: 'Astro Studio AI' },
         to: [{ email }],
         subject: 'Verifica tu correo - Astro Studio AI',
         htmlContent: `
