@@ -156,6 +156,10 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+app.get('/auth/email', (req, res) => {
+  res.sendFile(path.join(__dirname, 'auth-email.html'));
+});
+
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['email', 'profile'] })
 );
@@ -297,7 +301,7 @@ app.get('/api/auth/check-username', async (req, res) => {
   const { username } = req.query;
   if (!username || username.length < 3) return res.json({ available: false });
   try {
-    const result = await pool.query(`SELECT id FROM usuarios WHERE username = $1`, [username]);
+    const result = await pool.query(`SELECT id FROM usuarios WHERE LOWER(username) = LOWER($1)`, [username]);
     res.json({ available: result.rows.length === 0 });
   } catch (err) {
     res.json({ available: false });
