@@ -394,20 +394,28 @@ document.getElementById('backToLoginBtn').addEventListener('click', () => goToSt
 document.getElementById('checkVerifiedBtn').addEventListener('click', async () => {
   if (!pendingEmail) { goToStep(1); return; }
   const btn = document.getElementById('checkVerifiedBtn');
+  const msg = document.getElementById('step2').querySelector('.auth-msg') || (() => {
+    const el = document.createElement('div');
+    el.className = 'auth-msg';
+    document.getElementById('step2').querySelector('p:last-of-type').after(el);
+    return el;
+  })();
   btn.disabled = true; btn.textContent = 'Verificando...';
+  msg.className = 'auth-msg'; msg.textContent = '';
   try {
-    const res = await fetch('/api/auth/login', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:pendingEmail, password:''}) });
+    const res = await fetch(`/api/auth/check-status?email=${encodeURIComponent(pendingEmail)}`);
     const data = await res.json();
-    if (res.ok && !data.needsUsername) { window.location.href = '/'; return; }
-    if (res.ok && data.needsUsername) { pendingId = pendingEmail; goToStep(3); return; }
-    if (data.needsVerification) {
-      document.getElementById('verifyEmailDisplay').textContent = pendingEmail;
-      document.getElementById('step2').querySelector('p:last-of-type').textContent = 'Aún no verificas tu correo. Revisa tu bandeja de entrada o spam.';
-      return;
+    if (!data.exists) { msg.className='auth-msg error'; msg.textContent='❌ No encontramos esta cuenta. ¿Usaste otro email?'; btn.disabled=false; btn.textContent='Ya verifiqué, iniciar sesión'; return; }
+    if (data.isVerified) {
+      msg.className='auth-msg success'; msg.textContent='✅ Correo verificado. Ahora inicia sesión.';
+      setTimeout(() => goToStep(1), 1200);
+    } else {
+      msg.className='auth-msg error'; msg.textContent='❌ Aún no detectamos la verificación. Revisa tu bandeja de entrada o spam.';
     }
-    goToStep(1);
-  } catch { goToStep(1); }
-  finally { btn.disabled=false; btn.textContent = 'Ya verifiqué, iniciar sesión'; }
+  } catch (err) {
+    msg.className='auth-msg error'; msg.textContent='Error al verificar. Intenta de nuevo.';
+  }
+  btn.disabled=false; btn.textContent='Ya verifiqué, iniciar sesión';
 });
 
 // Username

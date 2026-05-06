@@ -16,12 +16,23 @@ const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 app.use(express.json());
 
 
-// Nodemailer transport (Gmail SMTP)
+// Nodemailer transport (Gmail SMTP - configuración explícita)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  }
+});
+
+// Verificar conexión SMTP al iniciar
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error('❌ Nodemailer SMTP error:', error.message);
+  } else {
+    console.log('✅ Nodemailer SMTP listo');
   }
 });
 
@@ -209,21 +220,27 @@ app.post('/api/auth/register', async (req, res) => {
     `, [crypto.randomUUID(), email, password_hash, verification_token, email.split('@')[0]]);
 
     // Enviar correo de verificación
-    const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
-    await transporter.sendMail({
-      from: `"Astro Studio AI" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Verifica tu correo - Astro Studio AI',
-      html: `
-        <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
-          <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-          <h1 style="color:#8b5cf6;">Astro Studio AI</h1>
-          <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botón para verificar tu correo:</p>
-          <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
-          <p style="margin-top:24px;font-size:13px;color:#9090b8;">Si no creaste esta cuenta, ignora este mensaje.</p>
-        </div>
-      `
-    });
+    try {
+      const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
+      await transporter.sendMail({
+        from: `"Astro Studio AI" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Verifica tu correo - Astro Studio AI',
+        html: `
+          <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
+            <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+            <h1 style="color:#8b5cf6;">Astro Studio AI</h1>
+            <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botón para verificar tu correo:</p>
+            <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
+            <p style="margin-top:24px;font-size:13px;color:#9090b8;">Si no creaste esta cuenta, ignora este mensaje.</p>
+          </div>
+        `
+      });
+      console.log(`✅ Correo de verificación enviado a ${email}`);
+    } catch (mailErr) {
+      console.error('❌ Error enviando correo a', email, ':', mailErr.message);
+      return res.status(500).json({ error: 'Error al enviar el correo de verificación. Intenta de nuevo más tarde.' });
+    }
 
     res.json({ ok: true, message: 'Revisa tu correo para verificar la cuenta' });
   } catch (err) {
@@ -253,6 +270,23 @@ app.get('/api/auth/verify-email', async (req, res) => {
   } catch (err) {
     console.error('Verify error:', err);
     res.status(500).send('Error al verificar');
+  }
+});
+
+// GET /api/auth/check-status?email=xxx - Verificar si un email ya está verificado
+app.get('/api/auth/check-status', async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  try {
+    const result = await pool.query(
+      `SELECT is_verified, username FROM usuarios WHERE email = $1 AND auth_method = 'email'`,
+      [email]
+    );
+    if (result.rows.length === 0) return res.json({ exists: false, isVerified: false });
+    res.json({ exists: true, isVerified: result.rows[0].is_verified, hasUsername: !!result.rows[0].username });
+  } catch (err) {
+    console.error('Check-status error:', err);
+    res.status(500).json({ error: 'Error al verificar estado' });
   }
 });
 
