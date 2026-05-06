@@ -27,11 +27,12 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   },
   family: 4,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
+  opportunisticTLS: true,
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
   tls: {
-    ciphers: 'SSLv3',
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    minVersion: 'TLSv1.2'
   },
   logger: true,
   debug: true
@@ -231,6 +232,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Enviar correo de verificación
     try {
+      console.log(`📧 Intentando enviar correo de verificación a ${email} vía IPv4:587...`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       await transporter.sendMail({
         from: `"Astro Studio AI" <${process.env.EMAIL_USER}>`,
