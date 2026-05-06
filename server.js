@@ -29,10 +29,10 @@ const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
       subject: '✅ Brevo API conectada - Astro Studio AI',
       htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
     });
-    console.log('✅ Brevo API Health Check exitoso');
+    console.log(`✅ Brevo API Health Check exitoso — messageId: ${result.data?.messageId || 'OK'}`);
   } catch (err) {
     console.error('❌ Brevo API Health Check falló:', err.message);
-    if (err.body) console.error('Detalle:', JSON.stringify(err.body, null, 2));
+    if (err.body) console.error('   Brevo detalle:', JSON.stringify(err.body, null, 2));
   }
 })();
 
@@ -221,9 +221,9 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Enviar correo de verificación
     try {
-      console.log(`📧 Enviando verificación a ${email} vía Brevo API...`);
+      console.log(`🚀 Intentando envío desde: astrostudioai@gmail.com → ${email}`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
-      await brevoClient.transactionalEmails.sendTransacEmail({
+      const mailRes = await brevoClient.transactionalEmails.sendTransacEmail({
         sender: { email: 'astrostudioai@gmail.com', name: 'Astro Studio AI' },
         to: [{ email }],
         subject: 'Verifica tu correo - Astro Studio AI',
@@ -237,9 +237,10 @@ app.post('/api/auth/register', async (req, res) => {
           </div>
         `
       });
-      console.log(`✅ Correo de verificación enviado vía Brevo a ${email}`);
+      console.log(`✅ Correo enviado vía Brevo a ${email} — messageId: ${mailRes.data?.messageId || mailRes.rawResponse?.headers?.get?.('x-message-id') || 'OK'}`);
     } catch (mailErr) {
       console.error('❌ Error enviando correo a', email, ':', mailErr.message);
+      if (mailErr.body) console.error('   Brevo detalle:', JSON.stringify(mailErr.body, null, 2));
       return res.status(500).json({ error: 'Error al enviar el correo de verificación. Intenta de nuevo más tarde.' });
     }
 
