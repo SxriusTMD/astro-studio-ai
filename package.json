@@ -1,7 +1,7 @@
 {
-  "name": "astro-studio-ai",
+  "name": "aerolex-ai",
   "version": "1.0.0",
-  "description": "Astro Studio AI — Asistente de estudio inteligente",
+  "description": "AeroLex AI — Asistente de estudio inteligente",
   "scripts": {
     "start": "node server.js"
   },

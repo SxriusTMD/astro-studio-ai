@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -24,14 +24,14 @@ const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
 (async () => {
   try {
     const result = await brevoClient.transactionalEmails.sendTransacEmail({
-      sender: { email: 'astrostudioai@gmail.com', name: 'Astro Studio AI' },
+      sender: { email: 'astrostudioai@gmail.com', name: 'AeroLex AI' },
       to: [{ email: 'astrostudioai@gmail.com' }],
-      subject: '✅ Brevo API conectada - Astro Studio AI',
+      subject: '? Brevo API conectada - AeroLex AI',
       htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
     });
-    console.log(`✅ Brevo API Health Check exitoso — messageId: ${result.data?.messageId || 'OK'}`);
+    console.log(`? Brevo API Health Check exitoso � messageId: ${result.data?.messageId || 'OK'}`);
   } catch (err) {
-    console.error('❌ Brevo API Health Check falló:', err.message);
+    console.error('? Brevo API Health Check fall�:', err.message);
     if (err.body) console.error('   Brevo detalle:', JSON.stringify(err.body, null, 2));
   }
 })();
@@ -44,7 +44,7 @@ let dbOk = false;
   try {
     await pool.connect();
     dbOk = true;
-    console.log('✅ PostgreSQL conectado');
+    console.log('? PostgreSQL conectado');
 
 await pool.query(`
     CREATE TABLE IF NOT EXISTS usuarios (
@@ -91,9 +91,9 @@ await pool.query(`
     created_at TIMESTAMP DEFAULT NOW()
   )
   `);
-    console.log('✅ Tablas creadas/verificadas');
+    console.log('? Tablas creadas/verificadas');
     
-    // Migración: columnas para auth por email
+    // Migraci�n: columnas para auth por email
     try {
       await pool.query(`ALTER TABLE usuarios ALTER COLUMN google_id DROP NOT NULL`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`);
@@ -101,36 +101,36 @@ await pool.query(`
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(255) UNIQUE`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS auth_method VARCHAR(50) DEFAULT 'google'`);
-      console.log('✅ Migración email auth completada');
+      console.log('? Migraci�n email auth completada');
     } catch (err) {
-      console.error('⚠️ Migración email auth:', err.message);
+      console.error('?? Migraci�n email auth:', err.message);
     }
 
-    // Migración: columnas para flashcards, resumen, examen, plan en sesiones
+    // Migraci�n: columnas para flashcards, resumen, examen, plan en sesiones
     try {
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS flashcards JSONB DEFAULT '[]'::jsonb`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS summary JSONB`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS exam JSONB DEFAULT '[]'::jsonb`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS study_plan JSONB`);
-      console.log('✅ Migración columnas de estudio completada');
+      console.log('? Migraci�n columnas de estudio completada');
     } catch (err) {
-      console.error('⚠️ Migración columnas de estudio:', err.message);
+      console.error('?? Migraci�n columnas de estudio:', err.message);
     }
   } catch (err) {
-    console.error('⚠️ PostgreSQL no disponible:', err.message);
-    console.log('⚠️ La app funcionará sin BD');
+    console.error('?? PostgreSQL no disponible:', err.message);
+    console.log('?? La app funcionar� sin BD');
   }
 })();
 app.set('trust proxy', 1);
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || "astro-studio-ai-dev-secret",
+  secret: process.env.SESSION_SECRET || "aerolex-ai-dev-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: true,       // 🔥 CLAVE
-    sameSite: "none"    // 🔥 CLAVE
+    secure: true,       // ?? CLAVE
+    sameSite: "none"    // ?? CLAVE
   }
 }));
 app.use(passport.initialize());
@@ -149,7 +149,7 @@ passport.use(new GoogleStrategy({
     photo: profile.photos?.[0]?.value || ''
   };
 
-  // Guardar/actualizar usuario en BD si está disponible
+  // Guardar/actualizar usuario en BD si est� disponible
   if (dbOk) {
     try {
       await pool.query(`
@@ -217,14 +217,14 @@ app.get('/api/me', (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+  if (!email || !password) return res.status(400).json({ error: 'Email y contrase�a requeridos' });
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) return res.status(400).json({ error: 'Formato de email inválido' });
-  if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  if (!emailRegex.test(email)) return res.status(400).json({ error: 'Formato de email inv�lido' });
+  if (password.length < 6) return res.status(400).json({ error: 'La contrase�a debe tener al menos 6 caracteres' });
 
   try {
     const existente = await pool.query(`SELECT id FROM usuarios WHERE email = $1`, [email]);
-    if (existente.rows.length > 0) return res.status(409).json({ error: 'Este email ya está registrado' });
+    if (existente.rows.length > 0) return res.status(409).json({ error: 'Este email ya est� registrado' });
 
     const password_hash = await bcrypt.hash(password, 10);
     const verification_token = crypto.randomBytes(32).toString('hex');
@@ -234,34 +234,34 @@ app.post('/api/auth/register', async (req, res) => {
       VALUES ($1, $2, $3, $4, false, 'email', $5)
     `, [crypto.randomUUID(), email, password_hash, verification_token, email.split('@')[0]]);
 
-    // Enviar correo de verificación
+    // Enviar correo de verificaci�n
     try {
-      console.log(`🚀 Intentando envío desde: astrostudioai@gmail.com → ${email}`);
+      console.log(`?? Intentando env�o desde: AeroLex AI (astrostudioai@gmail.com) ? ${email}`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       const mailRes = await brevoClient.transactionalEmails.sendTransacEmail({
-        sender: { email: 'astrostudioai@gmail.com', name: 'Astro Studio AI' },
+        sender: { email: 'astrostudioai@gmail.com', name: 'AeroLex AI' },
         to: [{ email }],
-        subject: 'Verifica tu correo - Astro Studio AI',
+        subject: 'Verifica tu correo - AeroLex AI',
         htmlContent: `
           <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
-            <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-            <h1 style="color:#8b5cf6;">Astro Studio AI</h1>
-            <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botón para verificar tu correo:</p>
+            <div style="font-size:48px;margin-bottom:16px;">??</div>
+            <h1 style="color:#8b5cf6;">AeroLex AI</h1>
+            <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el bot�n para verificar tu correo:</p>
             <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
             <p style="margin-top:24px;font-size:13px;color:#9090b8;">Si no creaste esta cuenta, ignora este mensaje.</p>
           </div>
         `
       });
-      console.log(`✅ Correo enviado vía Brevo a ${email} — messageId: ${mailRes.data?.messageId || mailRes.rawResponse?.headers?.get?.('x-message-id') || 'OK'}`);
+      console.log(`? Correo enviado v�a Brevo a ${email} � messageId: ${mailRes.data?.messageId || mailRes.rawResponse?.headers?.get?.('x-message-id') || 'OK'}`);
     } catch (mailErr) {
-      console.error('❌ Error enviando correo a', email, ':', mailErr.message);
+      console.error('? Error enviando correo a', email, ':', mailErr.message);
       if (mailErr.body) console.error('   Brevo detalle:', JSON.stringify(mailErr.body, null, 2));
-      return res.status(500).json({ error: 'Error al enviar el correo de verificación. Intenta de nuevo más tarde.' });
+      return res.status(500).json({ error: 'Error al enviar el correo de verificaci�n. Intenta de nuevo m�s tarde.' });
     }
 
     res.json({ ok: true, message: 'Revisa tu correo para verificar la cuenta' });
   } catch (err) {
-    console.error('❌ ERROR EN REGISTRO:', err);
+    console.error('? ERROR EN REGISTRO:', err);
     if (err.body) console.error('Detalle Brevo:', JSON.stringify(err.body, null, 2));
     res.status(500).json({ error: 'Error al registrar' });
   }
@@ -277,7 +277,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
       `SELECT id, email FROM usuarios WHERE verification_token = $1 AND is_verified = false`,
       [token]
     );
-    if (result.rows.length === 0) return res.status(400).send('Token inválido o ya verificado');
+    if (result.rows.length === 0) return res.status(400).send('Token inv�lido o ya verificado');
 
     const userId = result.rows[0].id;
 
@@ -286,7 +286,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
       [userId]
     );
 
-    // Iniciar sesión automáticamente para que al llegar a / ya esté autenticado
+    // Iniciar sesi�n autom�ticamente para que al llegar a / ya est� autenticado
     const userResult = await pool.query(
       `SELECT google_id, email, username, nombre, foto FROM usuarios WHERE id = $1`,
       [userId]
@@ -311,7 +311,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
   }
 });
 
-// GET /api/auth/check-status?email=xxx - Verificar si un email ya está verificado
+// GET /api/auth/check-status?email=xxx - Verificar si un email ya est� verificado
 app.get('/api/auth/check-status', async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'Email requerido' });
@@ -328,25 +328,25 @@ app.get('/api/auth/check-status', async (req, res) => {
   }
 });
 
-// POST /api/auth/login - Iniciar sesión con email + password
+// POST /api/auth/login - Iniciar sesi�n con email + password
 app.post('/api/auth/login', async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+  if (!email || !password) return res.status(400).json({ error: 'Email y contrase�a requeridos' });
 
   try {
     const result = await pool.query(
       `SELECT id, google_id, email, password_hash, is_verified, username, nombre, foto FROM usuarios WHERE email = $1 AND auth_method = 'email'`,
       [email]
     );
-    if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales inválidas' });
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales inv�lidas' });
 
     const user = result.rows[0];
     if (!user.is_verified) return res.status(403).json({ error: 'Correo no verificado', needsVerification: true });
-    if (!user.password_hash) return res.status(401).json({ error: 'Credenciales inválidas' });
+    if (!user.password_hash) return res.status(401).json({ error: 'Credenciales inv�lidas' });
 
     const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) return res.status(401).json({ error: 'Credenciales inválidas' });
+    if (!match) return res.status(401).json({ error: 'Credenciales inv�lidas' });
 
     const needsUsername = !user.username;
 
@@ -359,12 +359,12 @@ app.post('/api/auth/login', async (req, res) => {
       dbId: user.id,
       needsUsername
     }, (err) => {
-      if (err) return res.status(500).json({ error: 'Error al iniciar sesión' });
+      if (err) return res.status(500).json({ error: 'Error al iniciar sesi�n' });
       res.json({ ok: true, needsUsername });
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Error al iniciar sesión' });
+    res.status(500).json({ error: 'Error al iniciar sesi�n' });
   }
 });
 
@@ -384,11 +384,11 @@ app.get('/api/auth/check-username', async (req, res) => {
 app.post('/api/auth/set-username', ensureAuthenticated, async (req, res) => {
   const { username } = req.body;
   if (!username || username.length < 3) return res.status(400).json({ error: 'El username debe tener al menos 3 caracteres' });
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Solo letras, números y guión bajo' });
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Solo letras, n�meros y gui�n bajo' });
 
   try {
     const duplicado = await pool.query(`SELECT id FROM usuarios WHERE username = $1`, [username]);
-    if (duplicado.rows.length > 0) return res.status(409).json({ error: 'Este nombre de usuario ya está en uso' });
+    if (duplicado.rows.length > 0) return res.status(409).json({ error: 'Este nombre de usuario ya est� en uso' });
 
     await pool.query(
       `UPDATE usuarios SET username = $1, nombre = $1 WHERE google_id = $2`,
@@ -457,7 +457,7 @@ async function callNVIDIA(messages) {
     }
   }
   
-  throw lastError || new Error('NVIDIA API error después de reintentos');
+  throw lastError || new Error('NVIDIA API error despu�s de reintentos');
 }
 
 // Helper: reset daily counters if needed
@@ -469,7 +469,7 @@ async function resetDailyCounters(googleId) {
     [googleId]
   );
   if (result.rows.length > 0) {
-    console.log('✅ Contadores reseteados para', googleId, 'last_reset:', result.rows[0].last_reset);
+    console.log('? Contadores reseteados para', googleId, 'last_reset:', result.rows[0].last_reset);
   }
 }
 
@@ -486,7 +486,7 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
     const row = result.rows[0];
     const isPremium = row.plan === 'premium';
     
-    console.log('📊 Limits:', row);
+    console.log('?? Limits:', row);
     
     res.json({
       plan: row.plan,
@@ -498,7 +498,7 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
     });
   } catch (err) {
     console.error('User limits error:', err);
-    res.status(500).json({ error: 'Error obteniendo límites' });
+    res.status(500).json({ error: 'Error obteniendo l�mites' });
   }
 });
 
@@ -506,7 +506,7 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
 app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
   const { type } = req.body;
   if (!type || !['chat', 'exam'].includes(type)) {
-    return res.status(400).json({ error: 'Tipo inválido' });
+    return res.status(400).json({ error: 'Tipo inv�lido' });
   }
   
   try {
@@ -542,7 +542,7 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
 
-  const systemInstruction = 'Eres un asistente de estudio universitario experto en Astro Studio AI. Tienes acceso al siguiente documento del estudiante. Responde siempre en español.\n\nREGLAS DE FORMATO:\n1. Usa SIEMPRE Markdown enriquecido para estructurar tus respuestas.\n2. Separa cada párrafo con un doble salto de línea (\\n\\n). Está prohibido crear bloques densos de texto sin separación.\n3. Usa encabezados (###), negritas (**texto**) y listas con viñetas (- o *) para desglosar información técnica.\n4. Incluye iconos temáticos (🚀, 🌌, ☄️, 🛰️, 📘, ⚡) al inicio de secciones clave para reforzar la identidad del proyecto.\n\nFORMATO DE CITAS: Usa exclusivamente corchetes con el número del documento, por ejemplo [1], [2]. Está prohibido escribir el nombre completo del archivo o su extensión en el cuerpo del texto. Al final de tu respuesta, incluye una leyenda con la correspondencia: [1] Nombre simplificado del documento, [2] Otro documento, etc.';
+  const systemInstruction = 'Eres AeroLex AI, el asistente inteligente de estudio gal�ctico de la plataforma AeroLex. Tienes acceso al siguiente documento del estudiante. Responde siempre en espa�ol.\n\nIDENTIDAD: Si el usuario te pregunta qui�n eres, pres�ntate como "AeroLex AI, tu asistente de estudio gal�ctico". Si pregunta qu� es esta plataforma, responde que es AeroLex AI, la plataforma de estudio inteligente impulsada por IA.\n\nREGLAS DE FORMATO:\n1. Usa SIEMPRE Markdown enriquecido para estructurar tus respuestas.\n2. Separa cada p�rrafo con un doble salto de l�nea (\\n\\n). Est� prohibido crear bloques densos de texto sin separaci�n.\n3. Usa encabezados (###), negritas (**texto**) y listas con vi�etas (- o *) para desglosar informaci�n t�cnica.\n4. Incluye iconos tem�ticos (??, ??, ??, ???, ??, ?, ??) al inicio de secciones clave para reforzar la identidad del proyecto.\n\nFORMATO DE CITAS: Usa exclusivamente corchetes con el n�mero del documento, por ejemplo [1], [2]. Est� prohibido escribir el nombre completo del archivo o su extensi�n en el cuerpo del texto. Al final de tu respuesta, incluye una leyenda con la correspondencia: [1] Nombre simplificado del documento, [2] Otro documento, etc.';
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
@@ -573,14 +573,14 @@ app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
   const { pdfContent } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
-  const prompt = 'Genera exactamente 5 flashcards de estudio basadas en este documento. Responde ÃšNICAMENTE con un array JSON vÃ¡lido con este formato: [{"pregunta":"...","respuesta":"..."}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
+  const prompt = 'Genera exactamente 5 flashcards de estudio basadas en este documento. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"pregunta":"...","respuesta":"..."}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
 
   try {
     const text = await callNVIDIA([
       { role: 'user', content: prompt }
     ]);
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No se encontrÃ³ JSON en la respuesta');
+    if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
     const cards = JSON.parse(jsonMatch[0]);
     res.json({ cards });
   } catch (err) {
@@ -593,7 +593,7 @@ app.post('/api/resumen', ensureAuthenticated, async (req, res) => {
   const { pdfContent } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
-  const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en espaÃ±ol: INTRODUCCIÃ“N, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÃ“N. Formato limpio y claro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
+  const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en español: INTRODUCCIÓN, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÓN. Formato limpio y claro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
 
   try {
     const text = await callNVIDIA([
@@ -615,7 +615,7 @@ app.post('/api/examen', ensureAuthenticated, async (req, res) => {
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No se encontrÃ³ JSON en la respuesta');
+    if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
     const preguntas = JSON.parse(jsonMatch[0]);
     res.json({ preguntas });
   } catch (err) {
@@ -636,10 +636,10 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 3) {
-    return res.json({ error: 'âš ï¸ El tiempo es muy corto. Quedan menos de 3 dÃ­as para el examen.', plan: [] });
+    return res.json({ error: '⚠️ El tiempo es muy corto. Quedan menos de 3 días para el examen.', plan: [] });
   }
 
-  const prompt = `Genera un plan de estudio dÃ­a por dÃ­a para preparar un examen de "${materia}" usando el contenido de este documento. Hay ${diffDays} dÃ­as hasta el examen. Asigna temas del documento a cada dÃ­a de forma progresiva. Responde ÃšNICAMENTE con un array JSON vÃ¡lido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
+  const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. Hay ${diffDays} días hasta el examen. Asigna temas del documento a cada día de forma progresiva. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
 
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
@@ -760,10 +760,10 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
       [req.params.id, req.user.id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Sesión no encontrada' });
+      return res.status(404).json({ error: 'Sesi�n no encontrada' });
     }
     const session = result.rows[0];
-    console.log('📤 GET session:', {
+    console.log('?? GET session:', {
       id: session.id,
       messagesCount: session.messages?.length,
       hasFlashcards: Array.isArray(session.flashcards) && session.flashcards.length > 0,
@@ -775,7 +775,7 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
     res.json({ session });
   } catch (err) {
     console.error('Get session error:', err);
-    res.status(500).json({ error: 'Error al obtener sesión' });
+    res.status(500).json({ error: 'Error al obtener sesi�n' });
   }
 });
 
@@ -784,7 +784,7 @@ app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
 
   const { title, messages, pdfs, flashcards, summary, exam, study_plan } = req.body;
   
-  console.log('📥 POST /api/sessions', { 
+  console.log('?? POST /api/sessions', { 
     title, 
     messagesCount: messages?.length,
     hasFlashcards: Array.isArray(flashcards) && flashcards.length > 0,
@@ -811,7 +811,7 @@ app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
     res.json({ id: result.rows[0].id });
   } catch (err) {
     console.error('Create session error:', err);
-    res.status(500).json({ error: 'Error al crear sesión' });
+    res.status(500).json({ error: 'Error al crear sesi�n' });
   }
 });
 
@@ -820,7 +820,7 @@ app.put('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
 
   const { messages, pdfs, title, flashcards, summary, exam, study_plan } = req.body;
   
-  console.log('📥 PUT /api/sessions/:id', { 
+  console.log('?? PUT /api/sessions/:id', { 
     id: req.params.id, 
     messagesCount: messages?.length,
     hasFlashcards: Array.isArray(flashcards) && flashcards.length > 0,
@@ -850,7 +850,7 @@ app.put('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Update session error:', err);
-    res.status(500).json({ error: 'Error al actualizar sesión' });
+    res.status(500).json({ error: 'Error al actualizar sesi�n' });
   }
 });
 
@@ -866,10 +866,11 @@ app.delete('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Delete session error:', err);
-    res.status(500).json({ error: 'Error al eliminar sesión' });
+    res.status(500).json({ error: 'Error al eliminar sesi�n' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`ðŸš€ Astro Studio AI corriendo en http://localhost:${PORT}`);
+  console.log(`🌌 AeroLex AI corriendo en http://localhost:${PORT}`);
 });
+
