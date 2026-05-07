@@ -105,6 +105,17 @@ await pool.query(`
     } catch (err) {
       console.error('⚠️ Migración email auth:', err.message);
     }
+
+    // Migración: columnas para flashcards, resumen, examen, plan en sesiones
+    try {
+      await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS flashcards JSONB DEFAULT '[]'::jsonb`);
+      await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS summary JSONB`);
+      await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS exam JSONB DEFAULT '[]'::jsonb`);
+      await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS study_plan JSONB`);
+      console.log('✅ Migración columnas de estudio completada');
+    } catch (err) {
+      console.error('⚠️ Migración columnas de estudio:', err.message);
+    }
   } catch (err) {
     console.error('⚠️ PostgreSQL no disponible:', err.message);
     console.log('⚠️ La app funcionará sin BD');
@@ -742,7 +753,9 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT * FROM chat_sessions
+      `SELECT id, google_id, title, created_at, updated_at, messages, pdfs,
+              flashcards, summary, exam, study_plan
+       FROM chat_sessions
        WHERE id = $1 AND google_id = $2`,
       [req.params.id, req.user.id]
     );
@@ -750,10 +763,14 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'Sesión no encontrada' });
     }
     const session = result.rows[0];
-    console.log('📤 GET session:', { 
-      id: session.id, 
+    console.log('📤 GET session:', {
+      id: session.id,
       messagesCount: session.messages?.length,
-      messages: session.messages?.slice(0, 3)
+      hasFlashcards: Array.isArray(session.flashcards) && session.flashcards.length > 0,
+      hasSummary: !!session.summary,
+      hasExam: Array.isArray(session.exam) && session.exam.length > 0,
+      hasStudyPlan: !!session.study_plan,
+      pdfs: session.pdfs?.length || 0
     });
     res.json({ session });
   } catch (err) {
@@ -765,20 +782,31 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
 app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
 
-  const { title, messages, pdfs } = req.body;
+  const { title, messages, pdfs, flashcards, summary, exam, study_plan } = req.body;
   
   console.log('📥 POST /api/sessions', { 
     title, 
     messagesCount: messages?.length,
-    messages: messages?.slice(0, 3)
+    hasFlashcards: Array.isArray(flashcards) && flashcards.length > 0,
+    hasSummary: !!summary,
+    hasExam: Array.isArray(exam) && exam.length > 0,
+    hasStudyPlan: !!study_plan
   });
 
   try {
     const result = await pool.query(
-      `INSERT INTO chat_sessions (google_id, title, messages, pdfs)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO chat_sessions (google_id, title, messages, pdfs, flashcards, summary, exam, study_plan)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
-      [req.user.id, title, JSON.stringify(messages || []), JSON.stringify(pdfs || [])]
+      [
+        req.user.id, title,
+        JSON.stringify(messages || []),
+        JSON.stringify(pdfs || []),
+        JSON.stringify(flashcards || []),
+        summary ? JSON.stringify(summary) : null,
+        JSON.stringify(exam || []),
+        study_plan ? JSON.stringify(study_plan) : null
+      ]
     );
     res.json({ id: result.rows[0].id });
   } catch (err) {
@@ -790,21 +818,34 @@ app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
 app.put('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
 
-  const { messages, pdfs, title } = req.body;
+  const { messages, pdfs, title, flashcards, summary, exam, study_plan } = req.body;
   
   console.log('📥 PUT /api/sessions/:id', { 
     id: req.params.id, 
-    messagesCount: messages?.length, 
-    messages: messages?.slice(0, 3), // primeros 3 mensajes
+    messagesCount: messages?.length,
+    hasFlashcards: Array.isArray(flashcards) && flashcards.length > 0,
+    hasSummary: !!summary,
+    hasExam: Array.isArray(exam) && exam.length > 0,
+    hasStudyPlan: !!study_plan,
     title 
   });
 
   try {
     await pool.query(
       `UPDATE chat_sessions
-       SET messages = $1, pdfs = $2, updated_at = NOW(), title = $3
-       WHERE id = $4 AND google_id = $5`,
-      [JSON.stringify(messages), JSON.stringify(pdfs), title, req.params.id, req.user.id]
+       SET messages = $1, pdfs = $2, updated_at = NOW(), title = $3,
+           flashcards = $4, summary = $5, exam = $6, study_plan = $7
+       WHERE id = $8 AND google_id = $9`,
+      [
+        JSON.stringify(messages),
+        JSON.stringify(pdfs),
+        title,
+        JSON.stringify(flashcards || []),
+        summary ? JSON.stringify(summary) : null,
+        JSON.stringify(exam || []),
+        study_plan ? JSON.stringify(study_plan) : null,
+        req.params.id, req.user.id
+      ]
     );
     res.json({ ok: true });
   } catch (err) {

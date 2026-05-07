@@ -216,8 +216,42 @@ header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .header-center {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      min-width: 34px;
+      height: 34px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
     }
 
     .logo-section {
@@ -500,14 +534,20 @@ body:not(.sidebar-closed) .app-container {
     .auth-msg.error { color: #f87171; }
     .auth-msg.success { color: #34d399; }
 
-    .user-menu {
+    .user-profile {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 4px 4px 4px 10px;
+      gap: 6px;
+      padding: 3px 3px 3px 10px;
       border: 1px solid var(--border);
       border-radius: 999px;
       background: var(--bg-card);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .user-profile:hover {
+      border-color: var(--accent-violet);
+      background: var(--bg-card-hover);
     }
 
     .user-avatar {
@@ -515,11 +555,11 @@ body:not(.sidebar-closed) .app-container {
       height: 30px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1px solid var(--border-active);
+      border: 2px solid var(--accent-violet);
     }
 
     .user-name {
-      max-width: 150px;
+      max-width: 120px;
       color: var(--text-secondary);
       font-size: 13px;
       font-weight: 500;
@@ -536,25 +576,25 @@ body:not(.sidebar-closed) .app-container {
       position: relative;
     }
 
-    /* User Dropdown Menu */
+    /* User Dropdown Menu - Glassmorphism */
 .user-dropdown {
       position: fixed;
-      top: 65px;
-      right: 16px;
-      left: auto;
-      background: #0f0f2a;
-      border: 1px solid rgba(139,92,246,0.3);
-      border-radius: 14px;
-      padding: 8px;
-      min-width: 260px;
+      width: 250px;
+      max-width: 250px;
       z-index: 9999;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      animation: fadeInDown 0.15s ease;
+      background: rgba(15, 15, 42, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      animation: dropdownFadeIn 0.15s ease;
     }
 
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translate(-50%, -8px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
+    @keyframes dropdownFadeIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .user-menu-header {
@@ -1982,14 +2022,13 @@ body:not(.sidebar-closed) .app-container {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  /* Header - mostrar hamburguesa */
   .menu-toggle {
     display: block;
   }
   
   header .header-inner {
-    flex-wrap: wrap;
     padding: 8px 12px;
+    gap: 6px;
   }
   
   .logo-section {
@@ -2004,8 +2043,17 @@ body:not(.sidebar-closed) .app-container {
     display: none;
   }
   
-  /* Ocultar botones secundarios en header */
-  #libraryBtn, #historyBtn, #exportAllBtn {
+  .header-tools .status-badge {
+    display: none;
+  }
+  
+  .header-tools .btn-icon {
+    min-width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  
+  .user-name {
     display: none;
   }
   
@@ -2143,6 +2191,52 @@ body:not(.sidebar-closed) .app-container {
       .exam-card .exam-question-text { font-size: 15px; }
       .history-panel { width: 100%; right: -100%; }
     }
+
+    /* ===== SKELETON LOADERS ===== */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        rgba(139, 92, 246, 0.06) 25%,
+        rgba(0, 229, 255, 0.10) 50%,
+        rgba(139, 92, 246, 0.06) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.8s ease-in-out infinite;
+      border-radius: 8px;
+    }
+
+    .skeleton-text {
+      height: 16px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .skeleton-text.short { width: 60%; }
+    .skeleton-text.tiny { width: 35%; height: 12px; }
+    .skeleton-card {
+      height: 120px;
+      width: 100%;
+      border-radius: 12px;
+    }
+    .skeleton-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .skeleton-stat {
+      height: 60px;
+      border-radius: 10px;
+    }
+    .skeleton-table-row {
+      height: 40px;
+      width: 100%;
+      margin-bottom: 4px;
+      border-radius: 6px;
+    }
 </style>
 </head>
 <body class="auth-checking">
@@ -2208,32 +2302,36 @@ body:not(.sidebar-closed) .app-container {
 <!-- ===== HEADER ===== -->
 <header>
 <div class="header-inner">
-<button id="sidebarToggle" title="Alternar sidebar">☰</button>
-<div class="logo-section">
+  <div class="header-left">
+    <button id="sidebarToggle" title="Alternar sidebar">☰</button>
+    <div class="logo-section">
       <div class="logo-icon">🚀</div>
       <div>
         <div class="logo-text">Astro Studio AI</div>
         <div class="tagline">Tu asistente de estudio inteligente</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="user-menu" id="userMenu">
-        <div class="user-avatar-container" id="userAvatarContainer">
-          <img class="user-avatar" id="userAvatar" alt="">
-          <span class="user-name" id="userName"></span>
-        </div>
-        <button class="logout-btn" id="logoutBtn" type="button">Cerrar sesión</button>
-      </div>
-      <button class="btn btn-secondary btn-small" id="libraryBtn" title="Biblioteca de documentos">📚 Biblioteca</button>
-      <button class="btn btn-secondary btn-small" id="historyBtn" title="Historial de sesiones">🕒</button>
-      <button class="btn btn-secondary btn-small" id="exportAllBtn" title="Exportar todo a PDF" disabled>⬇️ Exportar</button>
-    </div>
-    <div class="status-badge offline" id="status-badge">
-      <span class="dot"></span>
-      <span id="status-text">Sin PDF</span>
-    </div>
-    <div class="plan-indicator" id="planIndicator"></div>
   </div>
+  <div class="header-center"></div>
+  <div class="header-right">
+    <div class="header-tools">
+      <div class="status-badge offline" id="status-badge">
+        <span class="dot"></span>
+        <span id="status-text">Sin PDF</span>
+      </div>
+      <div class="plan-indicator" id="planIndicator"></div>
+      <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos">📚</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones">🕒</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled>⬇️</button>
+    </div>
+    <div class="user-profile" id="userProfile">
+      <div class="user-avatar-container" id="userAvatarContainer">
+        <img class="user-avatar" id="userAvatar" alt="">
+        <span class="user-name" id="userName"></span>
+      </div>
+    </div>
+  </div>
+</div>
 </header>
 
 <!-- Sidebar Overlay (móvil) -->
@@ -2247,7 +2345,7 @@ body:not(.sidebar-closed) .app-container {
   <div class="sidebar-list" id="sessionList"></div>
 </div>
 
-<!-- User Dropdown Menu - Fixed position -->
+<!-- User Dropdown Menu - Glassmorphism, right-aligned -->
 <div id="userDropdown" class="user-dropdown" style="display:none;">
   <div class="user-menu-header">
     <img class="menu-avatar" id="menuAvatar" src="" alt="">
@@ -2261,11 +2359,11 @@ body:not(.sidebar-closed) .app-container {
   <div class="menu-usage" id="menuUsage"></div>
   <div class="menu-divider"></div>
   <button class="menu-item" id="menuUpgrade">
-    Mejorar a Premium
+    ⭐ Mejorar a Premium
   </button>
   <div class="menu-divider"></div>
   <button class="menu-item menu-item-danger" id="menuLogout">
-    Cerrar sesión
+    🚪 Cerrar sesión
   </button>
 </div>
 
@@ -2771,11 +2869,33 @@ body:not(.sidebar-closed) .app-container {
         const data = await res.json();
         const session = data.session || data;
         
-        // Restaurar PDFs
+        window.currentSessionId = id;
+        
+        // ===== HIDRATAR PDFs =====
         window.pdfDocs = session.pdfs || [];
         window.activeDocId = window.pdfDocs[0]?.id || null;
         
-        // Restaurar mensajes del chat
+        if (window.pdfDocs.length > 0) {
+          const doc = window.pdfDocs[0];
+          document.getElementById('fileName').textContent = doc.name || 'Documento';
+          document.getElementById('pageCount').textContent = doc.pages || '?';
+          document.getElementById('fileInfo').classList.add('visible');
+          document.getElementById('status-badge').className = 'status-badge online';
+          document.getElementById('status-text').textContent = 'PDF Cargado';
+          document.getElementById('toolPanel').classList.add('visible');
+          document.getElementById('dropZone').classList.add('collapsed');
+          const combined = getCombinedContext();
+          const allWords = combined.split(/\s+/).filter(Boolean);
+          document.getElementById('statPages').textContent = window.pdfDocs.reduce((s, d) => s + (d.pages || 0), 0);
+          document.getElementById('statWords').textContent = allWords.length.toLocaleString();
+          document.getElementById('statChars').textContent = combined.replace(/\s/g, '').length.toLocaleString();
+          document.getElementById('statReadTime').textContent = Math.max(1, Math.round(allWords.length / 200)) + ' min';
+        } else {
+          document.getElementById('status-badge').className = 'status-badge offline';
+          document.getElementById('status-text').textContent = 'Sin PDF';
+        }
+        
+        // ===== HIDRATAR MENSAJES DEL CHAT =====
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
           chatMessages.innerHTML = '';
@@ -2786,16 +2906,80 @@ body:not(.sidebar-closed) .app-container {
           }
         }
         
-        // Renderizar tabs y actualizar UI
-        renderTabs();
-        window.currentSessionId = id;
+        // ===== HIDRATAR FLASHCARDS =====
+        if (session.flashcards && session.flashcards.length > 0) {
+          window.flashcardsData = session.flashcards;
+          renderFlashcards(session.flashcards);
+          document.getElementById('exportFlashcards').style.display = 'inline-block';
+        } else {
+          window.flashcardsData = null;
+        }
         
-        // Marcar sesión activa
+        // ===== HIDRATAR RESUMEN =====
+        if (session.summary && session.summary.text) {
+          window.summaryData = session.summary;
+          const summaryEl = document.getElementById('summaryText');
+          if (summaryEl) {
+            summaryEl.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${session.summary.text.replace(/\n/g, '<br>')}`;
+          }
+          document.getElementById('exportSummary').style.display = 'inline-block';
+        } else {
+          window.summaryData = null;
+        }
+        
+        // ===== HIDRATAR PLAN DE ESTUDIO =====
+        if (session.study_plan) {
+          window.planData = session.study_plan;
+          const tbody = document.getElementById('planBody');
+          if (tbody && session.study_plan.items && session.study_plan.items.length > 0) {
+            tbody.innerHTML = '';
+            session.study_plan.items.forEach((item, i) => {
+              const d = new Date(item.fecha);
+              const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+              const tagClass = i < session.study_plan.items.length - 1 ? 'tag-cyan' : 'tag-purple';
+              const label = i < session.study_plan.items.length - 1 ? 'Por hacer' : '📝 Examen';
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>Día ${item.dia}</td>
+                <td>${dateStr}</td>
+                <td>${item.tema}</td>
+                <td>${item.tiempo}</td>
+                <td><span class="tag ${tagClass}">${label}</span></td>
+              `;
+              tbody.appendChild(tr);
+            });
+            document.getElementById('exportPlan').style.display = 'inline-block';
+          }
+          if (session.study_plan.subject) document.getElementById('planSubject').value = session.study_plan.subject;
+          if (session.study_plan.examDate) document.getElementById('planDate').value = session.study_plan.examDate;
+        } else {
+          window.planData = null;
+        }
+        
+        // ===== HIDRATAR EXAMEN =====
+        if (session.exam && session.exam.length > 0) {
+          const lastExam = session.exam[session.exam.length - 1];
+          if (lastExam.results) {
+            examQuestions = lastExam.questions || [];
+            examAnswers = lastExam.results || [];
+            examIndex = examQuestions.length;
+            renderExamResults();
+          }
+        }
+        
+        // ===== ACTUALIZAR UI =====
+        renderTabs();
+        updateExportAllButton();
+        
+        // Marcar sesión activa en sidebar
         document.querySelectorAll('.session-item').forEach(el => {
           el.classList.toggle('active', el.dataset.id == id);
         });
+        
+        mostrarToast('✅ Sesión restaurada correctamente');
       } catch (e) {
         console.error('Load session error:', e);
+        mostrarToast('⚠️ Error al cargar la sesión');
       }
     }
 
@@ -2803,14 +2987,12 @@ body:not(.sidebar-closed) .app-container {
       if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
       saveDebounceTimer = setTimeout(async () => {
         try {
-          // Obtener mensajes actuales (solo usuario e IA, no sistema)
           const chatMessages = document.getElementById('chatMessages');
           const messages = [];
           if (chatMessages) {
             chatMessages.querySelectorAll('.message').forEach(msg => {
               const isUser = msg.classList.contains('user');
               const isAI = msg.classList.contains('ai');
-              // Solo guardar mensajes reales de usuario e IA, no loading ni sistema
               if (isUser || (isAI && !msg.classList.contains('loading'))) {
                 messages.push({
                   role: isUser ? 'user' : 'ai',
@@ -2820,16 +3002,19 @@ body:not(.sidebar-closed) .app-container {
             });
           }
           
-          // Debug: verificar qué se está guardando
-          console.log('💾 Guardando sesión:', { messagesCount: messages.length, messages });
-          
-          // Generar título
           let title = 'Nueva sesión';
           if (window.pdfDocs.length > 0) {
             title = window.pdfDocs[0].name.replace(/\.pdf$/i, '');
           } else if (messages.length > 0) {
             title = messages[0].text.substring(0, 40);
           }
+          
+          // Colectar datos de estudio
+          const examState = examQuestions.length > 0 ? [{
+            questions: examQuestions,
+            results: examAnswers,
+            timestamp: new Date().toISOString()
+          }] : [];
           
           const payload = {
             title,
@@ -2839,10 +3024,20 @@ body:not(.sidebar-closed) .app-container {
               name: doc.name,
               content: doc.content,
               pages: doc.pages
-            }))
+            })),
+            flashcards: window.flashcardsData || [],
+            summary: window.summaryData || null,
+            exam: examState,
+            study_plan: window.planData || null
           };
           
-          console.log('📦 Payload:', payload);
+          console.log('📦 Guardando sesión:', {
+            messages: messages.length,
+            flashcards: payload.flashcards.length,
+            summary: !!payload.summary,
+            exam: payload.exam.length,
+            study_plan: !!payload.study_plan
+          });
           
           let res;
           if (window.currentSessionId) {
@@ -2878,10 +3073,27 @@ body:not(.sidebar-closed) .app-container {
       window.pdfDocs = [];
       window.activeDocId = null;
       window.currentSessionId = null;
+      window.flashcardsData = null;
+      window.summaryData = null;
+      window.planData = null;
+      examQuestions = [];
+      examAnswers = [];
+      examIndex = 0;
       document.getElementById('chatMessages').innerHTML = '';
+      document.getElementById('summaryText').innerHTML = '<h4>📝 Resumen</h4><p>Sube un PDF y genera un resumen para ver aquí el contenido extraído de tus apuntes de forma inteligente.</p>';
+      document.getElementById('planBody').innerHTML = '';
+      document.getElementById('planSubject').value = 'Álgebra Lineal';
+      document.getElementById('statWords').textContent = '—';
+      document.getElementById('statPages').textContent = '—';
+      document.getElementById('statChars').textContent = '—';
+      document.getElementById('statReadTime').textContent = '—';
+      document.getElementById('examContent').innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
+      startExam = document.getElementById('startExam');
+      if (startExam) startExam.addEventListener('click', handleStartExam);
       renderTabs();
       document.getElementById('dropZone').classList.remove('collapsed');
       document.querySelector('.tool-panel')?.classList.remove('visible');
+      updateExportAllButton();
       loadSessions();
     }
 
@@ -2911,8 +3123,8 @@ let userMenuOpen = false;
 
 function toggleUserMenu() {
   const dropdown = document.getElementById('userDropdown');
-  const userNameEl = document.getElementById('userName');
-  if (!dropdown || !userNameEl) return;
+  const profile = document.getElementById('userProfile');
+  if (!dropdown || !profile) return;
 
   if (userMenuOpen) {
     dropdown.style.display = 'none';
@@ -2922,13 +3134,13 @@ function toggleUserMenu() {
 
   userMenuOpen = true;
   
-  // Calcular posición dinámica
-  const rect = userNameEl.getBoundingClientRect();
+  // Posicionar justo debajo del perfil, alineado al borde derecho
+  const rect = profile.getBoundingClientRect();
   dropdown.style.position = 'fixed';
   dropdown.style.top = (rect.bottom + 8) + 'px';
-  dropdown.style.left = (rect.left + rect.width / 2) + 'px';
-  dropdown.style.transform = 'translateX(-50%)';
-dropdown.style.display = 'block';
+  dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+  dropdown.style.left = 'auto';
+  dropdown.style.display = 'block';
 
   updateUserMenu();
 }
@@ -3592,13 +3804,15 @@ if (window.location.search.includes('verified=true')) {
   }
 }
 
-logoutBtn.addEventListener('click', () => {
-      clearStorage();
-      window.location.href = '/auth/logout';
-    });
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    clearStorage();
+    window.location.href = '/auth/logout';
+  });
+}
 
     // User dropdown menu
-    document.getElementById('userAvatarContainer').addEventListener('click', toggleUserMenu);
+    document.getElementById('userProfile').addEventListener('click', toggleUserMenu);
     document.getElementById('menuLogout').addEventListener('click', () => {
       clearStorage();
       window.location.href = '/auth/logout';
@@ -3611,7 +3825,7 @@ logoutBtn.addEventListener('click', () => {
     // Click fuera del menú para cerrar
     document.addEventListener('click', (e) => {
       const dropdown = document.getElementById('userDropdown');
-      const container = document.getElementById('userAvatarContainer');
+      const container = document.getElementById('userProfile');
       if (dropdown && container && !dropdown.contains(e.target) && !container.contains(e.target)) {
         closeUserMenu();
       }
@@ -3710,6 +3924,8 @@ if (data.cards && data.cards.length > 0) {
         // Mostrar botón de exportar
         document.getElementById('exportFlashcards').style.display = 'inline-block';
         updateExportAllButton();
+        // Auto-save después de generar flashcards
+        saveCurrentSession();
       }
       } catch (e) {
         console.error('Flashcards error:', e);
@@ -4086,6 +4302,9 @@ if (data.fallback && data.planTexto) {
         document.getElementById('exportPlan').style.display = 'inline-block';
         updateExportAllButton();
       }
+      
+      // Auto-save después de generar plan
+      saveCurrentSession();
 
         document.querySelector('.study-plan-section p:last-child').textContent = `✅ Plan de estudio para "${subject}" — ${data.diasRestantes} días hasta el examen.`;
       } catch (e) {
@@ -4124,6 +4343,8 @@ genSummary.addEventListener('click', async () => {
         saveToStorage('summary', window.summaryData);
         document.getElementById('exportSummary').style.display = 'inline-block';
         updateExportAllButton();
+        // Auto-save después de generar resumen
+        saveCurrentSession();
       } catch (e) {
         console.error('Summary error:', e);
         summaryText.innerHTML = '<p style="color:var(--text-muted);">⚠️ Error al generar el resumen. Intenta de nuevo.</p>';
@@ -4302,7 +4523,10 @@ genSummary.addEventListener('click', async () => {
         renderExamQuestion();
       });
 
-      document.getElementById('backToExam').addEventListener('click', () => {
+      // Auto-save después de completar examen
+      saveCurrentSession();
+
+document.getElementById('backToExam').addEventListener('click', () => {
         examQuestions = [];
         examIndex = 0;
         examAnswers = [];
