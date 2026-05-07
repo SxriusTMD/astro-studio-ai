@@ -2237,6 +2237,47 @@ body:not(.sidebar-closed) .app-container {
       margin-bottom: 4px;
       border-radius: 6px;
     }
+
+    /* ===== CITATION BADGES ===== */
+    .citation-badge {
+      display: inline-block;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #a78bfa;
+      font-family: 'Inter', monospace;
+      letter-spacing: 0.3px;
+    }
+    .citation-badge.annex {
+      background: rgba(0, 229, 255, 0.1);
+      border-color: rgba(0, 229, 255, 0.25);
+      color: #5eead4;
+    }
+    .citation-badge.primary {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+    }
+
+    .message.ai .citation-badge {
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+
+    /* Leyenda Técnica block */
+    .leyenda-tecnica {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(139, 92, 246, 0.06);
+      border-left: 3px solid rgba(139, 92, 246, 0.4);
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
 </style>
 </head>
 <body class="auth-checking">
@@ -4153,14 +4194,17 @@ if (!file._fromRestore) {
       renderTabs();
     }
     function addChatMessage(role, text) {
-      // Eliminar empty state
       const empty = chatMessages.querySelector('.empty-chat');
       if (empty) empty.remove();
 
       const div = document.createElement('div');
       div.className = `message ${role}`;
       if (role === 'ai' && typeof marked !== 'undefined') {
-        div.innerHTML = marked.parse(text);
+        let html = marked.parse(text);
+        html = html.replace(/\[(Fuente \d+|Anexo [A-Z]|Documento Principal)\]/g, '<span class="citation-badge">$1</span>');
+        html = html.replace(/---\s*$/gm, '');
+        html = html.replace(/(📌 Leyenda Técnica:[^<]*)/g, '<div class="leyenda-tecnica">$1</div>');
+        div.innerHTML = html;
       } else {
         div.textContent = text;
       }

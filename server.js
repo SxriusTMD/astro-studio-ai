@@ -29,9 +29,9 @@ const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
       subject: '? Brevo API conectada - AeroLex AI',
       htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
     });
-    console.log(`? Brevo API Health Check exitoso Ã¯Â¿Â½ messageId: ${result.data?.messageId || 'OK'}`);
+    console.log(`? Brevo API Health Check exitoso ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ messageId: ${result.data?.messageId || 'OK'}`);
   } catch (err) {
-    console.error('? Brevo API Health Check fallÃ¯Â¿Â½:', err.message);
+    console.error('? Brevo API Health Check fallÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½:', err.message);
     if (err.body) console.error('   Brevo detalle:', JSON.stringify(err.body, null, 2));
   }
 })();
@@ -93,7 +93,7 @@ await pool.query(`
   `);
     console.log('? Tablas creadas/verificadas');
     
-    // MigraciÃ¯Â¿Â½n: columnas para auth por email
+    // MigraciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n: columnas para auth por email
     try {
       await pool.query(`ALTER TABLE usuarios ALTER COLUMN google_id DROP NOT NULL`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`);
@@ -101,24 +101,24 @@ await pool.query(`
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(255) UNIQUE`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS auth_method VARCHAR(50) DEFAULT 'google'`);
-      console.log('? MigraciÃ¯Â¿Â½n email auth completada');
+      console.log('? MigraciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n email auth completada');
     } catch (err) {
-      console.error('?? MigraciÃ¯Â¿Â½n email auth:', err.message);
+      console.error('?? MigraciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n email auth:', err.message);
     }
 
-    // MigraciÃ¯Â¿Â½n: columnas para flashcards, resumen, examen, plan en sesiones
+    // MigraciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n: columnas para flashcards, resumen, examen, plan en sesiones
     try {
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS flashcards JSONB DEFAULT '[]'::jsonb`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS summary JSONB`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS exam JSONB DEFAULT '[]'::jsonb`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS study_plan JSONB`);
-      console.log('? MigraciÃ¯Â¿Â½n columnas de estudio completada');
+      console.log('? MigraciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n columnas de estudio completada');
     } catch (err) {
-      console.error('?? MigraciÃ¯Â¿Â½n columnas de estudio:', err.message);
+      console.error('?? MigraciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n columnas de estudio:', err.message);
     }
   } catch (err) {
     console.error('?? PostgreSQL no disponible:', err.message);
-    console.log('?? La app funcionarÃ¯Â¿Â½ sin BD');
+    console.log('?? La app funcionarÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ sin BD');
   }
 })();
 app.set('trust proxy', 1);
@@ -149,7 +149,7 @@ passport.use(new GoogleStrategy({
     photo: profile.photos?.[0]?.value || ''
   };
 
-  // Guardar/actualizar usuario en BD si estÃ¯Â¿Â½ disponible
+  // Guardar/actualizar usuario en BD si estÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ disponible
   if (dbOk) {
     try {
       await pool.query(`
@@ -217,14 +217,14 @@ app.get('/api/me', (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email y contraseÃ¯Â¿Â½a requeridos' });
+  if (!email || !password) return res.status(400).json({ error: 'Email y contraseÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½a requeridos' });
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) return res.status(400).json({ error: 'Formato de email invÃ¯Â¿Â½lido' });
-  if (password.length < 6) return res.status(400).json({ error: 'La contraseÃ¯Â¿Â½a debe tener al menos 6 caracteres' });
+  if (!emailRegex.test(email)) return res.status(400).json({ error: 'Formato de email invÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½lido' });
+  if (password.length < 6) return res.status(400).json({ error: 'La contraseÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½a debe tener al menos 6 caracteres' });
 
   try {
     const existente = await pool.query(`SELECT id FROM usuarios WHERE email = $1`, [email]);
-    if (existente.rows.length > 0) return res.status(409).json({ error: 'Este email ya estÃ¯Â¿Â½ registrado' });
+    if (existente.rows.length > 0) return res.status(409).json({ error: 'Este email ya estÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ registrado' });
 
     const password_hash = await bcrypt.hash(password, 10);
     const verification_token = crypto.randomBytes(32).toString('hex');
@@ -234,9 +234,9 @@ app.post('/api/auth/register', async (req, res) => {
       VALUES ($1, $2, $3, $4, false, 'email', $5)
     `, [crypto.randomUUID(), email, password_hash, verification_token, email.split('@')[0]]);
 
-    // Enviar correo de verificaciÃ¯Â¿Â½n
+    // Enviar correo de verificaciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n
     try {
-      console.log(`?? Intentando envÃ¯Â¿Â½o desde: AeroLex AI (aerolexai@gmail.com) ? ${email}`);
+      console.log(`?? Intentando envÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½o desde: AeroLex AI (aerolexai@gmail.com) ? ${email}`);
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       const mailRes = await brevoClient.transactionalEmails.sendTransacEmail({
         sender: { email: 'aerolexai@gmail.com', name: 'AeroLex AI' },
@@ -246,17 +246,17 @@ app.post('/api/auth/register', async (req, res) => {
           <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
             <div style="font-size:48px;margin-bottom:16px;">??</div>
             <h1 style="color:#8b5cf6;">AeroLex AI</h1>
-            <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botÃ¯Â¿Â½n para verificar tu correo:</p>
+            <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n para verificar tu correo:</p>
             <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
             <p style="margin-top:24px;font-size:13px;color:#9090b8;">Si no creaste esta cuenta, ignora este mensaje.</p>
           </div>
         `
       });
-      console.log(`? Correo enviado vÃ¯Â¿Â½a Brevo a ${email} Ã¯Â¿Â½ messageId: ${mailRes.data?.messageId || mailRes.rawResponse?.headers?.get?.('x-message-id') || 'OK'}`);
+      console.log(`? Correo enviado vÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½a Brevo a ${email} ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ messageId: ${mailRes.data?.messageId || mailRes.rawResponse?.headers?.get?.('x-message-id') || 'OK'}`);
     } catch (mailErr) {
       console.error('? Error enviando correo a', email, ':', mailErr.message);
       if (mailErr.body) console.error('   Brevo detalle:', JSON.stringify(mailErr.body, null, 2));
-      return res.status(500).json({ error: 'Error al enviar el correo de verificaciÃ¯Â¿Â½n. Intenta de nuevo mÃ¯Â¿Â½s tarde.' });
+      return res.status(500).json({ error: 'Error al enviar el correo de verificaciÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n. Intenta de nuevo mÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½s tarde.' });
     }
 
     res.json({ ok: true, message: 'Revisa tu correo para verificar la cuenta' });
@@ -277,7 +277,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
       `SELECT id, email FROM usuarios WHERE verification_token = $1 AND is_verified = false`,
       [token]
     );
-    if (result.rows.length === 0) return res.status(400).send('Token invÃ¯Â¿Â½lido o ya verificado');
+    if (result.rows.length === 0) return res.status(400).send('Token invÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½lido o ya verificado');
 
     const userId = result.rows[0].id;
 
@@ -286,7 +286,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
       [userId]
     );
 
-    // Iniciar sesiÃ¯Â¿Â½n automÃ¯Â¿Â½ticamente para que al llegar a / ya estÃ¯Â¿Â½ autenticado
+    // Iniciar sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n automÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ticamente para que al llegar a / ya estÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ autenticado
     const userResult = await pool.query(
       `SELECT google_id, email, username, nombre, foto FROM usuarios WHERE id = $1`,
       [userId]
@@ -311,7 +311,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
   }
 });
 
-// GET /api/auth/check-status?email=xxx - Verificar si un email ya estÃ¯Â¿Â½ verificado
+// GET /api/auth/check-status?email=xxx - Verificar si un email ya estÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ verificado
 app.get('/api/auth/check-status', async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).json({ error: 'Email requerido' });
@@ -328,25 +328,25 @@ app.get('/api/auth/check-status', async (req, res) => {
   }
 });
 
-// POST /api/auth/login - Iniciar sesiÃ¯Â¿Â½n con email + password
+// POST /api/auth/login - Iniciar sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n con email + password
 app.post('/api/auth/login', async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email y contraseÃ¯Â¿Â½a requeridos' });
+  if (!email || !password) return res.status(400).json({ error: 'Email y contraseÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½a requeridos' });
 
   try {
     const result = await pool.query(
       `SELECT id, google_id, email, password_hash, is_verified, username, nombre, foto FROM usuarios WHERE email = $1 AND auth_method = 'email'`,
       [email]
     );
-    if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales invÃ¯Â¿Â½lidas' });
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Credenciales invÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½lidas' });
 
     const user = result.rows[0];
     if (!user.is_verified) return res.status(403).json({ error: 'Correo no verificado', needsVerification: true });
-    if (!user.password_hash) return res.status(401).json({ error: 'Credenciales invÃ¯Â¿Â½lidas' });
+    if (!user.password_hash) return res.status(401).json({ error: 'Credenciales invÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½lidas' });
 
     const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) return res.status(401).json({ error: 'Credenciales invÃ¯Â¿Â½lidas' });
+    if (!match) return res.status(401).json({ error: 'Credenciales invÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½lidas' });
 
     const needsUsername = !user.username;
 
@@ -359,12 +359,12 @@ app.post('/api/auth/login', async (req, res) => {
       dbId: user.id,
       needsUsername
     }, (err) => {
-      if (err) return res.status(500).json({ error: 'Error al iniciar sesiÃ¯Â¿Â½n' });
+      if (err) return res.status(500).json({ error: 'Error al iniciar sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n' });
       res.json({ ok: true, needsUsername });
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Error al iniciar sesiÃ¯Â¿Â½n' });
+    res.status(500).json({ error: 'Error al iniciar sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n' });
   }
 });
 
@@ -384,11 +384,11 @@ app.get('/api/auth/check-username', async (req, res) => {
 app.post('/api/auth/set-username', ensureAuthenticated, async (req, res) => {
   const { username } = req.body;
   if (!username || username.length < 3) return res.status(400).json({ error: 'El username debe tener al menos 3 caracteres' });
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Solo letras, nÃ¯Â¿Â½meros y guiÃ¯Â¿Â½n bajo' });
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Solo letras, nÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½meros y guiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n bajo' });
 
   try {
     const duplicado = await pool.query(`SELECT id FROM usuarios WHERE username = $1`, [username]);
-    if (duplicado.rows.length > 0) return res.status(409).json({ error: 'Este nombre de usuario ya estÃ¯Â¿Â½ en uso' });
+    if (duplicado.rows.length > 0) return res.status(409).json({ error: 'Este nombre de usuario ya estÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ en uso' });
 
     await pool.query(
       `UPDATE usuarios SET username = $1, nombre = $1 WHERE google_id = $2`,
@@ -457,7 +457,7 @@ async function callNVIDIA(messages) {
     }
   }
   
-  throw lastError || new Error('NVIDIA API error despuÃ¯Â¿Â½s de reintentos');
+  throw lastError || new Error('NVIDIA API error despuÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½s de reintentos');
 }
 
 // Helper: reset daily counters if needed
@@ -498,7 +498,7 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
     });
   } catch (err) {
     console.error('User limits error:', err);
-    res.status(500).json({ error: 'Error obteniendo lÃ¯Â¿Â½mites' });
+    res.status(500).json({ error: 'Error obteniendo lÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½mites' });
   }
 });
 
@@ -506,7 +506,7 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
 app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
   const { type } = req.body;
   if (!type || !['chat', 'exam'].includes(type)) {
-    return res.status(400).json({ error: 'Tipo invÃ¯Â¿Â½lido' });
+    return res.status(400).json({ error: 'Tipo invÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½lido' });
   }
   
   try {
@@ -542,7 +542,7 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
 
-  const systemInstruction = 'Eres AeroLex AI, un analista académico de alto nivel. Tu función es procesar documentos, extraer información estructurada y generar resúmenes, flashcards, planes de estudio y exámenes. Responde siempre en español.\n\nREGLAS DE HIERRO:\n1. (CERO SALUDO) ESTÁ PROHIBIDO saludar, presentarse o decir "Hola", "Soy AeroLex", "Bienvenido" o cualquier variante. Inicia la respuesta directamente con el análisis.\n2. (PRIVACIDAD EN CITAS) Al referenciar información del documento, usa únicamente corchetes genéricos: [Fuente 1], [Fuente 2]. ESTÁ PROHIBIDO escribir nombres reales de archivos, extensiones .pdf, rutas o identificadores del usuario.\n3. (LEYENDA TÉCNICA) Al final de cada respuesta, inserta un separador (---) seguido de una línea con: "📌 Leyenda Técnica:" y una conclusión de máximo 20 palabras sobre el rigor del análisis.\n4. (TONO) Académico de alto nivel. Técnico, preciso, frío. Cero informalidad. Cero adjetivos subjetivos. Cero opiniones.\n\nESTRUCTURA DE RESPUESTA:\n- Primer párrafo: análisis directo del contenido solicitado.\n- Cuerpo: datos estructurados, clasificaciones, términos clave en **negritas**.\n- Cierre: ---\n📌 Leyenda Técnica: [conclusión de ≤20 palabras].\n\nFORMATO:\n- ### para títulos de sección.\n- **negritas** para términos clave.\n- - para listas.\n- \\n\\n entre párrafos.';
+  const systemInstruction = 'Eres AeroLex AI, un analista acad\u00e9mico de alto nivel especializado en procesamiento documental. Tu funci\u00f3n es procesar documentos, extraer informaci\u00f3n estructurada y generar res\u00famenes, flashcards, planes de estudio y ex\u00e1menes. Responde siempre en espa\u00f1ol.\n\nL\u00d3GICA DE INTERACCI\u00d3N:\n1. (SALUDO CONTEXTUAL) SI el usuario saluda expl\u00edcitamente ("Hola", "Buenas", "Hey") O es evidente que inicia una conversaci\u00f3n: responde con un saludo breve y profesional. Ejemplo: "AeroLex AI a su disposici\u00f3n. Iniciando an\u00e1lisis documental riguroso." SI es una pregunta de seguimiento t\u00e9cnico: PROHIBIDO saludar. Ve directo al an\u00e1lisis.\n2. (INTENCI\u00d3N PROACTIVA) Si el usuario no formula una pregunta t\u00e9cnica pero hay documentos cargados, genera proactivamente un "Resumen Ejecutivo" de 3 puntos clave sobre el contenido del documento. No digas que no tienes instrucciones.\n\nREGLAS DE FORMATO:\n1. (PRIVACIDAD EN CITAS) PROHIBIDO mencionar nombres de archivos, extensiones .pdf o rutas. OBLIGATORIO usar etiquetas gen\u00e9ricas: [Fuente 1], [Anexo A], [Documento Principal].\n2. (ESTRUCTURA) Usa **negritas** para conceptos clave. Usa listas tabuladas (-) para hallazgos t\u00e9cnicos.\n3. (CIERRE) Inserta --- y la secci\u00f3n "📌 Leyenda T\u00e9cnica:" con una frase que resuma el valor acad\u00e9mico de la respuesta.\n4. (TONO) Mentor\u00eda de postgrado. T\u00e9cnico, riguroso, profesional. Sin opiniones ni subjetividad.';
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
@@ -573,14 +573,14 @@ app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
   const { pdfContent } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
-  const prompt = 'Genera exactamente 5 flashcards de estudio basadas en este documento. Responde ÃƒÅ¡NICAMENTE con un array JSON vÃƒÂ¡lido con este formato: [{"pregunta":"...","respuesta":"..."}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
+  const prompt = 'Genera exactamente 5 flashcards de estudio basadas en este documento. Responde ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡NICAMENTE con un array JSON vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido con este formato: [{"pregunta":"...","respuesta":"..."}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
 
   try {
     const text = await callNVIDIA([
       { role: 'user', content: prompt }
     ]);
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No se encontrÃƒÂ³ JSON en la respuesta');
+    if (!jsonMatch) throw new Error('No se encontrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ JSON en la respuesta');
     const cards = JSON.parse(jsonMatch[0]);
     res.json({ cards });
   } catch (err) {
@@ -593,7 +593,7 @@ app.post('/api/resumen', ensureAuthenticated, async (req, res) => {
   const { pdfContent } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
-  const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en espaÃƒÂ±ol: INTRODUCCIÃƒâ€œN, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÃƒâ€œN. Formato limpio y claro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
+  const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en espaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â±ol: INTRODUCCIÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œN, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œN. Formato limpio y claro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
 
   try {
     const text = await callNVIDIA([
@@ -615,7 +615,7 @@ app.post('/api/examen', ensureAuthenticated, async (req, res) => {
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No se encontrÃƒÂ³ JSON en la respuesta');
+    if (!jsonMatch) throw new Error('No se encontrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ JSON en la respuesta');
     const preguntas = JSON.parse(jsonMatch[0]);
     res.json({ preguntas });
   } catch (err) {
@@ -636,10 +636,10 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 3) {
-    return res.json({ error: 'Ã¢Å¡Â Ã¯Â¸Â El tiempo es muy corto. Quedan menos de 3 dÃƒÂ­as para el examen.', plan: [] });
+    return res.json({ error: 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â El tiempo es muy corto. Quedan menos de 3 dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as para el examen.', plan: [] });
   }
 
-  const prompt = `Genera un plan de estudio dÃƒÂ­a por dÃƒÂ­a para preparar un examen de "${materia}" usando el contenido de este documento. Hay ${diffDays} dÃƒÂ­as hasta el examen. Asigna temas del documento a cada dÃƒÂ­a de forma progresiva. Responde ÃƒÅ¡NICAMENTE con un array JSON vÃƒÂ¡lido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
+  const prompt = `Genera un plan de estudio dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a por dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a para preparar un examen de "${materia}" usando el contenido de este documento. Hay ${diffDays} dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as hasta el examen. Asigna temas del documento a cada dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a de forma progresiva. Responde ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡NICAMENTE con un array JSON vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
 
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
@@ -760,7 +760,7 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
       [req.params.id, req.user.id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'SesiÃ¯Â¿Â½n no encontrada' });
+      return res.status(404).json({ error: 'SesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n no encontrada' });
     }
     const session = result.rows[0];
     console.log('?? GET session:', {
@@ -775,7 +775,7 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
     res.json({ session });
   } catch (err) {
     console.error('Get session error:', err);
-    res.status(500).json({ error: 'Error al obtener sesiÃ¯Â¿Â½n' });
+    res.status(500).json({ error: 'Error al obtener sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n' });
   }
 });
 
@@ -811,7 +811,7 @@ app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
     res.json({ id: result.rows[0].id });
   } catch (err) {
     console.error('Create session error:', err);
-    res.status(500).json({ error: 'Error al crear sesiÃ¯Â¿Â½n' });
+    res.status(500).json({ error: 'Error al crear sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n' });
   }
 });
 
@@ -850,7 +850,7 @@ app.put('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Update session error:', err);
-    res.status(500).json({ error: 'Error al actualizar sesiÃ¯Â¿Â½n' });
+    res.status(500).json({ error: 'Error al actualizar sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n' });
   }
 });
 
@@ -866,12 +866,12 @@ app.delete('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Delete session error:', err);
-    res.status(500).json({ error: 'Error al eliminar sesiÃ¯Â¿Â½n' });
+    res.status(500).json({ error: 'Error al eliminar sesiÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½n' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Ã°Å¸Å’Å’ AeroLex AI corriendo en http://localhost:${PORT}`);
+  console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã¢â‚¬â„¢Ãƒâ€¦Ã¢â‚¬â„¢ AeroLex AI corriendo en http://localhost:${PORT}`);
 });
 
 
