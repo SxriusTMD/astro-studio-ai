@@ -74,9 +74,9 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -84,24 +84,46 @@
   align-items: stretch;
 }
 
-    @media (min-width: 1200px) {
-      .app-container { max-width: 1300px; padding: 0 32px; }
+    @media (min-width: 1600px) {
+      .app-container { max-width: 1400px; padding: 0 48px; }
     }
     @media (max-width: 768px) {
-      .app-container { padding: 0 12px; }
+      .app-container { padding: 0 8px; }
     }
 
 /* ===== HEADER ===== */
 header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 101;
   width: 100%;
   background: rgba(10,10,26,0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  transition: padding 0.25s ease;
+}
+
+header.header-compact .logo-text {
+  font-size: 16px;
+}
+header.header-compact .tagline,
+header.header-compact .status-badge,
+header.header-compact .plan-indicator {
+  display: none;
+}
+header.header-compact .logo-icon {
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+}
+@media (min-width: 769px) {
+  header.header-compact .tagline,
+  header.header-compact .status-badge,
+  header.header-compact .plan-indicator {
+    display: none;
+  }
 }
 
 /* ===== SIDEBAR ===== */
@@ -297,6 +319,13 @@ header {
   justify-content: center;
   min-width: 36px;
   height: 36px;
+}
+@media (max-width: 768px) {
+  #sidebarToggle {
+    min-width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
 }
 #sidebarToggle:hover {
   background: rgba(139,92,246,0.2);
@@ -700,13 +729,15 @@ body:not(.sidebar-closed) .app-container {
     /* ===== DROP ZONE ===== */
 .drop-zone {
   position: relative;
-  border: 2px dashed var(--border);
+  border: 2px dashed rgba(255,255,255,0.12);
   border-radius: var(--radius);
   padding: 12px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: var(--bg-card);
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   overflow-y: auto;
   overflow-x: hidden;
   flex-shrink: 0;
@@ -955,11 +986,13 @@ body:not(.sidebar-closed) .app-container {
 
     .tabs {
       display: flex;
-      gap: 4px;
+      gap: 2px;
       background: rgba(255,255,255,0.03);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
       border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-      padding: 8px 4px 0;
+      padding: 6px 6px 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       flex-shrink: 0;
@@ -971,25 +1004,26 @@ body:not(.sidebar-closed) .app-container {
     .tab-btn {
       flex: 1;
       min-width: fit-content;
-      padding: 10px 16px;
+      padding: 8px 14px;
       background: transparent;
       border: none;
-      border-radius: var(--radius-xs);
+      border-radius: 8px;
       color: var(--text-muted);
       font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.2s ease;
       white-space: nowrap;
+      letter-spacing: 0.01em;
     }
 
-    .tab-btn:hover { color: var(--text-secondary); }
+    .tab-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
 
     .tab-btn.active {
-      background: var(--bg-surface);
-      color: var(--accent-cyan);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      background: rgba(108, 59, 210, 0.2);
+      color: #fff;
+      box-shadow: 0 1px 6px rgba(108, 59, 210, 0.25);
     }
 
 .tab-content {
@@ -1021,13 +1055,16 @@ body:not(.sidebar-closed) .app-container {
 
     /* ===== TAB 1 - CHAT ===== */
     .chat-container {
-      background: var(--bg-card);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: var(--radius);
-      border: 1px solid var(--border);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       height: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
     .chat-messages {
@@ -1109,8 +1146,10 @@ body:not(.sidebar-closed) .app-container {
       display: flex;
       gap: 10px;
       padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-surface);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
     .chat-input-area input {
@@ -1178,16 +1217,56 @@ body:not(.sidebar-closed) .app-container {
     .flashcards-actions,
     .summary-actions {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       justify-content: center;
       align-items: center;
       margin-top: 16px;
+      flex-wrap: wrap;
     }
 
     .study-plan-actions {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Premium action toolbar */
+    .flashcards-actions .btn,
+    .summary-actions .btn,
+    .study-plan-actions .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: 8px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .flashcards-actions .btn-primary,
+    .summary-actions .btn-primary,
+    .study-plan-actions .btn-primary {
+      background: rgba(108, 59, 210, 0.25);
+      color: #c4b5fd;
+      border: 1px solid rgba(108, 59, 210, 0.35);
+      box-shadow: none;
+    }
+    .flashcards-actions .btn-primary:hover,
+    .summary-actions .btn-primary:hover,
+    .study-plan-actions .btn-primary:hover {
+      background: rgba(108, 59, 210, 0.35);
+      border-color: rgba(108, 59, 210, 0.5);
+      transform: none;
+      box-shadow: 0 2px 12px rgba(108, 59, 210, 0.2);
+    }
+    .flashcards-actions .btn-secondary,
+    .summary-actions .btn-secondary,
+    .study-plan-actions .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.10);
+    }
+    .flashcards-actions .btn-secondary:hover,
+    .summary-actions .btn-secondary:hover,
+    .study-plan-actions .btn-secondary:hover {
+      background: rgba(255,255,255,0.10);
     }
 
     .flashcards-section .section-header {
@@ -1209,11 +1288,21 @@ body:not(.sidebar-closed) .app-container {
       margin-bottom: 20px;
     }
 
-    .flashcard-container {
-      width: 100%;
-      max-width: 380px;
-      min-height: 280px;
+.flashcard-container {
       perspective: 1000px;
+      width: 320px;
+      height: 240px;
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .flashcards-section {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 24px;
     }
 
     .flashcard {
@@ -1416,6 +1505,15 @@ body:not(.sidebar-closed) .app-container {
       border: 1px solid var(--border);
     }
 
+    .study-plan-section {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
     .study-plan-table {
       width: 100%;
       border-collapse: collapse;
@@ -1475,8 +1573,10 @@ body:not(.sidebar-closed) .app-container {
     }
 
     .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: var(--radius-sm);
       padding: 16px;
       text-align: center;
@@ -1498,9 +1598,20 @@ body:not(.sidebar-closed) .app-container {
       margin-top: 4px;
     }
 
+    .summary-section {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
     .summary-text {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: var(--radius-sm);
       padding: 20px;
       min-height: 180px;
@@ -1531,7 +1642,7 @@ body:not(.sidebar-closed) .app-container {
     }
 
     /* ===== TAB 5 - EXAM MODE ===== */
-    .exam-section { text-align: center; }
+    .exam-section { text-align: center; background: rgba(255,255,255,0.03); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 24px; }
     .exam-section .section-header { margin-bottom: 24px; }
     .exam-section .section-header p { color: var(--text-secondary); font-size: 14px; margin-top: 6px; }
 
@@ -1913,27 +2024,32 @@ body:not(.sidebar-closed) .app-container {
     /* ===== TOAST ===== */
     .toast {
       position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(120px);
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 14px 20px;
+      top: 72px;
+      right: 24px;
+      left: auto;
+      bottom: auto;
+      transform: translateY(-12px);
+      background: rgba(15, 15, 42, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 12px 18px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      z-index: 200;
+      gap: 12px;
+      z-index: 99999;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      max-width: 380px;
     }
 
     .toast.show {
       opacity: 1;
       pointer-events: auto;
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0);
     }
 
     .toast-content {
@@ -2099,9 +2215,9 @@ body:not(.sidebar-closed) .app-container {
   }
   
   .header-tools .btn-icon {
-    min-width: 30px;
-    height: 30px;
-    font-size: 14px;
+    min-width: 44px;
+    height: 44px;
+    font-size: 18px;
   }
   
   .user-name {
@@ -2232,7 +2348,18 @@ body:not(.sidebar-closed) .app-container {
       .history-panel { width: 300px; right: -320px; }
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
+  .toast {
+    top: 64px;
+    right: 8px;
+    left: 8px;
+    max-width: none;
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 480px) {
       .logo-text { font-size: 17px; }
       .logo-icon { width: 32px; height: 32px; font-size: 16px; }
       header .header-inner { padding: 6px 12px; gap: 6px; }
@@ -3851,14 +3978,19 @@ async function initAuth() {
       
       // Mostrar sidebar según estado guardado en localStorage
       if (sidebar) {
-        const sidebarOpen = localStorage.getItem('sidebarOpen');
-        // Por defecto abierto si no hay estado guardado
-        if (sidebarOpen === null || sidebarOpen === 'true') {
-          sidebar.style.display = 'flex';
-          document.body.classList.remove('sidebar-closed');
-        } else {
+        if (window.innerWidth <= 768) {
           sidebar.style.display = 'none';
-          document.body.classList.add('sidebar-closed');
+          sidebar.classList.remove('open');
+          document.getElementById('sidebarOverlay')?.classList.remove('open');
+        } else {
+          const sidebarOpen = localStorage.getItem('sidebarOpen');
+          if (sidebarOpen === null || sidebarOpen === 'true') {
+            sidebar.style.display = 'flex';
+            document.body.classList.remove('sidebar-closed');
+          } else {
+            sidebar.style.display = 'none';
+            document.body.classList.add('sidebar-closed');
+          }
         }
       }
 
@@ -3873,8 +4005,8 @@ async function initAuth() {
     }
 }
 
-// Toggle sidebar function
-function toggleSidebar() {
+// Toggle sidebar function (desktop only)
+function toggleSidebarDesktop() {
   const sidebar = document.getElementById('sidebar');
   
   if (!sidebar) return;
@@ -3892,13 +4024,24 @@ function toggleSidebar() {
   }
 }
 
-// Event listener for sidebar toggle button
-document.addEventListener('DOMContentLoaded', () => {
-  const sidebarToggleBtn = document.getElementById('sidebarToggle');
-  if (sidebarToggleBtn) {
-    sidebarToggleBtn.addEventListener('click', toggleSidebar);
+function toggleSidebar() {
+  if (window.innerWidth <= 768) {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebarOverlay');
+    if (!s || !o) return;
+    if (s.classList.contains('open')) {
+      s.classList.remove('open');
+      o.classList.remove('open');
+      s.style.display = '';
+    } else {
+      s.style.display = 'flex';
+      s.classList.add('open');
+      o.classList.add('open');
+    }
+  } else {
+    toggleSidebarDesktop();
   }
-});
+}
 
 // Check if returning from email verification
 if (window.location.search.includes('verified=true')) {
@@ -3938,6 +4081,18 @@ if (logoutBtn) {
     });
 
     initAuth();
+
+    // Header shrink on scroll (mobile)
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const header = document.querySelector('header');
+      if (!header) return;
+      if (window.scrollY > 30) {
+        header.classList.add('header-compact');
+      } else {
+        header.classList.remove('header-compact');
+      }
+    }, { passive: true });
 
     /* ==========================================================
        FLASHCARDS - Data de ejemplo
@@ -5021,50 +5176,45 @@ renderTabs();
     document.getElementById('exportAllBtn').addEventListener('click', exportAllPDF);
 
     // Chat sessions
-    document.getElementById('newChatBtn').addEventListener('click', newSession);
+    document.getElementById('newChatBtn').addEventListener('click', () => {
+      if (window.innerWidth <= 768) closeMobileDrawer();
+      newSession();
+    });
     
-    // Sidebar toggle (desktop y móvil)
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    // Mobile drawer: overlay + auto-close en sesiones
+    const sidebarEl = document.getElementById('sidebar');
+    const sidebarOverlayEl = document.getElementById('sidebarOverlay');
     
-    // Estado inicial del sidebar desde localStorage
-    const sidebarOpen = localStorage.getItem('sidebarOpen');
-    // Por defecto abierto si no hay estado guardado
-    if (sidebarOpen === 'false' && window.innerWidth > 768) {
-      document.body.classList.add('sidebar-closed');
+    if (sidebarOverlayEl) {
+      sidebarOverlayEl.addEventListener('click', closeMobileDrawer);
     }
     
-    if (menuToggle && sidebar && sidebarOverlay) {
-      menuToggle.addEventListener('click', () => {
-        // En desktop: toggle class en body
-        if (window.innerWidth > 768) {
-          const isClosed = document.body.classList.toggle('sidebar-closed');
-          // Guardar estado invertido (sidebarOpen)
-          localStorage.setItem('sidebarOpen', !isClosed ? 'true' : 'false');
-        } else {
-          // En móvil: abrir/cerrar drawer
-          sidebar.classList.toggle('open');
-          sidebarOverlay.classList.toggle('open');
-        }
-      });
-      
-      // Cerrar al hacer click en overlay (móvil)
-      sidebarOverlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        sidebarOverlay.classList.remove('open');
-      });
-      
-      // Cerrar al cargar una sesión (móvil)
-      document.querySelectorAll('.session-item').forEach(item => {
-        item.addEventListener('click', () => {
-          if (window.innerWidth <= 768) {
-            sidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('open');
-          }
-        });
-      });
+    function closeMobileDrawer() {
+      if (!sidebarEl || !sidebarOverlayEl) return;
+      sidebarEl.classList.remove('open');
+      sidebarOverlayEl.classList.remove('open');
+      sidebarEl.style.display = '';
     }
+    
+    function openMobileDrawer() {
+      if (!sidebarEl || !sidebarOverlayEl) return;
+      // On mobile, the sidebar is positioned off-screen to the right.
+      // It needs display:flex to be visible even before .open translates it.
+      sidebarEl.style.display = 'flex';
+      sidebarEl.classList.add('open');
+      sidebarOverlayEl.classList.add('open');
+    }
+    
+    // Fix toggleSidebar to handle both desktop and mobile
+    // (the function is already defined above and was registered via DOMContentLoaded)
+    
+    // Cerrar drawer al cargar sesión (event delegation)
+    document.getElementById('sessionList')?.addEventListener('click', function(e) {
+      const item = e.target.closest('.session-item');
+      if (item && window.innerWidth <= 768) {
+        closeMobileDrawer();
+      }
+    });
 
     console.log('🌌 AeroLex AI — IA conectada');
     console.log('🤖 Modelo: Gemma-4-31B-IT via NVIDIA NIM');
