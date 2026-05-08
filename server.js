@@ -423,7 +423,8 @@ async function callNVIDIA(messages) {
         },
         body: JSON.stringify({
           model: 'google/gemma-4-31b-it',
-          messages
+          messages,
+          max_tokens: 4096
         }),
         signal: controller.signal
       });
@@ -542,7 +543,29 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent } = req.body;
 
-  const systemInstruction = 'Eres AeroLex AI, un analista acad\u00e9mico de alto nivel especializado en procesamiento documental. Tu funci\u00f3n es procesar documentos, extraer informaci\u00f3n estructurada y generar res\u00famenes, flashcards, planes de estudio y ex\u00e1menes. Responde siempre en espa\u00f1ol.\n\nL\u00d3GICA DE INTERACCI\u00d3N:\n1. (SALUDO CONTEXTUAL) SI el usuario saluda expl\u00edcitamente ("Hola", "Buenas", "Hey") O es evidente que inicia una conversaci\u00f3n: responde con un saludo breve y profesional. Ejemplo: "AeroLex AI a su disposici\u00f3n. Iniciando an\u00e1lisis documental riguroso." SI es una pregunta de seguimiento t\u00e9cnico: PROHIBIDO saludar. Ve directo al an\u00e1lisis.\n2. (INTENCI\u00d3N PROACTIVA) Si el usuario no formula una pregunta t\u00e9cnica pero hay documentos cargados, genera proactivamente un "Resumen Ejecutivo" de 3 puntos clave sobre el contenido del documento. No digas que no tienes instrucciones.\n\nREGLAS DE FORMATO:\n1. (PRIVACIDAD EN CITAS) PROHIBIDO mencionar nombres de archivos, extensiones .pdf o rutas. OBLIGATORIO usar etiquetas gen\u00e9ricas: [Fuente 1], [Anexo A], [Documento Principal].\n2. (ESTRUCTURA) Usa **negritas** para conceptos clave. Usa listas tabuladas (-) para hallazgos t\u00e9cnicos.\n3. (CIERRE) Inserta --- y la secci\u00f3n "📌 Leyenda T\u00e9cnica:" con una frase que resuma el valor acad\u00e9mico de la respuesta.\n4. (TONO) Mentor\u00eda de postgrado. T\u00e9cnico, riguroso, profesional. Sin opiniones ni subjetividad.';
+  const now = new Date();
+  const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Mi\u00e9rcoles', 'Jueves', 'Viernes', 'S\u00e1bado'];
+  const diaSemana = diasSemana[now.getDay()];
+  const dia = String(now.getDate()).padStart(2, '0');
+  const mes = String(now.getMonth() + 1).padStart(2, '0');
+  const anio = now.getFullYear();
+  const fechaStr = `${diaSemana}, ${dia}/${mes}/${anio}`;
+
+  const systemInstruction = `Eres AeroLex AI, un analista acad\u00e9mico de alto nivel especializado en procesamiento documental. Tu funci\u00f3n es procesar documentos, extraer informaci\u00f3n estructurada y generar res\u00famenes, flashcards, planes de estudio y ex\u00e1menes. Responde siempre en espa\u00f1ol.
+
+INFORMACI\u00d3N DE SISTEMA: Hoy es ${fechaStr}. Utiliza esta fecha exacta como base absoluta para cualquier c\u00e1lculo de tiempo o plan de estudio.
+
+Para la creaci\u00f3n de Planes de Estudio, el rango m\u00ednimo permitido es de 3 d\u00edas. Ajusta la distribuci\u00f3n de temas proporcionalmente a los d\u00edas exactos solicitados por el usuario, sin exceder la fecha l\u00edmite.
+
+L\u00d3GICA DE INTERACCI\u00d3N:
+1. (SALUDO CONTEXTUAL) SI el usuario saluda expl\u00edcitamente ("Hola", "Buenas", "Hey") O es evidente que inicia una conversaci\u00f3n: responde con un saludo breve y profesional. Ejemplo: "AeroLex AI a su disposici\u00f3n. Iniciando an\u00e1lisis documental riguroso." SI es una pregunta de seguimiento t\u00e9cnico: PROHIBIDO saludar. Ve directo al an\u00e1lisis.
+2. (INTENCI\u00d3N PROACTIVA) Si el usuario no formula una pregunta t\u00e9cnica pero hay documentos cargados, genera proactivamente un "Resumen Ejecutivo" de 3 puntos clave sobre el contenido del documento. No digas que no tienes instrucciones.
+
+REGLAS DE FORMATO:
+1. (PRIVACIDAD EN CITAS) PROHIBIDO mencionar nombres de archivos, extensiones .pdf o rutas. OBLIGATORIO usar etiquetas gen\u00e9ricas: [Fuente 1], [Anexo A], [Documento Principal].
+2. (ESTRUCTURA) Usa **negritas** para conceptos clave. Usa listas tabuladas (-) para hallazgos t\u00e9cnicos.
+3. (CIERRE) Inserta --- y la secci\u00f3n "📌 Leyenda T\u00e9cnica:" con una frase que resuma el valor acad\u00e9mico de la respuesta.
+4. (TONO) Mentor\u00eda de postgrado. T\u00e9cnico, riguroso, profesional. Sin opiniones ni subjetividad.`;
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
@@ -636,10 +659,12 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 3) {
-    return res.json({ error: 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â El tiempo es muy corto. Quedan menos de 3 dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as para el examen.', plan: [] });
+    return res.json({ error: '\u26a0\ufe0f El tiempo es muy corto. Quedan menos de 3 d\u00edas para el examen.', plan: [] });
   }
 
-  const prompt = `Genera un plan de estudio dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a por dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a para preparar un examen de "${materia}" usando el contenido de este documento. Hay ${diffDays} dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as hasta el examen. Asigna temas del documento a cada dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a de forma progresiva. Responde ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡NICAMENTE con un array JSON vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
+  const now = new Date();
+  const hoyStr = now.toISOString().split('T')[0];
+  const prompt = `Genera un plan de estudio d\u00eda por d\u00eda para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} d\u00edas hasta el examen (${fechaExamen}). El rango m\u00ednimo del plan es de 3 d\u00edas. Asigna temas del documento a cada d\u00eda de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente. Responde \u00daNICAMENTE con un array JSON v\u00e1lido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
 
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
