@@ -19,22 +19,10 @@ app.use(express.json());
 const CLIENT_URL = process.env.CLIENT_URL || 'https://www.aerolexai.com';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// WWW redirect — force canonical domain
-app.use((req, res, next) => {
-  if (NODE_ENV === 'production') {
-    const host = req.headers.host;
-    const canonical = new URL(CLIENT_URL).host;
-    if (host && host !== canonical && !host.startsWith('localhost')) {
-      return res.redirect(301, `${CLIENT_URL}${req.url}`);
-    }
-  }
-  next();
-});
-
 // CORS — allow credentials for cookie-based auth
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowed = [CLIENT_URL, 'https://www.aerolexai.com', 'https://aerolexai.com'];
+  const allowed = [CLIENT_URL, 'https://aerolexai.com', 'https://www.aerolexai.com'];
   if (origin && allowed.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
