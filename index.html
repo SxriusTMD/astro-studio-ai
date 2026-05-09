@@ -79,7 +79,23 @@ tailwind.config = {
       left: 0;
       width: 100vw;
       height: 100vh;
-      z-index: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    #loadingScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-deep);
+      transition: opacity 0.4s ease;
+    }
+    body.authenticated #loadingScreen,
+    body.unauthenticated #loadingScreen {
+      opacity: 0;
       pointer-events: none;
     }
 
@@ -2487,10 +2503,24 @@ body:not(.sidebar-closed) .app-container {
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
 
-  <!-- Stars Background -->
-  <canvas id="stars-canvas" class="fixed inset-0 w-screen h-screen z-0 pointer-events-none"></canvas>
+  <!-- Loading Screen (visible during auth check, fades out when resolved) -->
+  <div id="loadingScreen">
+    <div class="text-center">
+      <div class="text-5xl mb-4">🚀</div>
+      <div class="font-['Space_Grotesk'] text-xl font-bold bg-gradient-to-r from-[#00e5ff] to-[#8b5cf6] bg-clip-text text-transparent">AeroLex AI</div>
+      <div class="flex gap-1.5 justify-center mt-5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0s"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.15s"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.3s"></span>
+      </div>
+      <p class="text-sm text-[#606088] mt-4">Iniciando sesión...</p>
+    </div>
+  </div>
 
-  <main class="login-screen" id="loginScreen" style="display:none;">
+  <!-- Stars Background -->
+  <canvas id="stars-canvas" class="fixed inset-0 w-screen h-screen z-[-1] pointer-events-none"></canvas>
+
+  <main class="login-screen" id="loginScreen">
 
   <div class="login-content" id="loginContent">
     <div class="login-logo">🚀</div>
@@ -2613,7 +2643,7 @@ body:not(.sidebar-closed) .app-container {
   </button>
 </div>
 
-<div class="app-container flex-1 flex overflow-hidden z-[1]">
+<div class="app-container flex-1 flex overflow-hidden z-10 relative">
 
   <!-- DROP ZONE -->
   <section class="drop-zone flex flex-col items-center justify-center" id="dropZone">
@@ -3958,14 +3988,20 @@ const data = await res.json();
 
 async function initAuth() {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
       const res = await fetch('/api/me', {
-        credentials: 'include'
+        credentials: 'include',
+        signal: controller.signal
       });
+      clearTimeout(timeout);
+
       const data = await res.json();
 
       const sidebar = document.getElementById('sidebar');
 
-      if (!data.user) {
+      if (!data?.user) {
         document.body.classList.remove('auth-checking', 'authenticated');
         document.body.classList.add('unauthenticated');
         if (sidebar) sidebar.style.display = 'none';
@@ -3973,16 +4009,16 @@ async function initAuth() {
       }
 
       // Email user needs to set username → redirect to complete profile
-      if (data.user.needsUsername) {
+      if (data.user?.needsUsername) {
         window.location.href = '/complete-profile';
         return;
       }
 
-      userName.textContent = data.user.displayName || data.user.email || 'Usuario';
-      if (data.user.photo) {
+      if (userName) userName.textContent = data.user?.displayName || data.user?.email || 'Usuario';
+      if (data.user?.photo && userAvatar) {
         userAvatar.src = data.user.photo;
         userAvatar.style.display = 'block';
-      } else {
+      } else if (userAvatar) {
         userAvatar.style.display = 'none';
       }
 
@@ -4093,7 +4129,16 @@ if (logoutBtn) {
       }
     });
 
-    initAuth();
+    // Init auth with fail-safe wrapper
+    (async () => {
+      try {
+        await initAuth();
+      } catch (err) {
+        console.error('[AeroLex Failsafe] Render error:', err);
+        document.body.classList.remove('auth-checking', 'authenticated');
+        document.body.classList.add('unauthenticated');
+      }
+    })();
 
     // Header shrink on scroll (mobile)
     let lastScroll = 0;

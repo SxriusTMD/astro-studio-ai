@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -140,7 +140,7 @@ app.use(express.static(__dirname));
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://aerolex-ai.up.railway.app/auth/google/callback"
+  callbackURL: "https://aerolexai.com/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   const userProfile = {
     id: profile.id,
