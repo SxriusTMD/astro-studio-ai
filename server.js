@@ -15,6 +15,35 @@ const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 app.use(express.json());
 
+// ===== PRODUCTION CONFIG =====
+const CLIENT_URL = process.env.CLIENT_URL || 'https://www.aerolexai.com';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// WWW redirect — force canonical domain
+app.use((req, res, next) => {
+  if (NODE_ENV === 'production') {
+    const host = req.headers.host;
+    const canonical = new URL(CLIENT_URL).host;
+    if (host && host !== canonical && !host.startsWith('localhost')) {
+      return res.redirect(301, `${CLIENT_URL}${req.url}`);
+    }
+  }
+  next();
+});
+
+// CORS — allow credentials for cookie-based auth
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowed = [CLIENT_URL, 'https://www.aerolexai.com', 'https://aerolexai.com'];
+  if (origin && allowed.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // ===== EMAIL CONFIG (Brevo API) =====
 const { BrevoClient } = require('@getbrevo/brevo');
@@ -129,8 +158,9 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: true,       // ?? CLAVE
-    sameSite: "none"    // ?? CLAVE
+    secure: NODE_ENV === 'production',
+    sameSite: NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
   }
 }));
 app.use(passport.initialize());
@@ -140,7 +170,7 @@ app.use(express.static(__dirname));
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://aerolexai.com/auth/google/callback"
+  callbackURL: `${CLIENT_URL}/auth/google/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   const userProfile = {
     id: profile.id,

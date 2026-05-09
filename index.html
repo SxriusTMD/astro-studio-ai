@@ -1157,15 +1157,16 @@ body:not(.sidebar-closed) .app-container {
       display: none;
     }
 
-    .message.ai h3, .message.ai h4 { margin: 12px 0 6px; color: var(--accent-cyan); font-family:'Space Grotesk',sans-serif; }
+    .message.ai { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .message.ai h3, .message.ai h4 { margin: 16px 0 8px; color: var(--accent-cyan); font-family:'Space Grotesk','Inter',sans-serif; font-weight: 600; letter-spacing: -0.01em; }
     .message.ai h3:first-child { margin-top: 0; }
-    .message.ai p { margin: 8px 0; }
-    .message.ai ul, .message.ai ol { margin: 6px 0; padding-left: 20px; }
-    .message.ai li { margin: 4px 0; }
-    .message.ai strong { color: var(--accent-violet); }
-    .message.ai code { background: rgba(139,92,246,0.15); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-    .message.ai pre { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
-    .message.ai pre code { background: none; padding: 0; }
+    .message.ai p { margin: 10px 0; line-height: 1.7; }
+    .message.ai ul, .message.ai ol { margin: 10px 0; padding-left: 24px; }
+    .message.ai li { margin: 6px 0; line-height: 1.7; }
+    .message.ai strong { color: var(--accent-violet); font-weight: 600; }
+    .message.ai code { background: rgba(139,92,246,0.15); padding: 3px 8px; border-radius: 4px; font-size: 13px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .message.ai pre { background: rgba(0,0,0,0.3); padding: 14px 16px; border-radius: 10px; overflow-x: auto; margin: 12px 0; border: 1px solid rgba(255,255,255,0.06); }
+    .message.ai pre code { background: none; padding: 0; font-size: 13px; line-height: 1.6; }
 
     .chat-input-area {
       display: flex;
@@ -2513,7 +2514,7 @@ body:not(.sidebar-closed) .app-container {
         <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.15s"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.3s"></span>
       </div>
-      <p class="text-sm text-[#606088] mt-4">Iniciando sesión...</p>
+      <p class="text-sm text-[#606088] mt-4">Sincronizando con AeroLex Cloud...</p>
     </div>
   </div>
 
