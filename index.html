@@ -306,6 +306,8 @@ header.header-compact .logo-icon {
 }
 
 #sidebarToggle {
+  position: relative;
+  z-index: 50;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
@@ -731,7 +733,7 @@ body:not(.sidebar-closed) .app-container {
   position: relative;
   border: 2px dashed rgba(255,255,255,0.12);
   border-radius: var(--radius);
-  padding: 12px 20px;
+  padding: 6px 12px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -741,8 +743,8 @@ body:not(.sidebar-closed) .app-container {
   overflow-y: auto;
   overflow-x: hidden;
   flex-shrink: 0;
-  min-height: 180px;
-  max-height: 200px;
+  min-height: 60px;
+  max-height: 100px;
 }
 
     .drop-zone.collapsed {
@@ -786,21 +788,21 @@ body:not(.sidebar-closed) .app-container {
     }
 
     .drop-zone .upload-icon {
-      font-size: 36px;
-      margin-bottom: 8px;
+      font-size: 22px;
+      margin-bottom: 2px;
       display: block;
     }
 
     .drop-zone h3 {
-      font-size: 17px;
-      margin-bottom: 4px;
+      font-size: 13px;
+      margin-bottom: 2px;
       color: var(--text-primary);
     }
 
     .drop-zone p {
       color: var(--text-secondary);
-      font-size: 13px;
-      margin-bottom: 12px;
+      font-size: 11px;
+      margin-bottom: 4px;
     }
 
     .btn {
@@ -1033,17 +1035,10 @@ body:not(.sidebar-closed) .app-container {
     }
 
     .tab-content.active {
-      display: block;
-      flex: 1;
-      min-height: 300px;
-      overflow-y: auto;
-    }
-
-    .tab-content.active {
       display: flex;
       flex-direction: column;
       flex: 1;
-      min-height: 300px;
+      min-height: 0;
       overflow-y: auto;
       margin-top: 10px;
     }
@@ -2301,18 +2296,6 @@ body:not(.sidebar-closed) .app-container {
       .history-panel { width: 300px; right: -320px; }
     }
 
-      .status-badge { align-self: flex-start; }
-
-      .drop-zone { padding: 10px 14px; min-height: 160px; max-height: 180px; }
-      .drop-zone.collapsed { min-height: 0; max-height: 0; padding: 0 14px; }
-      .drop-zone .upload-icon { font-size: 28px; margin-bottom: 4px; }
-      .drop-zone h3 { font-size: 15px; }
-      .drop-zone p { font-size: 12px; margin-bottom: 8px; }
-
-      .drop-zone h3 { font-size: 16px; }
-      .drop-zone .upload-icon { font-size: 34px; margin-bottom: 8px; }
-      .drop-zone p { margin-bottom: 12px; }
-
       .tabs {
         gap: 2px;
         overflow-x: auto;
@@ -2363,11 +2346,11 @@ body:not(.sidebar-closed) .app-container {
       .logo-text { font-size: 17px; }
       .logo-icon { width: 32px; height: 32px; font-size: 16px; }
       header .header-inner { padding: 6px 12px; gap: 6px; }
-      .drop-zone { padding: 8px 10px; min-height: 130px; max-height: 160px; }
+      .drop-zone { padding: 6px 8px; min-height: 50px; max-height: 80px; }
       .drop-zone.collapsed { min-height: 0; max-height: 0; padding: 0 10px; margin: 0; border-width: 0; }
-      .drop-zone .upload-icon { font-size: 24px; margin-bottom: 2px; }
-      .drop-zone h3 { font-size: 14px; }
-      .drop-zone p { font-size: 11px; margin-bottom: 6px; }
+      .drop-zone .upload-icon { font-size: 20px; margin-bottom: 2px; }
+      .drop-zone h3 { font-size: 12px; }
+      .drop-zone p { font-size: 10px; margin-bottom: 4px; }
       .btn-change-pdf { font-size: 10px; padding: 2px 6px; }
 
       .flashcard-container { max-width: 240px; min-height: 240px; }
@@ -2985,12 +2968,9 @@ body:not(.sidebar-closed) .app-container {
           separator.style.cssText = 'text-align:center;color:var(--text-muted);font-size:12px;margin:12px 0;opacity:0.6;';
           chatMessages.appendChild(separator);
           
-          // Restaurar mensajes
+          // Restaurar mensajes con Markdown rendering
           chatData.forEach(msg => {
-            const div = document.createElement('div');
-            div.className = `message ${msg.role}`;
-            div.textContent = msg.text;
-            chatMessages.appendChild(div);
+            addChatMessage(msg.role, msg.text);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;
           restored = true;
@@ -5205,8 +5185,8 @@ renderTabs();
       sidebarOverlayEl.classList.add('open');
     }
     
-    // Fix toggleSidebar to handle both desktop and mobile
-    // (the function is already defined above and was registered via DOMContentLoaded)
+    // Fix toggleSidebar — register the click handler
+    document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
     
     // Cerrar drawer al cargar sesión (event delegation)
     document.getElementById('sessionList')?.addEventListener('click', function(e) {

@@ -565,7 +565,8 @@ REGLAS DE FORMATO:
 1. (PRIVACIDAD EN CITAS) PROHIBIDO mencionar nombres de archivos, extensiones .pdf o rutas. OBLIGATORIO usar etiquetas gen\u00e9ricas: [Fuente 1], [Anexo A], [Documento Principal].
 2. (ESTRUCTURA) Usa **negritas** para conceptos clave. Usa listas tabuladas (-) para hallazgos t\u00e9cnicos.
 3. (CIERRE) Inserta --- y la secci\u00f3n "📌 Leyenda T\u00e9cnica:" con una frase que resuma el valor acad\u00e9mico de la respuesta.
-4. (TONO) Mentor\u00eda de postgrado. T\u00e9cnico, riguroso, profesional. Sin opiniones ni subjetividad.`;
+4. (TONO) Mentor\u00eda de postgrado. T\u00e9cnico, riguroso, profesional. Sin opiniones ni subjetividad.
+5. (REGLA DE FORMATO OBLIGATORIA) Est\u00e1s obligado a usar vi\u00f1etas (bullet points), **negritas** y saltos de l\u00ednea dobles para separar conceptos. NUNCA respondas con un solo p\u00e1rrafo de texto continuo.`;
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
