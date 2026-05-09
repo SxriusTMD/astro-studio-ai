@@ -10,6 +10,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  corePlugins: { preflight: false },
+  theme: {
+    extend: {
+      fontFamily: {
+        inter: ['Inter', 'sans-serif'],
+        grotesk: ['Space Grotesk', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -2452,14 +2466,31 @@ body:not(.sidebar-closed) .app-container {
       color: var(--text-secondary);
       font-style: italic;
     }
+
+    /* ===== LAYOUT OVERRIDES — Tailwind-assisted ===== */
+    .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; max-height: none; padding: 0; border: none; cursor: pointer; background: transparent; backdrop-filter: none; overflow: visible; }
+    .drop-zone.collapsed { display: none; flex: none; min-height: 0; max-height: 0; padding: 0; margin: 0; border: 0; overflow: hidden; }
+    .drop-zone.collapsed + .tool-panel { margin-top: 0; }
+    .tool-panel { display: none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; margin-top: 0; }
+    .tool-panel.visible { display: flex; }
+    .message { white-space: pre-wrap; line-height: 1.75; }
+    .message.user { white-space: pre-wrap; }
+    .message.ai { white-space: pre-wrap; }
+    .message.system { white-space: pre-wrap; }
+    .chat-messages { white-space: normal; }
+    .chat-messages .message { white-space: pre-wrap; }
+    #pdf-tabs { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; min-height: 42px; }
+    #pdf-tabs + #btnChangePdf { flex: none; }
+    body.authenticated .app-container { margin-left: 0; }
+    body:not(.sidebar-closed) .app-container { margin-left: 260px; }
 </style>
 </head>
-<body class="auth-checking">
+<body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
 
   <!-- Stars Background -->
-  <canvas id="stars-canvas"></canvas>
+  <canvas id="stars-canvas" class="fixed inset-0 w-screen h-screen z-0 pointer-events-none"></canvas>
 
-  <main class="login-screen" id="loginScreen">
+  <main class="login-screen" id="loginScreen" style="display:none;">
 
   <div class="login-content" id="loginContent">
     <div class="login-logo">🚀</div>
@@ -2515,11 +2546,11 @@ body:not(.sidebar-closed) .app-container {
 </div>
 
 <!-- ===== HEADER ===== -->
-<header>
-<div class="header-inner">
-  <div class="header-left">
-    <button id="sidebarToggle" title="Alternar sidebar">☰</button>
-    <div class="logo-section">
+<header class="flex-none h-14 md:h-16 bg-[rgba(10,10,26,0.85)] backdrop-blur-md border-b border-[#1e1e4a] z-[101] flex-shrink-0">
+<div class="flex items-center justify-between px-4 md:px-6 h-full max-w-[1400px] mx-auto">
+  <div class="flex items-center gap-3 flex-none">
+    <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar">☰</button>
+    <div class="logo-section flex items-center gap-3">
       <div class="logo-icon">🚀</div>
       <div>
         <div class="logo-text">AeroLex AI</div>
@@ -2527,17 +2558,17 @@ body:not(.sidebar-closed) .app-container {
       </div>
     </div>
   </div>
-  <div class="header-center"></div>
-  <div class="header-right">
-    <div class="header-tools">
+  <div class="flex-1 min-w-0"></div>
+  <div class="flex items-center gap-3 flex-none">
+    <div class="header-tools flex items-center gap-2">
       <div class="status-badge offline" id="status-badge">
         <span class="dot"></span>
-        <span id="status-text">Sin PDF</span>
+        <span id="status-text" class="hidden md:inline">Sin PDF</span>
       </div>
       <div class="plan-indicator" id="planIndicator"></div>
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos">📚</button>
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones">🕒</button>
-      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled>⬇️</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;">⬇️</button>
     </div>
     <div class="user-profile" id="userProfile">
       <div class="user-avatar-container" id="userAvatarContainer">
@@ -2582,71 +2613,73 @@ body:not(.sidebar-closed) .app-container {
   </button>
 </div>
 
-  <div class="app-container">
+<div class="app-container flex-1 flex overflow-hidden z-[1]">
 
-      <!-- DROP ZONE -->
-      <section class="drop-zone" id="dropZone">
-        <div class="drop-zone-content">
-          <span class="upload-icon">📄</span>
-          <h3>Sube tu PDF de apuntes</h3>
-          <p>Arrastra y suelta tu archivo aquí o haz clic para seleccionar</p>
-          <button class="btn btn-primary" id="uploadBtn">Seleccionar archivo</button>
-          <input type="file" id="fileInput" accept=".pdf">
-        </div>
+  <!-- DROP ZONE -->
+  <section class="drop-zone flex flex-col items-center justify-center" id="dropZone">
+    <div class="flex flex-col items-center justify-center gap-3 p-8 w-96 h-64 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.03] backdrop-blur-sm cursor-pointer hover:border-[#00e5ff] hover:scale-[1.01] transition-all duration-300">
+      <span class="text-3xl">📄</span>
+      <h3 class="font-['Space_Grotesk'] text-lg font-semibold text-[#e8e8f0] m-0">Sube tu PDF de apuntes</h3>
+      <p class="text-sm text-[#9090b8] m-0">Arrastra y suelta o haz clic para seleccionar</p>
+      <button class="px-6 py-2.5 rounded-xl bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white text-sm font-semibold shadow-[0_4px_16px_rgba(108,59,210,0.3)] hover:shadow-[0_6px_24px_rgba(108,59,210,0.45)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border-none font-['Inter']" id="uploadBtn">Seleccionar archivo</button>
+      <input type="file" id="fileInput" accept=".pdf" class="hidden">
+    </div>
 
-        <div class="file-info" id="fileInfo">
-          <div class="file-header">
-            <span class="file-icon">📘</span>
-            <div>
-              <div class="file-name" id="fileName">—</div>
-              <div class="file-meta">
-                <span>📄 <span id="pageCount">0</span> páginas</span>
-                <span>⚖️ <span id="fileSize">0</span> MB</span>
-              </div>
-            </div>
-          </div>
-          <div class="progress-bar">
-            <div class="fill" id="progressFill"></div>
-          </div>
-          <div class="progress-label" id="progressLabel">Listo para extraer</div>
-          <div class="text-preview" id="textPreview">Esperando contenido del PDF...</div>
-        </div>
-      </section>
-
-      <!-- TOOL PANEL -->
-      <section class="tool-panel" id="toolPanel">
-
-        <!-- PDF Tabs -->
-        <div id="pdf-tabs"></div>
-        <button class="btn-change-pdf" id="btnChangePdf" title="Cambiar PDF">📎 Cambiar PDF</button>
-
-        <!-- Module Tabs -->
-        <div class="tabs" id="tabs">
-          <button class="tab-btn active" data-tab="chat">💬 Chat con tu PDF</button>
-          <button class="tab-btn" data-tab="flashcards">⚡ Flashcards</button>
-          <button class="tab-btn" data-tab="studyplan">📅 Plan de Estudio</button>
-          <button class="tab-btn" data-tab="summary">📊 Resumen</button>
-          <button class="tab-btn" data-tab="exam">🎯 Modo Examen</button>
-        </div>
-
-        <!-- TAB 1: CHAT -->
-        <div class="tab-content active" id="tab-chat">
-          <div class="chat-container">
-            <div class="chat-messages" id="chatMessages">
-              <div class="empty-chat">
-                <div class="icon">💬</div>
-                <p>Sube un PDF y haz cualquier pregunta sobre tus apuntes</p>
-              </div>
-            </div>
-            <div class="chat-input-area">
-              <input type="text" id="chatInput" placeholder="Pregunta sobre tu PDF..." autocomplete="off">
-              <button class="btn btn-primary btn-small" id="chatSend">Enviar</button>
-            </div>
+    <div class="file-info w-full" id="fileInfo">
+      <div class="file-header">
+        <span class="file-icon">📘</span>
+        <div>
+          <div class="file-name" id="fileName">—</div>
+          <div class="file-meta">
+            <span>📄 <span id="pageCount">0</span> páginas</span>
+            <span>⚖️ <span id="fileSize">0</span> MB</span>
           </div>
         </div>
+      </div>
+      <div class="progress-bar">
+        <div class="fill" id="progressFill"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Listo para extraer</div>
+      <div class="text-preview" id="textPreview">Esperando contenido del PDF...</div>
+    </div>
+  </section>
 
-        <!-- TAB 2: FLASHCARDS -->
-        <div class="tab-content" id="tab-flashcards">
+  <!-- TOOL PANEL -->
+  <section class="tool-panel flex-col flex-1 min-h-0 overflow-hidden" id="toolPanel">
+
+    <!-- PDF pills bar -->
+    <div class="flex-none flex items-center gap-2 px-4 py-2 overflow-x-auto" id="pdfBar">
+      <div id="pdf-tabs"></div>
+      <button class="btn-change-pdf flex-none" id="btnChangePdf" title="Cambiar PDF">📎 Cambiar PDF</button>
+    </div>
+
+    <!-- Module Tabs -->
+    <div class="tabs flex-none" id="tabs">
+      <button class="tab-btn active" data-tab="chat">💬 Chat con tu PDF</button>
+      <button class="tab-btn" data-tab="flashcards">⚡ Flashcards</button>
+      <button class="tab-btn" data-tab="studyplan">📅 Plan de Estudio</button>
+      <button class="tab-btn" data-tab="summary">📊 Resumen</button>
+      <button class="tab-btn" data-tab="exam">🎯 Modo Examen</button>
+    </div>
+
+    <!-- TAB 1: CHAT -->
+    <div class="tab-content active flex flex-col flex-1 min-h-0 overflow-y-auto" id="tab-chat">
+      <div class="chat-container flex-1 flex flex-col overflow-hidden">
+        <div class="chat-messages flex-1 overflow-y-auto p-4 space-y-3 whitespace-pre-wrap leading-relaxed" id="chatMessages">
+          <div class="empty-chat">
+            <div class="icon">💬</div>
+            <p>Sube un PDF y haz cualquier pregunta sobre tus apuntes</p>
+          </div>
+        </div>
+        <div class="chat-input-area flex-none flex gap-2.5 p-4 border-t border-white/10">
+          <input type="text" id="chatInput" placeholder="Pregunta sobre tu PDF..." autocomplete="off" class="flex-1 px-4 py-2.5 rounded-xl border border-[#1e1e4a] bg-[#07071a] text-[#e8e8f0] text-sm outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)] transition-all placeholder:text-[#606088] font-['Inter']">
+          <button class="btn btn-primary btn-small flex-none min-w-[80px]" id="chatSend">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: FLASHCARDS -->
+    <div class="tab-content" id="tab-flashcards">
 <div class="flashcards-section">
       <div class="section-header">
         <h2>⚡ Flashcards</h2>
@@ -4416,11 +4449,14 @@ if (!file._fromRestore) {
 
       const div = document.createElement('div');
       if (role === 'system') {
-        div.className = 'message system';
+        div.className = 'message system self-center bg-transparent border-none text-[#606088] text-xs px-3 py-1.5 text-center';
+        div.textContent = text;
+      } else if (role === 'user') {
+        div.className = 'message user self-end bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white rounded-br-md max-w-[70%] md:max-w-[60%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
         div.textContent = text;
       } else {
-        div.className = `message ${role}`;
-        if (role === 'ai' && typeof marked !== 'undefined') {
+        div.className = 'message ai self-start bg-[#12123a] text-[#e8e8f0] border border-[#1e1e4a] rounded-bl-md max-w-[85%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
+        if (typeof marked !== 'undefined') {
           let html = marked.parse(text);
           html = html.replace(/\[(Fuente \d+|Anexo [A-Z]|Documento Principal)\]/g, '<span class="citation-badge">$1</span>');
           html = html.replace(/---\s*$/gm, '');
@@ -4436,7 +4472,7 @@ if (!file._fromRestore) {
 
     function addTypingIndicator() {
       const div = document.createElement('div');
-      div.className = 'message ai loading';
+      div.className = 'message ai loading self-start bg-transparent border-none rounded-2xl text-sm leading-relaxed whitespace-pre-wrap px-3 py-3';
       div.id = 'typingIndicator';
       div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
       chatMessages.appendChild(div);
