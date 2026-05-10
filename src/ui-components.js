@@ -241,7 +241,7 @@ export function renderTabs() {
     const tab = document.createElement('span');
     tab.className = 'pdf-tab' + (doc.id === window.activeDocId ? ' active' : '');
     tab.dataset.id = doc.id;
-    tab.innerHTML = `📄 ${doc.name} <span class="pdf-tab-close" data-id="${doc.id}">✕</span>`;
+    tab.innerHTML = `📄 <span class="tab-name">${doc.name}</span> <span class="pdf-tab-close" data-id="${doc.id}">✕</span>`;
     tab.addEventListener('click', (e) => {
       if (e.target.classList.contains('pdf-tab-close')) return;
       window.activeDocId = doc.id;

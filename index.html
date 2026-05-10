@@ -1015,13 +1015,13 @@ body:not(.sidebar-closed) .sidebar {
 
     .tabs {
       display: flex;
-      gap: 2px;
+      gap: 8px;
       background: rgba(255,255,255,0.03);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       border-bottom: 1px solid rgba(255,255,255,0.06);
       border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-      padding: 6px 6px 0;
+      padding: 12px 12px 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       flex-shrink: 0;
@@ -1067,7 +1067,7 @@ body:not(.sidebar-closed) .sidebar {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      margin-top: 10px;
+      margin-top: 24px;
     }
 
     @keyframes fadeIn {
@@ -2674,7 +2674,7 @@ body:not(.sidebar-closed) .sidebar {
   <section class="tool-panel flex-col flex-1 min-h-0 overflow-hidden" id="toolPanel">
 
     <!-- PDF pills bar -->
-    <div class="flex-none flex items-center gap-2 px-4 py-2 overflow-x-auto" id="pdfBar">
+    <div class="flex-none flex items-center gap-3 px-4 py-3 overflow-x-auto" id="pdfBar">
       <div id="pdf-tabs"></div>
       <button class="btn-change-pdf flex-none" id="btnChangePdf" title="Cambiar PDF">ðŸ“Ž Cambiar PDF</button>
     </div>
@@ -2689,7 +2689,7 @@ body:not(.sidebar-closed) .sidebar {
     </div>
 
     <!-- TAB 1: CHAT -->
-    <div class="tab-content active flex flex-col flex-1 min-h-0 overflow-y-auto" id="tab-chat">
+    <div class="tab-content active" id="tab-chat">
       <div class="chat-container flex-1 flex flex-col overflow-hidden">
         <div class="chat-messages flex-1 overflow-y-auto p-4 space-y-3 whitespace-pre-wrap leading-relaxed" id="chatMessages">
           <div class="empty-chat">
