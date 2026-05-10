@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AeroLex AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2247,7 +2247,7 @@ body:not(.sidebar-closed) .sidebar {
     display: none;
   }
   
-  /* Sidebar como drawer en mÃ³vil */
+  /* Sidebar como drawer en móvil */
   .sidebar {
     width: 80%;
     max-width: 300px;
@@ -2261,7 +2261,7 @@ body:not(.sidebar-closed) .sidebar {
     right: 0;
   }
   
-  /* App container sin margen en mÃ³vil */
+  /* App container sin margen en móvil */
   body.authenticated .app-container {
     margin-left: 0;
   }
@@ -2298,7 +2298,7 @@ body:not(.sidebar-closed) .sidebar {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  /* Flashcards mÃ¡s pequeÃ±as */
+  /* Flashcards más pequeñas */
   .flashcard-container {
     max-width: 100%;
     min-height: 200px;
@@ -2468,7 +2468,7 @@ body:not(.sidebar-closed) .sidebar {
       margin: 0 2px;
     }
 
-    /* Leyenda TÃ©cnica block */
+    /* Leyenda Técnica block */
     .leyenda-tecnica {
       margin-top: 12px;
       padding: 8px 12px;
@@ -2480,7 +2480,7 @@ body:not(.sidebar-closed) .sidebar {
       font-style: italic;
     }
 
-    /* ===== LAYOUT OVERRIDES â€” Tailwind-assisted ===== */
+    /* ===== LAYOUT OVERRIDES — Tailwind-assisted ===== */
     .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; max-height: none; padding: 0; border: none; cursor: pointer; background: transparent; backdrop-filter: none; overflow: visible; }
     .drop-zone.collapsed { display: none; flex: none; min-height: 0; max-height: 0; padding: 0; margin: 0; border: 0; overflow: hidden; }
     .drop-zone.collapsed + .tool-panel { margin-top: 0; }
@@ -2502,14 +2502,14 @@ body:not(.sidebar-closed) .sidebar {
   <!-- Loading Screen (visible during auth check, fades out when resolved) -->
   <div id="loadingScreen">
     <div class="text-center">
-      <div class="text-5xl mb-4">ðŸš€</div>
+      <div class="text-5xl mb-4">🚀</div>
       <div class="font-['Space_Grotesk'] text-xl font-bold bg-gradient-to-r from-[#00e5ff] to-[#8b5cf6] bg-clip-text text-transparent">AeroLex AI</div>
       <div class="flex gap-1.5 justify-center mt-5">
         <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0s"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.15s"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.3s"></span>
       </div>
-      <p class="text-sm text-[#606088] mt-4">Verificando ConexiÃ³n Segura...</p>
+      <p class="text-sm text-[#606088] mt-4">Verificando Conexión Segura...</p>
     </div>
   </div>
 
@@ -2519,13 +2519,13 @@ body:not(.sidebar-closed) .sidebar {
   <main class="login-screen" id="loginScreen">
 
   <div class="login-content" id="loginContent">
-    <div class="login-logo">ðŸš€</div>
+    <div class="login-logo">🚀</div>
     <div class="login-title">AeroLex AI</div>
-    <div class="login-tagline">Tu asistente de estudio galÃ¡ctico</div>
+    <div class="login-tagline">Tu asistente de estudio galáctico</div>
 
     <a href="/auth/google" class="google-login-btn">
       <span class="google-icon">G</span>
-      Iniciar sesiÃ³n con Google
+      Iniciar sesión con Google
     </a>
 
     <div class="login-divider"><span>o</span></div>
@@ -2543,10 +2543,10 @@ body:not(.sidebar-closed) .sidebar {
 <div class="history-overlay" id="upgradeOverlay">
 <div class="upgrade-modal">
 <div class="upgrade-header">
-<h2>ðŸš€ Desbloquea todo con Premium</h2>
-<button id="closeUpgrade">âœ•</button>
+<h2>🚀 Desbloquea todo con Premium</h2>
+<button id="closeUpgrade">✕</button>
 </div>
-<p class="upgrade-desc" id="upgradeDesc">Alcanzaste tu lÃ­mite gratuito.</p>
+<p class="upgrade-desc" id="upgradeDesc">Alcanzaste tu límite gratuito.</p>
 
 <div class="upgrade-compare">
 <table class="upgrade-table">
@@ -2554,9 +2554,9 @@ body:not(.sidebar-closed) .sidebar {
 <tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
 </thead>
 <tbody>
-<tr><td>PDFs simultÃ¡neos</td><td>3</td><td>Ilimitados</td></tr>
-<tr><td>Chat por dÃ­a</td><td>10</td><td>Ilimitado</td></tr>
-<tr><td>ExÃ¡menes por dÃ­a</td><td>3</td><td>Ilimitado</td></tr>
+<tr><td>PDFs simultáneos</td><td>3</td><td>Ilimitados</td></tr>
+<tr><td>Chat por día</td><td>10</td><td>Ilimitado</td></tr>
+<tr><td>Exámenes por día</td><td>3</td><td>Ilimitado</td></tr>
 <tr><td>Flashcards</td><td>âœ…</td><td>âœ…</td></tr>
 <tr><td>Resumen</td><td>âœ…</td><td>âœ…</td></tr>
 <tr><td>Plan de Estudio</td><td>âœ…</td><td>âœ…</td></tr>
@@ -2565,8 +2565,8 @@ body:not(.sidebar-closed) .sidebar {
 </div>
 
 <div class="upgrade-actions">
-<button class="btn btn-primary" id="getPremiumBtn">â­ Obtener Premium â€” $X/mes</button>
-<button class="btn btn-secondary" id="backFreeBtn">Volver al lÃ­mite gratuito</button>
+<button class="btn btn-primary" id="getPremiumBtn">â­ Obtener Premium — $X/mes</button>
+<button class="btn btn-secondary" id="backFreeBtn">Volver al límite gratuito</button>
 </div>
 </div>
 </div>
@@ -2577,10 +2577,10 @@ body:not(.sidebar-closed) .sidebar {
   <div class="flex items-center gap-3 flex-none">
     <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar">â˜°</button>
     <div class="logo-section flex items-center gap-3">
-      <div class="logo-icon">ðŸš€</div>
+      <div class="logo-icon">🚀</div>
       <div>
         <div class="logo-text">AeroLex AI</div>
-        <div class="tagline">Tu asistente de estudio galÃ¡ctico</div>
+        <div class="tagline">Tu asistente de estudio galáctico</div>
       </div>
     </div>
   </div>
@@ -2593,8 +2593,8 @@ body:not(.sidebar-closed) .sidebar {
       </div>
       <div class="plan-indicator" id="planIndicator"></div>
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos">ðŸ“š</button>
-      <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones">ðŸ•’</button>
-      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;">â¬‡ï¸</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones">🕒</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;">⬇️</button>
     </div>
     <div class="user-profile" id="userProfile">
       <div class="user-avatar-container" id="userAvatarContainer">
@@ -2606,13 +2606,13 @@ body:not(.sidebar-closed) .sidebar {
 </div>
 </header>
 
-<!-- Sidebar Overlay (mÃ³vil) -->
+<!-- Sidebar Overlay (móvil) -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <!-- Sidebar - Panel lateral izquierdo -->
 <div id="sidebar" class="sidebar" style="display:none">
   <div class="sidebar-header">
-    <button id="newChatBtn" class="new-chat-btn">+ Nueva sesiÃ³n</button>
+    <button id="newChatBtn" class="new-chat-btn">+ Nueva sesión</button>
   </div>
   <div class="sidebar-list" id="sessionList"></div>
 </div>
@@ -2635,7 +2635,7 @@ body:not(.sidebar-closed) .sidebar {
   </button>
   <div class="menu-divider"></div>
   <button class="menu-item menu-item-danger" id="menuLogout">
-    ðŸšª Cerrar sesiÃ³n
+    🚪 Cerrar sesión
   </button>
 </div>
 
@@ -2644,7 +2644,7 @@ body:not(.sidebar-closed) .sidebar {
   <!-- DROP ZONE -->
   <section class="drop-zone flex flex-col items-center justify-center" id="dropZone">
     <div class="flex flex-col items-center justify-center gap-3 p-8 w-96 h-64 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.03] backdrop-blur-sm cursor-pointer hover:border-[#00e5ff] hover:scale-[1.01] transition-all duration-300">
-      <span class="text-3xl">ðŸ“„</span>
+      <span class="text-3xl">📄</span>
       <h3 class="font-['Space_Grotesk'] text-lg font-semibold text-[#e8e8f0] m-0">Sube tu PDF de apuntes</h3>
       <p class="text-sm text-[#9090b8] m-0">Arrastra y suelta o haz clic para seleccionar</p>
       <button class="px-6 py-2.5 rounded-xl bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white text-sm font-semibold shadow-[0_4px_16px_rgba(108,59,210,0.3)] hover:shadow-[0_6px_24px_rgba(108,59,210,0.45)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border-none font-['Inter']" id="uploadBtn">Seleccionar archivo</button>
@@ -2653,12 +2653,12 @@ body:not(.sidebar-closed) .sidebar {
 
     <div class="file-info w-full" id="fileInfo">
       <div class="file-header">
-        <span class="file-icon">ðŸ“˜</span>
+        <span class="file-icon">📘</span>
         <div>
-          <div class="file-name" id="fileName">â€”</div>
+          <div class="file-name" id="fileName">—</div>
           <div class="file-meta">
-            <span>ðŸ“„ <span id="pageCount">0</span> pÃ¡ginas</span>
-            <span>âš–ï¸ <span id="fileSize">0</span> MB</span>
+            <span>📄 <span id="pageCount">0</span> páginas</span>
+            <span>⚖️ <span id="fileSize">0</span> MB</span>
           </div>
         </div>
       </div>
@@ -2676,16 +2676,16 @@ body:not(.sidebar-closed) .sidebar {
     <!-- PDF pills bar -->
     <div class="flex-none flex items-center gap-3 px-4 py-3 overflow-x-auto" id="pdfBar">
       <div id="pdf-tabs"></div>
-      <button class="btn-change-pdf flex-none" id="btnChangePdf" title="Cambiar PDF">ðŸ“Ž Cambiar PDF</button>
+      <button class="btn-change-pdf flex-none" id="btnChangePdf" title="Cambiar PDF">📎 Cambiar PDF</button>
     </div>
 
     <!-- Module Tabs -->
     <div class="tabs flex-none" id="tabs">
-      <button class="tab-btn active" data-tab="chat">ðŸ’¬ Chat con tu PDF</button>
-      <button class="tab-btn" data-tab="flashcards">âš¡ Flashcards</button>
-      <button class="tab-btn" data-tab="studyplan">ðŸ“… Plan de Estudio</button>
-      <button class="tab-btn" data-tab="summary">ðŸ“Š Resumen</button>
-      <button class="tab-btn" data-tab="exam">ðŸŽ¯ Modo Examen</button>
+      <button class="tab-btn active" data-tab="chat">💬 Chat con tu PDF</button>
+      <button class="tab-btn" data-tab="flashcards">⚡ Flashcards</button>
+      <button class="tab-btn" data-tab="studyplan">📅 Plan de Estudio</button>
+      <button class="tab-btn" data-tab="summary">📊 Resumen</button>
+      <button class="tab-btn" data-tab="exam">🎯 Modo Examen</button>
     </div>
 
     <!-- TAB 1: CHAT -->
@@ -2693,7 +2693,7 @@ body:not(.sidebar-closed) .sidebar {
       <div class="chat-container flex-1 flex flex-col overflow-hidden">
         <div class="chat-messages flex-1 overflow-y-auto p-4 space-y-3 whitespace-pre-wrap leading-relaxed" id="chatMessages">
           <div class="empty-chat">
-            <div class="icon">ðŸ’¬</div>
+            <div class="icon">💬</div>
             <p>Sube un PDF y haz cualquier pregunta sobre tus apuntes</p>
           </div>
         </div>
@@ -2708,26 +2708,26 @@ body:not(.sidebar-closed) .sidebar {
     <div class="tab-content" id="tab-flashcards">
 <div class="flashcards-section">
       <div class="section-header">
-        <h2>âš¡ Flashcards</h2>
-        <p>Las flashcards reales serÃ¡n generadas por IA</p>
+        <h2>⚡ Flashcards</h2>
+        <p>Las flashcards reales serán generadas por IA</p>
       </div>
       <div class="flashcards-actions">
         <button class="btn btn-primary" id="genFlashcards">
           Generar Flashcards
         </button>
         <button class="btn btn-secondary" id="exportFlashcards" style="display:none;">
-          â¬‡ï¸ Exportar PDF
+          ⬇️ Exportar PDF
         </button>
       </div>
             <div style="margin-top:24px;">
               <div class="flashcard-carousel">
-                <button class="carousel-btn" id="prevCard">â€¹</button>
+                <button class="carousel-btn" id="prevCard">‹</button>
                 <div class="flashcard-container">
                   <div class="flashcard" id="flashcard">
                     <div class="flashcard-face front">
                       <span class="card-number" id="cardIndex">1 / 3</span>
                       <div class="card-label">Pregunta</div>
-                      <div class="card-question" id="cardQuestion">Â¿QuÃ© es el aprendizaje supervisado?</div>
+                      <div class="card-question" id="cardQuestion">Â¿Qué es el aprendizaje supervisado?</div>
                       <div class="flip-hint">Haz clic para ver respuesta</div>
                     </div>
                     <div class="flashcard-face back">
@@ -2737,7 +2737,7 @@ body:not(.sidebar-closed) .sidebar {
                     </div>
                   </div>
                 </div>
-                <button class="carousel-btn" id="nextCard">â€º</button>
+                <button class="carousel-btn" id="nextCard">›</button>
               </div>
               <div class="flashcard-dots" id="cardDots">
                 <span class="dot active" data-i="0"></span>
@@ -2752,55 +2752,55 @@ body:not(.sidebar-closed) .sidebar {
         <div class="tab-content" id="tab-studyplan">
           <div class="study-plan-section">
             <div class="section-header">
-              <h2>ðŸ“… Plan de Estudio</h2>
+              <h2>📅 Plan de Estudio</h2>
               <p>Organiza tu estudio con un plan personalizado</p>
             </div>
 <div class="study-plan-form">
-      <input type="text" id="planSubject" placeholder="Materia (ej: Ãlgebra Lineal)" value="Ãlgebra Lineal">
+      <input type="text" id="planSubject" placeholder="Materia (ej: Álgebra Lineal)" value="Álgebra Lineal">
       <input type="date" id="planDate">
       <div class="study-plan-actions">
         <button class="btn btn-primary" id="createPlan">Crear Plan</button>
-        <button class="btn btn-secondary" id="exportPlan" style="display:none;">â¬‡ï¸ Exportar PDF</button>
+        <button class="btn btn-secondary" id="exportPlan" style="display:none;">⬇️  Exportar PDF</button>
       </div>
     </div>
             <div class="study-plan-table-wrap">
               <table class="study-plan-table" id="planTable">
                 <thead>
-                  <tr><th>DÃ­a</th><th>Fecha</th><th>Tema</th><th>DuraciÃ³n</th><th>Estado</th></tr>
+                  <tr><th>Día</th><th>Fecha</th><th>Tema</th><th>Duración</th><th>Estado</th></tr>
                 </thead>
                 <tbody id="planBody">
                   <tr>
-                    <td>DÃ­a 1</td>
-                    <td>â€”</td>
-                    <td>IntroducciÃ³n a matrices</td>
+                    <td>Día 1</td>
+                    <td>—</td>
+                    <td>Introducción a matrices</td>
                     <td>2 h</td>
                     <td><span class="tag tag-cyan">Por hacer</span></td>
                   </tr>
                   <tr>
-                    <td>DÃ­a 2</td>
-                    <td>â€”</td>
+                    <td>Día 2</td>
+                    <td>—</td>
                     <td>Sistemas de ecuaciones lineales</td>
                     <td>2 h</td>
                     <td><span class="tag tag-cyan">Por hacer</span></td>
                   </tr>
                   <tr>
-                    <td>DÃ­a 3</td>
-                    <td>â€”</td>
+                    <td>Día 3</td>
+                    <td>—</td>
                     <td>Determinantes y propiedades</td>
                     <td>1.5 h</td>
                     <td><span class="tag tag-cyan">Por hacer</span></td>
                   </tr>
                   <tr>
-                    <td>DÃ­a 4</td>
-                    <td>â€”</td>
+                    <td>Día 4</td>
+                    <td>—</td>
                     <td>Vectores y espacios vectoriales</td>
                     <td>2 h</td>
                     <td><span class="tag tag-cyan">Por hacer</span></td>
                   </tr>
                   <tr>
-                    <td>DÃ­a 5</td>
-                    <td>â€”</td>
-                    <td>Repaso y ejercicios prÃ¡cticos</td>
+                    <td>Día 5</td>
+                    <td>—</td>
+                    <td>Repaso y ejercicios prácticos</td>
                     <td>3 h</td>
                     <td><span class="tag tag-violet">Repaso</span></td>
                   </tr>
@@ -2808,7 +2808,7 @@ body:not(.sidebar-closed) .sidebar {
               </table>
             </div>
             <p style="margin-top:12px;font-size:13px;color:var(--text-muted);">
-              * Plan de ejemplo â€” la versiÃ³n IA generarÃ¡ fechas reales y temas personalizados.
+              * Plan de ejemplo — la versión IA generará fechas reales y temas personalizados.
             </p>
           </div>
         </div>
@@ -2817,37 +2817,37 @@ body:not(.sidebar-closed) .sidebar {
         <div class="tab-content" id="tab-summary">
           <div class="summary-section">
 <div class="section-header">
-      <h2>ðŸ“Š Resumen</h2>
+      <h2>📊 Resumen</h2>
       <p>Genera un resumen inteligente de tus apuntes</p>
     </div>
     <div class="summary-actions">
       <button class="btn btn-primary" id="genSummary">Generar Resumen</button>
-      <button class="btn btn-secondary" id="exportSummary" style="display:none;">â¬‡ï¸ Exportar PDF</button>
+      <button class="btn btn-secondary" id="exportSummary" style="display:none;">⬇️ Exportar PDF</button>
     </div>
 
             <div class="summary-stats" style="margin-top:24px;">
               <div class="stat-card">
-                <div class="stat-value" id="statWords">â€”</div>
+                <div class="stat-value" id="statWords">—</div>
                 <div class="stat-label">Palabras</div>
               </div>
               <div class="stat-card">
-                <div class="stat-value" id="statPages">â€”</div>
-                <div class="stat-label">PÃ¡ginas</div>
+                <div class="stat-value" id="statPages">—</div>
+                <div class="stat-label">Páginas</div>
               </div>
               <div class="stat-card">
-                <div class="stat-value" id="statChars">â€”</div>
+                <div class="stat-value" id="statChars">—</div>
                 <div class="stat-label">Caracteres</div>
               </div>
               <div class="stat-card">
-                <div class="stat-value" id="statReadTime">â€”</div>
+                <div class="stat-value" id="statReadTime">—</div>
                 <div class="stat-label">Lectura estimada</div>
               </div>
             </div>
 
             <div class="summary-text" id="summaryText">
               <h4>ðŸ“ Resumen</h4>
-              <p>Sube un PDF y genera un resumen para ver aquÃ­ el contenido extraÃ­do de tus apuntes de forma inteligente.</p>
-              <p>El resumen incluirÃ¡ los conceptos clave, definiciones importantes y una estructura organizada por temas.</p>
+              <p>Sube un PDF y genera un resumen para ver aquí el contenido extraído de tus apuntes de forma inteligente.</p>
+              <p>El resumen incluirá los conceptos clave, definiciones importantes y una estructura organizada por temas.</p>
             </div>
           </div>
         </div>
@@ -2856,7 +2856,7 @@ body:not(.sidebar-closed) .sidebar {
         <div class="tab-content" id="tab-exam">
           <div class="exam-section">
             <div class="section-header">
-              <h2>ðŸŽ¯ Modo Examen</h2>
+              <h2>🎯 Modo Examen</h2>
               <p>Pon a prueba lo que aprendiste con preguntas generadas por IA</p>
             </div>
             <div id="examContent">
@@ -2871,21 +2871,21 @@ body:not(.sidebar-closed) .sidebar {
     <div class="history-overlay" id="historyOverlay"></div>
     <div class="history-panel" id="historyPanel">
       <div class="history-panel-header">
-        <h3>ðŸ•’ Historial de sesiones</h3>
-        <button id="closeHistory">âœ•</button>
+        <h3>🕒 Historial de sesiones</h3>
+        <button id="closeHistory">✕</button>
       </div>
       <div class="history-list" id="historyList">
-        <div class="history-empty">AÃºn no hay sesiones guardadas.<br>Las conversaciones del chat se guardan automÃ¡ticamente.</div>
+        <div class="history-empty">Aún no hay sesiones guardadas.<br>Las conversaciones del chat se guardan automáticamente.</div>
       </div>
       <div class="history-panel-footer">
-        <button class="clear-btn" id="clearHistory">ðŸ—‘ï¸ Borrar todo el historial</button>
+        <button class="clear-btn" id="clearHistory">🗑️ Borrar todo el historial</button>
       </div>
     </div>
 
     <!-- ===== TOAST ===== -->
     <div id="toast" class="toast">
       <div class="toast-content">
-        <span>ðŸ“˜</span>
+        <span>📘</span>
         <span id="toastText">Â¿Guardar este documento en tu biblioteca?</span>
       </div>
       <div class="toast-actions">
@@ -2899,16 +2899,16 @@ body:not(.sidebar-closed) .sidebar {
     <div class="history-panel" id="libraryPanel">
       <div class="history-panel-header">
         <h3>ðŸ“š Mi Biblioteca</h3>
-        <button id="closeLibrary">âœ•</button>
+        <button id="closeLibrary">✕</button>
 </div>
 <div class="history-list" id="libraryList">
-<div class="history-empty">AÃºn no hay documentos guardados.</div>
+<div class="history-empty">Aún no hay documentos guardados.</div>
 </div>
 </div>
 
 <!-- ===== FOOTER ===== -->
     <footer>
-      AeroLex AI â€” Inteligencia documental rigurosa.
+      AeroLex AI — Inteligencia documental rigurosa.
     </footer>
   </div>
 
