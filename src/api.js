@@ -30,10 +30,14 @@ export async function incrementCounter(type) {
   });
 }
 
-export async function sendChat(prompt, pdfContent) {
+export async function sendChat(prompt, pdfContent, sessionId = null) {
   return request('/api/chat', {
     method: 'POST',
-    body: JSON.stringify({ prompt, pdfContent }),
+    body: JSON.stringify({
+      prompt,
+      pdfContent,
+      sessionId: sessionId != null && sessionId !== '' ? sessionId : null,
+    }),
   });
 }
 

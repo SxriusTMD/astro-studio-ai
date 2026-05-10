@@ -568,7 +568,7 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
 });
 
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
-  const { prompt, pdfContent } = req.body;
+  const { prompt, pdfContent, sessionId } = req.body;
 
   const now = new Date();
   const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -598,6 +598,10 @@ REGLAS DE FORMATO:
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
     : prompt;
+
+  if (sessionId != null && sessionId !== '') {
+    console.log('?? /api/chat sessionId:', sessionId);
+  }
 
   try {
     // 1. Primero llamar a NVIDIA NIM

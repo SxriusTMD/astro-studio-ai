@@ -140,9 +140,16 @@ export function updateExportAllButton() {
 
 export function getCombinedContext() {
   if (!window.pdfDocs || window.pdfDocs.length === 0) return '';
-  return window.pdfDocs.map((doc, i) =>
-    `=== DOCUMENTO ${i + 1}: ${doc.name} ===\n${doc.content}`
-  ).join('\n\n');
+  const parts = [];
+  let i = 0;
+  for (const doc of window.pdfDocs) {
+    if (!doc) continue;
+    const text = typeof doc.content === 'string' ? doc.content : '';
+    if (!text.trim()) continue;
+    i += 1;
+    parts.push(`=== DOCUMENTO ${i}: ${doc.name || 'documento'} ===\n${text}`);
+  }
+  return parts.join('\n\n');
 }
 
 // ===== DRAG & DROP / FILE HANDLING =====

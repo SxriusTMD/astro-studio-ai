@@ -24,6 +24,7 @@ let examAnswers = [];
 let selectedExamOption = null;
 let examTimerInterval = null;
 let examStartTime = null;
+let examStartDelegationBound = false;
 
 function startExamTimer() {
   if (examTimerInterval) clearInterval(examTimerInterval);
@@ -45,7 +46,8 @@ const flashcardData = [
 
 window.askAI = async function (prompt) {
   try {
-    const data = await sendChat(prompt, getCombinedContext());
+    const pdfContent = getCombinedContext();
+    const data = await sendChat(prompt, pdfContent, window.currentSessionId ?? null);
     if (data.chat_used !== undefined && window.userLimits) {
       window.userLimits.chat_used = data.chat_used;
       updatePlanIndicator();
@@ -58,6 +60,43 @@ window.askAI = async function (prompt) {
   }
 };
 
+/** Alinea roles del backend (assistant/model) con la UI (ai). */
+export function normalizeChatRole(role) {
+  const r = String(role ?? '').trim().toLowerCase();
+  if (r === 'user' || r === 'human') return 'user';
+  if (r === 'system') return 'system';
+  if (r === 'assistant' || r === 'model' || r === 'bot' || r === 'ai') return 'ai';
+  return 'ai';
+}
+
+/**
+ * Mensajes persistidos (sesión / historial): burbujas con createElement + textContent solamente.
+ */
+export function appendStoredChatMessage(roleRaw, text) {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return;
+  const body = String(text ?? '').trim();
+  if (!body) return;
+
+  const empty = chatMessages.querySelector('.empty-chat');
+  if (empty) empty.remove();
+
+  const roleNorm = normalizeChatRole(roleRaw);
+  const div = document.createElement('div');
+  if (roleNorm === 'system') {
+    div.className = 'message system self-center bg-transparent border-none text-[#606088] text-xs px-3 py-1.5 text-center';
+    div.textContent = body;
+  } else if (roleNorm === 'user') {
+    div.className = 'message user self-end bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white rounded-br-md max-w-[70%] md:max-w-[60%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
+    div.textContent = body;
+  } else {
+    div.className = 'message ai self-start bg-[#12123a] text-[#e8e8f0] border border-[#1e1e4a] rounded-bl-md max-w-[85%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
+    div.textContent = body;
+  }
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 export function addChatMessage(role, text) {
   const chatMessages = document.getElementById('chatMessages');
   if (!chatMessages) return;
@@ -65,11 +104,12 @@ export function addChatMessage(role, text) {
   const empty = chatMessages.querySelector('.empty-chat');
   if (empty) empty.remove();
 
+  const roleNorm = normalizeChatRole(role);
   const div = document.createElement('div');
-  if (role === 'system') {
+  if (roleNorm === 'system') {
     div.className = 'message system self-center bg-transparent border-none text-[#606088] text-xs px-3 py-1.5 text-center';
     div.textContent = text;
-  } else if (role === 'user') {
+  } else if (roleNorm === 'user') {
     div.className = 'message user self-end bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white rounded-br-md max-w-[70%] md:max-w-[60%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
     div.textContent = text;
   } else {
@@ -118,6 +158,12 @@ export async function handleChat() {
     return;
   }
 
+  const pdfCtx = getCombinedContext();
+  if (!pdfCtx.trim()) {
+    mostrarToast('⚠️ El PDF aún no tiene texto listo. Espera un momento y vuelve a intentar.');
+    return;
+  }
+
   if (window.userLimits && window.userLimits.plan === 'free' && window.userLimits.chat_used >= 10) {
     showUpgradeModal('chat');
     return;
@@ -132,7 +178,7 @@ export async function handleChat() {
 
   const docsInfo = window.pdfDocs.map(d => d.name).join(', ');
   const systemBlock = `El usuario ha cargado ${window.pdfDocs.length} documento(s): ${docsInfo}. Cuando respondas, indica entre corchetes de qué documento viene cada información. Ejemplo: [nombre.pdf]`;
-  const contextPrompt = `${systemBlock}\n\nContexto del PDF:\n${getCombinedContext().slice(0, 4000)}\n\nPregunta: ${text}`;
+  const contextPrompt = `${systemBlock}\n\nContexto del PDF:\n${pdfCtx.slice(0, 4000)}\n\nPregunta: ${text}`;
   const response = await window.askAI(contextPrompt);
 
   removeTypingIndicator();
@@ -486,7 +532,6 @@ function ensureExamStartButtonAfterLoad() {
   if (sid != null && sid !== '' && readExamProgressForSession(sid, { silent: true })) return;
 
   examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
-  document.getElementById('startExam')?.addEventListener('click', handleStartExam);
 }
 
 function renderExamProgress() {
@@ -649,7 +694,6 @@ function renderExamResults() {
     selectedExamOption = null;
     clearExamProgressStorage();
     examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
-    document.getElementById('startExam').addEventListener('click', handleStartExam);
   });
 }
 
@@ -825,9 +869,26 @@ export async function loadSession(id) {
 
     const chatMessages = document.getElementById('chatMessages');
     if (chatMessages) {
-      chatMessages.innerHTML = '<div class="empty-chat"><div class="icon">🚀</div><p>Chat cargado de sesión</p></div>';
-      if (session.messages && session.messages.length) {
-        session.messages.forEach(m => addChatMessage(m.role, m.content));
+      chatMessages.replaceChildren();
+      const msgs = Array.isArray(session.messages) ? session.messages : [];
+      if (msgs.length) {
+        msgs.forEach((m) => {
+          const raw = typeof m === 'string' ? { role: 'user', content: m } : m;
+          const body = String(raw?.content ?? raw?.text ?? '').trim();
+          if (!body) return;
+          appendStoredChatMessage(raw?.role, body);
+        });
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'empty-chat';
+        const icon = document.createElement('div');
+        icon.className = 'icon';
+        icon.textContent = '🚀';
+        const p = document.createElement('p');
+        p.textContent = 'Chat cargado de sesión';
+        empty.appendChild(icon);
+        empty.appendChild(p);
+        chatMessages.appendChild(empty);
       }
     }
 
@@ -1094,8 +1155,29 @@ export function restoreSession(id) {
 
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
-    chatMessages.innerHTML = '<div class="empty-chat"><div class="icon">🚀</div><p>Historial cargado</p></div>';
-    session.messages.forEach(msg => addChatMessage('user', msg));
+    chatMessages.replaceChildren();
+    const list = Array.isArray(session.messages) ? session.messages : [];
+    list.forEach((entry, idx) => {
+      if (typeof entry === 'string') {
+        const role = idx % 2 === 0 ? 'user' : 'ai';
+        appendStoredChatMessage(role, entry);
+      } else if (entry && typeof entry === 'object') {
+        const body = String(entry.content ?? entry.text ?? '').trim();
+        if (body) appendStoredChatMessage(entry.role, body);
+      }
+    });
+    if (!chatMessages.querySelector('.message')) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-chat';
+      const icon = document.createElement('div');
+      icon.className = 'icon';
+      icon.textContent = '🚀';
+      const p = document.createElement('p');
+      p.textContent = 'Historial cargado';
+      empty.appendChild(icon);
+      empty.appendChild(p);
+      chatMessages.appendChild(empty);
+    }
   }
   closeHistoryPanel();
 }
@@ -1119,7 +1201,10 @@ export function restoreFromStorage() {
       separator.textContent = '── Sesión anterior ──';
       separator.style.cssText = 'text-align:center;color:var(--text-muted);font-size:12px;margin:12px 0;opacity:0.6;';
       chatMessages.appendChild(separator);
-      chatData.forEach(msg => addChatMessage(msg.role, msg.text));
+      chatData.forEach((msg) => {
+        if (!msg) return;
+        appendStoredChatMessage(msg.role, msg.text ?? msg.content ?? '');
+      });
       chatMessages.scrollTop = chatMessages.scrollHeight;
       restored = true;
     }
@@ -1319,6 +1404,13 @@ export function initSummaryGenerator() {
 }
 
 export function initExamMode() {
-  const startExam = document.getElementById('startExam');
-  if (startExam) startExam.addEventListener('click', handleStartExam);
+  const root = document.getElementById('examContent');
+  if (!root || examStartDelegationBound) return;
+  examStartDelegationBound = true;
+  root.addEventListener('click', (e) => {
+    const btn = e.target.closest('#startExam');
+    if (!btn || btn.disabled) return;
+    e.preventDefault();
+    handleStartExam();
+  });
 }
