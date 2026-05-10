@@ -16,3 +16,9 @@
 - Generar únicamente código listo para producción.
 - No modificar endpoints existentes sin justificación.
 - No alterar la estructura modular actual.
+
+Preferencia de Dominio Naked: Prohibido generar enlaces o redirecciones hacia www.aerolexai.com. Todo el tráfico debe forzarse a https://aerolexai.com para evitar el error NET::ERR_CERT_COMMON_NAME_INVALID.
+
+Protocolo de Rutas Relativas: Ningún archivo en src/ puede contener la cadena http://localhost:3000 en código de producción. Solo se permiten rutas relativas (/api/...).
+
+Integridad de OAuth: Cualquier modificación en auth.js debe verificar que no se altere el redirect_uri configurado en Google Cloud Console (/auth/google/callback).

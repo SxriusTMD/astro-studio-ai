@@ -2499,7 +2499,31 @@ body:not(.sidebar-closed) .sidebar {
     #pdf-tabs { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; min-height: 42px; }
     #pdf-tabs + #btnChangePdf { flex: none; }
 
-</style>
+    /* ===== COSMIC LOADING SKELETONS ===== */
+    @keyframes cosmicShimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    .cosmic-skeleton {
+      background: linear-gradient(90deg, #0d0d2b 25%, #1a1a4a 50%, #0d0d2b 75%);
+      background-size: 1000px 100%;
+      animation: cosmicShimmer 2s infinite linear;
+      border-radius: 8px;
+    }
+    .tool-panel.workspace-loading .chat-messages .message {
+      background: transparent;
+      border: none;
+    }
+    .tool-panel.workspace-loading .chat-messages .message::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 40px;
+      background: linear-gradient(90deg, #0d0d2b 25%, #1a1a4a 50%, #0d0d2b 75%);
+      background-size: 1000px 100%;
+      animation: cosmicShimmer 2s infinite linear;
+      border-radius: 8px;
+    }</style>
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
 

@@ -87,6 +87,17 @@ function init() {
   (async () => {
     try {
       await initAuth();
+      const { PersistenceManager } = await import('./persistence.js');
+      await PersistenceManager.restoreWorkspace();
+      
+      const chatMessages = document.getElementById('chatMessages');
+      if (chatMessages) {
+        chatMessages.addEventListener('scroll', () => PersistenceManager.saveScrollPositions());
+      }
+      const pdfViewer = document.getElementById('pdfViewer');
+      if (pdfViewer) {
+        pdfViewer.addEventListener('scroll', () => PersistenceManager.saveScrollPositions());
+      }
     } catch (err) {
       console.error('[AeroLex Failsafe] Render error:', err);
       document.body.classList.remove('auth-checking', 'authenticated');

@@ -144,10 +144,11 @@ export function updateUserMenu() {
   if (menuUsage) {
     const chatLimit = user.plan === 'premium' ? 'Ilimitado' : `${user.chat_used} / 10`;
     const examLimit = user.plan === 'premium' ? 'Ilimitado' : `${user.exam_used} / 3`;
-    menuUsage.innerHTML = `
-      <div>💬 Chat: ${chatLimit} hoy</div>
-      <div>📝 Exámenes: ${examLimit} hoy</div>
-    `;
+    const divChat = document.createElement('div');
+    divChat.textContent = `💬 Chat: ${chatLimit} hoy`;
+    const divExam = document.createElement('div');
+    divExam.textContent = `📝 Exámenes: ${examLimit} hoy`;
+    menuUsage.replaceChildren(divChat, divExam);
   }
 
   if (menuUpgrade) {

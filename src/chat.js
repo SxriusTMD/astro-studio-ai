@@ -395,18 +395,21 @@ export async function loadSessions() {
     renderSessionList(sessions);
 
     if (!window.currentSessionId) {
-      const lastId = localStorage.getItem('aerolex_last_session_id');
-      if (lastId) {
-        const idNum = Number(lastId);
-        if (sessions.some(s => s.id === idNum)) {
-          const toolPanel = document.getElementById('toolPanel');
-          if (toolPanel) toolPanel.classList.add('workspace-loading');
-          await loadSession(idNum);
-          if (toolPanel) toolPanel.classList.remove('workspace-loading');
-        } else {
-          localStorage.removeItem('aerolex_last_session_id');
+      import('./persistence.js').then(({ PersistenceManager }) => {
+        const lastId = localStorage.getItem(PersistenceManager.getKey('last_session_id'));
+        if (lastId) {
+          const idNum = Number(lastId);
+          if (sessions.some(s => s.id === idNum)) {
+            const toolPanel = document.getElementById('toolPanel');
+            if (toolPanel) toolPanel.classList.add('workspace-loading');
+            loadSession(idNum).finally(() => {
+              if (toolPanel) toolPanel.classList.remove('workspace-loading');
+            });
+          } else {
+            localStorage.removeItem(PersistenceManager.getKey('last_session_id'));
+          }
         }
-      }
+      });
     }
   } catch (e) {
     console.error('Load sessions error:', e);
@@ -418,22 +421,51 @@ export function renderSessionList(sessions) {
   if (!sessionList) return;
 
   if (!sessions.length) {
-    sessionList.innerHTML = '<div class="session-empty">Sin conversaciones previas</div>';
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'session-empty';
+    emptyDiv.textContent = 'Sin conversaciones previas';
+    sessionList.replaceChildren(emptyDiv);
     return;
   }
 
-  sessionList.innerHTML = sessions.map(s => {
+  const nodes = sessions.map(s => {
     const date = new Date(s.updated_at || s.created_at).toLocaleDateString('es-ES', {
       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     });
     const isActive = s.id === window.currentSessionId;
-    return `<div class="session-item ${isActive ? 'active' : ''}" data-id="${s.id}">
-      <div class="session-title">${s.title || 'Chat'}</div>
-      <div class="session-date">${date}</div>
-      ${s.pdfs?.length ? `<div class="session-pdfs">📄 ${s.pdfs.length} PDF(s)</div>` : ''}
-      <button class="session-delete" data-id="${s.id}">✕</button>
-    </div>`;
-  }).join('');
+    
+    const div = document.createElement('div');
+    div.className = `session-item ${isActive ? 'active' : ''}`;
+    div.dataset.id = s.id;
+    
+    const title = document.createElement('div');
+    title.className = 'session-title';
+    title.textContent = s.title || 'Chat';
+    
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'session-date';
+    dateDiv.textContent = date;
+    
+    div.appendChild(title);
+    div.appendChild(dateDiv);
+    
+    if (s.pdfs?.length) {
+      const pdfs = document.createElement('div');
+      pdfs.className = 'session-pdfs';
+      pdfs.textContent = `📄 ${s.pdfs.length} PDF(s)`;
+      div.appendChild(pdfs);
+    }
+    
+    const btn = document.createElement('button');
+    btn.className = 'session-delete';
+    btn.dataset.id = s.id;
+    btn.textContent = '✕';
+    div.appendChild(btn);
+    
+    return div;
+  });
+  
+  sessionList.replaceChildren(...nodes);
 }
 
 export async function loadSession(id) {
@@ -516,7 +548,9 @@ export async function loadSession(id) {
 
 export function newSession() {
   window.currentSessionId = null;
-  localStorage.removeItem('aerolex_last_session_id');
+  import('./persistence.js').then(({ PersistenceManager }) => {
+    localStorage.removeItem(PersistenceManager.getKey('last_session_id'));
+  });
   window.pdfDocs = [];
   window.activeDocId = null;
   window.flashcardsData = null;
@@ -592,7 +626,9 @@ export async function saveCurrentSession() {
         const data = await createSession(payload);
         window.currentSessionId = data.id;
       }
-      localStorage.setItem('aerolex_last_session_id', window.currentSessionId);
+      import('./persistence.js').then(({ PersistenceManager }) => {
+        localStorage.setItem(PersistenceManager.getKey('last_session_id'), window.currentSessionId);
+      });
       loadSessions();
     } catch (e) {
       console.error('Save session error:', e);
@@ -628,19 +664,43 @@ export function renderHistory() {
   const history = getHistory();
 
   if (history.length === 0) {
-    list.innerHTML = '<div class="history-empty">Aún no hay sesiones guardadas.<br>Las conversaciones del chat se guardan automáticamente.</div>';
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'history-empty';
+    emptyDiv.textContent = 'Aún no hay sesiones guardadas.\nLas conversaciones del chat se guardan automáticamente.';
+    emptyDiv.style.whiteSpace = 'pre-line';
+    list.replaceChildren(emptyDiv);
     return;
   }
 
-  list.innerHTML = history.map(s => {
+  const nodes = history.map(s => {
     const date = new Date(s.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     const preview = s.messages.length > 0 ? s.messages[0].substring(0, 80) : '';
-    return `<div class="history-item" data-id="${s.id}">
-      <div class="h-name">📘 ${s.pdfName}</div>
-      <div class="h-date">${date}</div>
-      ${preview ? `<div class="h-preview">💬 "${preview}..."</div>` : ''}
-    </div>`;
-  }).join('');
+    
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.dataset.id = s.id;
+    
+    const title = document.createElement('div');
+    title.className = 'h-name';
+    title.textContent = `📘 ${s.pdfName}`;
+    
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'h-date';
+    dateDiv.textContent = date;
+    
+    div.appendChild(title);
+    div.appendChild(dateDiv);
+    
+    if (preview) {
+      const prevDiv = document.createElement('div');
+      prevDiv.className = 'h-preview';
+      prevDiv.textContent = `💬 "${preview}..."`;
+      div.appendChild(prevDiv);
+    }
+    return div;
+  });
+
+  list.replaceChildren(...nodes);
 
   list.querySelectorAll('.history-item').forEach(el => {
     el.addEventListener('click', () => {
