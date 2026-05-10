@@ -13,6 +13,7 @@ import {
 } from './api.js';
 import { updatePlanIndicator, showUpgradeModal, saveToStorage, loadFromStorage } from './auth.js';
 import { getCombinedContext, updateExportAllButton, mostrarToast } from './ui-components.js';
+import { PersistenceManager } from './persistence.js';
 
 let saveDebounceTimer = null;
 const HISTORY_KEY = 'aerolex_history';
@@ -204,6 +205,106 @@ function normalizeExamQuestion(question) {
   };
 }
 
+function normalizeExamQuestionsFromSession(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  return raw.map(normalizeExamQuestion).filter(Boolean);
+}
+
+/** Recalcula y muestra palabras, páginas, caracteres y lectura estimada a partir de los PDF en memoria (p. ej. tras loadSession). */
+function rehydrateSummaryMetrics() {
+  const pdfs = window.pdfDocs || [];
+  const statWords = document.getElementById('statWords');
+  const statPages = document.getElementById('statPages');
+  const statChars = document.getElementById('statChars');
+  const statReadTime = document.getElementById('statReadTime');
+
+  if (!pdfs.length) {
+    if (statWords) statWords.textContent = '—';
+    if (statPages) statPages.textContent = '—';
+    if (statChars) statChars.textContent = '—';
+    if (statReadTime) statReadTime.textContent = '—';
+    return;
+  }
+
+  let totalPages = 0;
+  let totalWords = 0;
+  let totalChars = 0;
+  for (const d of pdfs) {
+    const content = typeof d.content === 'string' ? d.content : '';
+    totalPages += Number(d.pages) || 0;
+    totalWords += content.split(/\s+/).filter(Boolean).length;
+    totalChars += content.length;
+  }
+
+  if (statWords) statWords.textContent = totalWords.toLocaleString('es-ES');
+  if (statPages) statPages.textContent = totalPages.toLocaleString('es-ES');
+  if (statChars) statChars.textContent = totalChars.toLocaleString('es-ES');
+  if (statReadTime) statReadTime.textContent = Math.ceil(totalWords / 200) + ' min';
+}
+
+function persistExamProgress() {
+  if (!window.currentSessionId || !examQuestions.length) return;
+  try {
+    localStorage.setItem(
+      PersistenceManager.getKey('exam_progress'),
+      JSON.stringify({
+        sessionId: window.currentSessionId,
+        examIndex,
+        examAnswers,
+      })
+    );
+  } catch (_) {}
+}
+
+function clearExamProgressStorage() {
+  try {
+    localStorage.removeItem(PersistenceManager.getKey('exam_progress'));
+  } catch (_) {}
+}
+
+function readExamProgressForSession(sessionId) {
+  try {
+    const raw = localStorage.getItem(PersistenceManager.getKey('exam_progress'));
+    if (!raw) return null;
+    const progress = JSON.parse(raw);
+    if (!progress || Number(progress.sessionId) !== Number(sessionId)) return null;
+    return {
+      examIndex: Math.max(0, Number(progress.examIndex) || 0),
+      examAnswers: Array.isArray(progress.examAnswers) ? progress.examAnswers : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function rehydrateExamAfterLoad() {
+  if (!examQuestions.length) return;
+  const examContent = document.getElementById('examContent');
+  if (!examContent) return;
+
+  if (examAnswers.length > examIndex) {
+    examAnswers = examAnswers.slice(0, examIndex);
+  }
+
+  const tsRaw = localStorage.getItem(PersistenceManager.getKey('exam_start'));
+  const ts = tsRaw != null && tsRaw !== '' ? Number(tsRaw) : NaN;
+  examStartTime = Number.isFinite(ts) ? ts : null;
+
+  if (examIndex >= examQuestions.length) {
+    if (examAnswers.length >= examQuestions.length) {
+      renderExamResults();
+    } else {
+      examIndex = Math.max(0, examQuestions.length - 1);
+      renderExamQuestion();
+      if (examStartTime) startExamTimer();
+    }
+    return;
+  }
+
+  renderExamQuestion();
+  if (examStartTime) startExamTimer();
+}
+
 function renderExamProgress() {
   let html = '<div class="exam-progress">';
   examQuestions.forEach((_, i) => {
@@ -269,6 +370,7 @@ function handleExamAnswer() {
     usuario: selectedExamOption,
     acierto: isCorrect
   });
+  persistExamProgress();
 
   document.querySelectorAll('.exam-option').forEach((btn) => {
     btn.disabled = true;
@@ -297,6 +399,7 @@ function handleExamAnswer() {
 
   document.getElementById('nextQuestion').addEventListener('click', () => {
     examIndex++;
+    persistExamProgress();
     renderExamQuestion();
   });
 }
@@ -304,9 +407,8 @@ function handleExamAnswer() {
 function renderExamResults() {
   // Stop timer
   if (examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval = null; }
-  import('./persistence.js').then(({ PersistenceManager }) => {
-    localStorage.removeItem(PersistenceManager.getKey('exam_start'));
-  }).catch(() => {});
+  localStorage.removeItem(PersistenceManager.getKey('exam_start'));
+  clearExamProgressStorage();
 
   const totalSeconds = examStartTime ? Math.floor((Date.now() - examStartTime) / 1000) : 0;
   const timerStr = `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
@@ -350,6 +452,7 @@ function renderExamResults() {
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
+    persistExamProgress();
     renderExamQuestion();
   });
 
@@ -360,6 +463,7 @@ function renderExamResults() {
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
+    clearExamProgressStorage();
     examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
     document.getElementById('startExam').addEventListener('click', handleStartExam);
   });
@@ -401,15 +505,14 @@ export async function handleStartExam() {
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
+    clearExamProgressStorage();
 
     // Persistent Timer: save start time
     examStartTime = Date.now();
-    try {
-      const { PersistenceManager } = await import('./persistence.js');
-      localStorage.setItem(PersistenceManager.getKey('exam_start'), String(examStartTime));
-    } catch (_) {}
+    localStorage.setItem(PersistenceManager.getKey('exam_start'), String(examStartTime));
     startExamTimer();
 
+    persistExamProgress();
     renderExamQuestion();
   } catch (e) {
     console.error('Start exam error:', e);
@@ -520,9 +623,14 @@ export async function loadSession(id) {
     window.flashcardsData = session.flashcards || null;
     window.summaryData = session.summary || null;
     window.planData = session.study_plan || null;
-    examQuestions = session.exam || [];
+    examQuestions = normalizeExamQuestionsFromSession(session.exam);
     examIndex = 0;
     examAnswers = [];
+    const examProgress = readExamProgressForSession(session.id);
+    if (examProgress && examQuestions.length) {
+      examIndex = Math.min(examProgress.examIndex, examQuestions.length);
+      examAnswers = examProgress.examAnswers;
+    }
 
     const chatMessages = document.getElementById('chatMessages');
     if (chatMessages) {
@@ -541,6 +649,7 @@ export async function loadSession(id) {
 
     const { renderTabs } = await import('./ui-components.js');
     renderTabs();
+    rehydrateSummaryMetrics();
 
     if (window.flashcardsData) {
       renderFlashcards(window.flashcardsData);
@@ -574,6 +683,7 @@ export async function loadSession(id) {
       document.getElementById('exportPlan').style.display = 'inline-block';
     }
 
+    rehydrateExamAfterLoad();
     updateExportAllButton();
     loadSessions();
   } catch (e) {
@@ -595,6 +705,7 @@ export function newSession() {
   examIndex = 0;
   examAnswers = [];
   selectedExamOption = null;
+  clearExamProgressStorage();
 
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
