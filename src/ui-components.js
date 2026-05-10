@@ -666,16 +666,28 @@ export function initDragDrop() {
   const uploadBtn = document.getElementById('uploadBtn');
   const btnChangePdf = document.getElementById('btnChangePdf');
 
-  if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('drag-active');
+  if (uploadBtn) uploadBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput?.click(); });
+  if (dropZone) dropZone.addEventListener('click', () => fileInput?.click());
+  if (btnChangePdf) btnChangePdf.addEventListener('click', (e) => { e.stopPropagation(); fileInput?.click(); });
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
     });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+  }
+
+  if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
     dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
-      dropZone.classList.remove('drag-active');
-      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+      dropZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const f = files[0];
+        if (!f.type || f.type === 'application/pdf') handleFile(f);
+        else alert('Solo se aceptan archivos PDF.');
+      }
     });
   }
 }
@@ -735,31 +747,6 @@ export function initLegalModal() {
   });
 }
 
-  if (uploadBtn) uploadBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput?.click(); });
-  if (dropZone) dropZone.addEventListener('click', () => fileInput?.click());
-  if (btnChangePdf) btnChangePdf.addEventListener('click', (e) => { e.stopPropagation(); fileInput?.click(); });
-
-  if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length) handleFile(e.target.files[0]);
-    });
-  }
-
-  if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      const files = e.dataTransfer.files;
-      if (files.length) {
-        const f = files[0];
-        if (!f.type || f.type === 'application/pdf') handleFile(f);
-        else alert('Solo se aceptan archivos PDF.');
-      }
-    });
-  }
-}
 
 // ===== LIBRARY PANEL =====
 

@@ -21,6 +21,20 @@ let examQuestions = [];
 let examIndex = 0;
 let examAnswers = [];
 let selectedExamOption = null;
+let examTimerInterval = null;
+let examStartTime = null;
+
+function startExamTimer() {
+  if (examTimerInterval) clearInterval(examTimerInterval);
+  examTimerInterval = setInterval(() => {
+    if (!examStartTime) return;
+    const elapsed = Math.floor((Date.now() - examStartTime) / 1000);
+    const timerEl = document.getElementById('examTimer');
+    if (timerEl) {
+      timerEl.textContent = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
+    }
+  }, 1000);
+}
 
 const flashcardData = [
   { q: '¿Qué es el aprendizaje supervisado?', a: 'Un tipo de ML donde el modelo se entrena con datos etiquetados.' },
@@ -218,7 +232,10 @@ function renderExamQuestion() {
   examContent.innerHTML = `
     ${renderExamProgress()}
     <div class="exam-card">
-      <div class="exam-question-number">Pregunta ${examIndex + 1} de ${examQuestions.length}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div class="exam-question-number">Pregunta ${examIndex + 1} de ${examQuestions.length}</div>
+        <div id="examTimer" style="font-family:'Space Grotesk',monospace;font-size:14px;color:var(--accent-cyan);min-width:60px;text-align:right;">00:00</div>
+      </div>
       <div class="exam-question-text">${escapeHTML(q.pregunta)}</div>
       <div class="exam-options">${optionsHtml}</div>
       <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -285,6 +302,15 @@ function handleExamAnswer() {
 }
 
 function renderExamResults() {
+  // Stop timer
+  if (examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval = null; }
+  import('./persistence.js').then(({ PersistenceManager }) => {
+    localStorage.removeItem(PersistenceManager.getKey('exam_start'));
+  }).catch(() => {});
+
+  const totalSeconds = examStartTime ? Math.floor((Date.now() - examStartTime) / 1000) : 0;
+  const timerStr = `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
+
   const correctCount = examAnswers.filter(a => a.acierto).length;
   const wrongCount = examAnswers.length - correctCount;
   const examContent = document.getElementById('examContent');
@@ -306,7 +332,7 @@ function renderExamResults() {
         <div style="color:var(--text-muted);font-size:14px;margin-bottom:4px;">Puntaje final</div>
         <div class="final-score">${correctCount}/${examQuestions.length}</div>
         <div style="margin-top:8px;font-size:14px;color:var(--text-secondary);">
-          ${correctCount} aciertos - ${wrongCount} errores
+          ${correctCount} aciertos - ${wrongCount} errores &middot; ${timerStr}
         </div>
       </div>
       <div style="margin-top:20px;">
@@ -375,6 +401,15 @@ export async function handleStartExam() {
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
+
+    // Persistent Timer: save start time
+    examStartTime = Date.now();
+    try {
+      const { PersistenceManager } = await import('./persistence.js');
+      localStorage.setItem(PersistenceManager.getKey('exam_start'), String(examStartTime));
+    } catch (_) {}
+    startExamTimer();
+
     renderExamQuestion();
   } catch (e) {
     console.error('Start exam error:', e);
