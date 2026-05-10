@@ -53,6 +53,9 @@ export async function initAuth() {
       }
     }
 
+    window.userLimits = window.userLimits || {};
+    if (data.user?.id) window.userLimits.google_id = data.user.id;
+
     const { loadSessions } = await import('./chat.js');
     loadSessions();
   } catch (err) {
@@ -70,7 +73,7 @@ export async function initAuth() {
 export async function fetchUserLimits() {
   try {
     const data = await apiFetchUserLimits();
-    window.userLimits = data;
+    window.userLimits = { ...window.userLimits, ...data };
     updatePlanIndicator();
     const { restoreFromStorage } = await import('./chat.js');
     restoreFromStorage();

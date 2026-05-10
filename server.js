@@ -516,6 +516,7 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
     console.log('?? Limits:', row);
     
     res.json({
+      google_id: userId,
       plan: row.plan,
       chat_used: row.chat_count,
       exam_used: row.exam_count,

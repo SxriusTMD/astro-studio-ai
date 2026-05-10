@@ -205,9 +205,28 @@ function normalizeExamQuestion(question) {
   };
 }
 
+function normalizeChatSessionId(id) {
+  if (id == null || id === '') return null;
+  const n = Number(id);
+  return Number.isFinite(n) ? n : id;
+}
+
+function sessionIdsMatch(a, b) {
+  if (a == null || b == null) return false;
+  return String(a) === String(b);
+}
+
 function normalizeExamQuestionsFromSession(raw) {
-  if (!Array.isArray(raw) || raw.length === 0) return [];
-  return raw.map(normalizeExamQuestion).filter(Boolean);
+  let data = raw;
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(data) || data.length === 0) return [];
+  return data.map(normalizeExamQuestion).filter(Boolean);
 }
 
 /** Recalcula y muestra palabras, páginas, caracteres y lectura estimada a partir de los PDF en memoria (p. ej. tras loadSession). */
@@ -243,12 +262,18 @@ function rehydrateSummaryMetrics() {
 }
 
 function persistExamProgress() {
-  if (!window.currentSessionId || !examQuestions.length) return;
+  const capturedSessionId = window.currentSessionId;
+  if (capturedSessionId == null || capturedSessionId === '') {
+    console.warn('[ExamDebug] persistExamProgress omitido: window.currentSessionId no está listo');
+    return;
+  }
+  if (!examQuestions.length) return;
+  const sessionIdStr = String(capturedSessionId);
   try {
     localStorage.setItem(
       PersistenceManager.getKey('exam_progress'),
       JSON.stringify({
-        sessionId: window.currentSessionId,
+        sessionId: sessionIdStr,
         examIndex,
         examAnswers,
       })
@@ -259,25 +284,99 @@ function persistExamProgress() {
 function clearExamProgressStorage() {
   try {
     localStorage.removeItem(PersistenceManager.getKey('exam_progress'));
+    localStorage.removeItem('astro_anon_exam_progress');
   } catch (_) {}
 }
 
-function readExamProgressForSession(sessionId) {
-  try {
-    const raw = localStorage.getItem(PersistenceManager.getKey('exam_progress'));
-    if (!raw) return null;
-    const progress = JSON.parse(raw);
-    if (!progress || Number(progress.sessionId) !== Number(sessionId)) return null;
-    return {
-      examIndex: Math.max(0, Number(progress.examIndex) || 0),
-      examAnswers: Array.isArray(progress.examAnswers) ? progress.examAnswers : [],
-    };
-  } catch {
-    return null;
+const LEGACY_EXAM_PROGRESS_KEY = 'astro_anon_exam_progress';
+
+function readRawExamProgressBlob() {
+  for (const key of [PersistenceManager.getKey('exam_progress'), LEGACY_EXAM_PROGRESS_KEY]) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
-function rehydrateExamAfterLoad() {
+async function waitForSessionIdAfterLoad(expectedSessionId, maxMicrotaskTicks = 15) {
+  for (let i = 0; i < maxMicrotaskTicks; i++) {
+    if (window.currentSessionId != null && window.currentSessionId !== '') {
+      return window.currentSessionId;
+    }
+    await new Promise((resolve) => queueMicrotask(resolve));
+  }
+  if (expectedSessionId != null && expectedSessionId !== '') {
+    window.currentSessionId = normalizeChatSessionId(expectedSessionId);
+    return window.currentSessionId;
+  }
+  return window.currentSessionId;
+}
+
+function readExamProgressForSession(sessionId, options = {}) {
+  const silent = options.silent === true;
+  if (sessionId == null || sessionId === '') return null;
+  const sid = String(sessionId);
+
+  const keysToTry = [PersistenceManager.getKey('exam_progress'), LEGACY_EXAM_PROGRESS_KEY];
+  const tried = [];
+
+  for (const key of keysToTry) {
+    try {
+      const raw = localStorage.getItem(key);
+      tried.push({ key, hasRaw: Boolean(raw) });
+      if (!raw) continue;
+      const progress = JSON.parse(raw);
+      if (!progress) continue;
+
+      if (!sessionIdsMatch(progress.sessionId, sid)) {
+        if (!silent) {
+          console.log('[ExamDebug] Progress raw mismatch:', {
+            progress,
+            expectedSessionId: sid,
+            storageKey: key,
+            compareSaved: progress.sessionId != null ? String(progress.sessionId) : progress.sessionId,
+            compareExpected: String(sid),
+          });
+        }
+        continue;
+      }
+
+      if (!silent) {
+        console.log('[ExamDebug] Progress found:', progress, { storageKey: key, sessionIdComparedAs: String(sid) });
+      }
+      return {
+        examIndex: Math.max(0, Number(progress.examIndex) || 0),
+        examAnswers: Array.isArray(progress.examAnswers) ? progress.examAnswers : [],
+      };
+    } catch (e) {
+      if (!silent) console.log('[ExamDebug] Progress read/parse error:', key, e);
+    }
+  }
+
+  if (!silent) console.log('[ExamDebug] No matching exam progress for session', String(sid), { triedKeys: tried });
+  return null;
+}
+
+async function rehydrateExamAfterLoad(expectedSessionId) {
+  await waitForSessionIdAfterLoad(expectedSessionId);
+
+  const progress = readRawExamProgressBlob();
+  console.log('ID Guardado:', progress?.sessionId, 'ID Actual:', window.currentSessionId);
+
+  console.log('[ExamDebug] rehydrateExamAfterLoad', {
+    questionCount: examQuestions.length,
+    examIndex,
+    answersLen: examAnswers.length,
+    currentSessionId: window.currentSessionId,
+    expectedSessionId,
+  });
+
   if (!examQuestions.length) return;
   const examContent = document.getElementById('examContent');
   if (!examContent) return;
@@ -303,6 +402,17 @@ function rehydrateExamAfterLoad() {
 
   renderExamQuestion();
   if (examStartTime) startExamTimer();
+}
+
+/** Inserta el botón Iniciar solo si el panel de examen sigue vacío (evita pisar rehidratación o resultados). */
+function ensureExamStartButtonAfterLoad() {
+  const examContent = document.getElementById('examContent');
+  if (!examContent) return;
+  if (examContent.querySelector('.exam-card') || examContent.querySelector('.exam-results')) return;
+  if (examContent.querySelector('#startExam')) return;
+
+  examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
+  document.getElementById('startExam')?.addEventListener('click', handleStartExam);
 }
 
 function renderExamProgress() {
@@ -537,7 +647,7 @@ export async function loadSessions() {
         const lastId = localStorage.getItem(PersistenceManager.getKey('last_session_id'));
         if (lastId) {
           const idNum = Number(lastId);
-          if (sessions.some(s => s.id === idNum)) {
+          if (sessions.some(s => sessionIdsMatch(s.id, idNum))) {
             const toolPanel = document.getElementById('toolPanel');
             if (toolPanel) toolPanel.classList.add('workspace-loading');
             loadSession(idNum).finally(() => {
@@ -570,7 +680,7 @@ export function renderSessionList(sessions) {
     const date = new Date(s.updated_at || s.created_at).toLocaleDateString('es-ES', {
       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     });
-    const isActive = s.id === window.currentSessionId;
+    const isActive = sessionIdsMatch(s.id, window.currentSessionId);
     
     const div = document.createElement('div');
     div.className = `session-item ${isActive ? 'active' : ''}`;
@@ -612,7 +722,8 @@ export async function loadSession(id) {
     if (!data.session) return;
     const session = data.session;
 
-    window.currentSessionId = session.id;
+    const loadedSessionId = normalizeChatSessionId(session.id);
+    window.currentSessionId = loadedSessionId;
     window.pdfDocs = session.pdfs || [];
     const savedDoc = localStorage.getItem('aerolex_active_doc');
     if (savedDoc && window.pdfDocs.some(d => String(d.id) === String(savedDoc))) {
@@ -626,7 +737,7 @@ export async function loadSession(id) {
     examQuestions = normalizeExamQuestionsFromSession(session.exam);
     examIndex = 0;
     examAnswers = [];
-    const examProgress = readExamProgressForSession(session.id);
+    const examProgress = readExamProgressForSession(loadedSessionId);
     if (examProgress && examQuestions.length) {
       examIndex = Math.min(examProgress.examIndex, examQuestions.length);
       examAnswers = examProgress.examAnswers;
@@ -683,9 +794,21 @@ export async function loadSession(id) {
       document.getElementById('exportPlan').style.display = 'inline-block';
     }
 
-    rehydrateExamAfterLoad();
     updateExportAllButton();
-    loadSessions();
+    await loadSessions();
+
+    if (examQuestions.length) {
+      await rehydrateExamAfterLoad(loadedSessionId);
+    } else {
+      const orphan = readExamProgressForSession(loadedSessionId, { silent: true });
+      if (orphan) {
+        console.warn('[ExamDebug] Progreso en storage sin preguntas en la sesión; limpiando.');
+        clearExamProgressStorage();
+      }
+      const examPanel = document.getElementById('examContent');
+      if (examPanel) examPanel.replaceChildren();
+      ensureExamStartButtonAfterLoad();
+    }
   } catch (e) {
     console.error('Load session error:', e);
   }
@@ -730,7 +853,7 @@ export function newSession() {
 export async function deleteSession(id) {
   try {
     await apiDeleteSession(id);
-    if (window.currentSessionId === id) {
+    if (sessionIdsMatch(window.currentSessionId, id)) {
       newSession();
     } else {
       loadSessions();
@@ -770,7 +893,7 @@ export async function saveCurrentSession() {
         await updateSession(window.currentSessionId, payload);
       } else {
         const data = await createSession(payload);
-        window.currentSessionId = data.id;
+        window.currentSessionId = normalizeChatSessionId(data.id);
       }
       import('./persistence.js').then(({ PersistenceManager }) => {
         localStorage.setItem(PersistenceManager.getKey('last_session_id'), window.currentSessionId);

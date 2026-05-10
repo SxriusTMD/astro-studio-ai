@@ -1,0 +1,32 @@
+# AeroLex AI - Constitucion de Ingenieria (Hugo's Workspace)
+
+# PERFIL DEL PROYECTO
+- [cite_start]Nombre: AeroLex AI [cite: 15]
+- [cite_start]Proposito: Copiloto de estudio inteligente y persistente para estudiantes[cite: 18].
+- [cite_start]Fundador: Hugo (Emprendedor tecnologico, Mexico)[cite: 6].
+
+# STACK TECNICO OBLIGATORIO
+- Frontend: 100% Vanilla JavaScript (ES6+), HTML5, CSS3.
+- [cite_start]Backend: Node.js, Express[cite: 19].
+- [cite_start]Base de Datos: PostgreSQL gestionado en Railway[cite: 14, 20].
+- Prohibido: React, Vue, Firebase, Tailwind CDN (en prod), o cualquier framework de JS.
+
+# REGLAS DE ORO DE SEGURIDAD Y UI
+- XSS: PROHIBIDO el uso de .innerHTML en elementos con listeners o datos de usuario.
+- Metodos Permitidos: .textContent, .createElement, .replaceChildren(), .insertAdjacentHTML (solo para strings estaticos).
+- Mobile-First: Estabilidad total en viewports de 390px.
+- Sidebar: Debe ser un overlay absoluto, no debe desplazar el contenido principal.
+- Dominios: Forzar siempre https://aerolexai.com (naked domain).
+
+# LOGICA DE PERSISTENCIA (PersistenceManager)
+- Prefijo LocalStorage: 'astro_${googleId}_'.
+- Rehidratacion: Al cargar sesion (loadSession), se deben repoblar TODOS los campos:
+    1. Texto del resumen y sus metricas (Palabras, Paginas, Caracteres).
+    2. Estado del examen (Si hay preguntas, saltar el boton "Iniciar").
+    3. Timer del examen (Basado en timestamp de PostgreSQL).
+    4. Posicion de Scroll del PDF y Chat.
+
+# INSTRUCCIONES DE FLUJO DE TRABAJO
+- Siempre realizar un Analisis de Causa Raiz (RCA) antes de proponer cambios.
+- Los commits deben ser profesionales: "feat(modulo): descripcion" o "fix(modulo): descripcion".
+- Tras cada cambio, verificar que no haya "Layout Shift" en la interfaz movil.
