@@ -106,7 +106,7 @@ tailwind.config = {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 16px 40px 0;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -115,10 +115,10 @@ tailwind.config = {
 }
 
     @media (min-width: 1600px) {
-      .app-container { max-width: 1400px; padding: 0 48px; }
+      .app-container { max-width: 1400px; padding: 16px 56px 0; }
     }
     @media (max-width: 768px) {
-      .app-container { padding: 0 8px; }
+      .app-container { padding: 10px 14px 0; }
     }
 
 /* ===== HEADER ===== */
@@ -2319,7 +2319,7 @@ body:not(.sidebar-closed) .sidebar {
       .study-plan-table th,
       .study-plan-table td { padding: 10px 12px; }
 
-      .app-container { padding: 0 12px; }
+      .app-container { padding: 10px 14px 0; }
 
       .history-panel { width: 300px; right: -320px; }
     }
@@ -2354,7 +2354,6 @@ body:not(.sidebar-closed) .sidebar {
       .study-plan-table th,
       .study-plan-table td { padding: 10px 12px; }
 
-      .app-container { padding: 12px 14px 0; }
 
       .history-panel { width: 300px; right: -320px; }
     }
