@@ -391,7 +391,23 @@ export async function handleStartExam() {
 export async function loadSessions() {
   try {
     const data = await fetchSessions();
-    renderSessionList(data.sessions || []);
+    const sessions = data.sessions || [];
+    renderSessionList(sessions);
+
+    if (!window.currentSessionId) {
+      const lastId = localStorage.getItem('aerolex_last_session_id');
+      if (lastId) {
+        const idNum = Number(lastId);
+        if (sessions.some(s => s.id === idNum)) {
+          const toolPanel = document.getElementById('toolPanel');
+          if (toolPanel) toolPanel.classList.add('workspace-loading');
+          await loadSession(idNum);
+          if (toolPanel) toolPanel.classList.remove('workspace-loading');
+        } else {
+          localStorage.removeItem('aerolex_last_session_id');
+        }
+      }
+    }
   } catch (e) {
     console.error('Load sessions error:', e);
   }
@@ -428,7 +444,12 @@ export async function loadSession(id) {
 
     window.currentSessionId = session.id;
     window.pdfDocs = session.pdfs || [];
-    window.activeDocId = window.pdfDocs.length > 0 ? window.pdfDocs[0].id : null;
+    const savedDoc = localStorage.getItem('aerolex_active_doc');
+    if (savedDoc && window.pdfDocs.some(d => String(d.id) === String(savedDoc))) {
+      window.activeDocId = savedDoc;
+    } else {
+      window.activeDocId = window.pdfDocs.length > 0 ? window.pdfDocs[0].id : null;
+    }
     window.flashcardsData = session.flashcards || null;
     window.summaryData = session.summary || null;
     window.planData = session.study_plan || null;
@@ -495,6 +516,7 @@ export async function loadSession(id) {
 
 export function newSession() {
   window.currentSessionId = null;
+  localStorage.removeItem('aerolex_last_session_id');
   window.pdfDocs = [];
   window.activeDocId = null;
   window.flashcardsData = null;
@@ -570,6 +592,7 @@ export async function saveCurrentSession() {
         const data = await createSession(payload);
         window.currentSessionId = data.id;
       }
+      localStorage.setItem('aerolex_last_session_id', window.currentSessionId);
       loadSessions();
     } catch (e) {
       console.error('Save session error:', e);

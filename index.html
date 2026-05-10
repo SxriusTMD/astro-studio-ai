@@ -2487,8 +2487,9 @@ body:not(.sidebar-closed) .sidebar {
     .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; max-height: none; padding: 0; border: none; cursor: pointer; background: transparent; backdrop-filter: none; overflow: visible; }
     .drop-zone.collapsed { display: none; flex: none; min-height: 0; max-height: 0; padding: 0; margin: 0; border: 0; overflow: hidden; }
     .drop-zone.collapsed + .tool-panel { margin-top: 0; }
-    .tool-panel { display: none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; margin-top: 0; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; }
+    .tool-panel { display: none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; margin-top: 0; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; transition: opacity 0.3s ease; }
     .tool-panel.visible { display: flex; }
+    .tool-panel.workspace-loading { opacity: 0.4; pointer-events: none; }
     .message { white-space: pre-wrap; line-height: 1.75; }
     .message.user { white-space: pre-wrap; }
     .message.ai { white-space: pre-wrap; }

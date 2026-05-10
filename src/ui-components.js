@@ -245,6 +245,7 @@ export function renderTabs() {
     tab.addEventListener('click', (e) => {
       if (e.target.classList.contains('pdf-tab-close')) return;
       window.activeDocId = doc.id;
+      localStorage.setItem('aerolex_active_doc', doc.id);
       renderTabs();
     });
     tab.querySelector('.pdf-tab-close').addEventListener('click', (e) => {
@@ -646,8 +647,15 @@ export function initTabs() {
       document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
       btn.classList.add('active');
       targetPanel.classList.add('active');
+      localStorage.setItem('aerolex_active_tab', btn.dataset.tab);
     });
   });
+
+  const savedTab = localStorage.getItem('aerolex_active_tab');
+  if (savedTab) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${savedTab}"]`);
+    if (btn) btn.click();
+  }
 }
 
 // ===== DRAG & DROP EVENTS =====
