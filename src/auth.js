@@ -61,6 +61,9 @@ export async function initAuth() {
     document.body.classList.add('unauthenticated');
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.style.display = 'none';
+    const loader = document.getElementById('loadingScreen');
+    if (loader) loader.style.display = 'none';
+    throw err;
   }
 }
 

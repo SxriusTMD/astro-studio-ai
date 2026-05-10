@@ -104,6 +104,10 @@ function init() {
       console.error('[AeroLex Failsafe] Render error:', err);
       document.body.classList.remove('auth-checking', 'authenticated');
       document.body.classList.add('unauthenticated');
+    } finally {
+      document.body.classList.remove('auth-checking');
+      const loader = document.getElementById('loadingScreen');
+      if (loader) loader.style.display = 'none';
     }
   })();
 

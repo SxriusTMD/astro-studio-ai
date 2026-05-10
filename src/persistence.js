@@ -30,67 +30,76 @@ export class PersistenceManager {
   }
 
   static async restoreWorkspace() {
-    // 1. Restore Sidebar
-    const sidebarOpen = localStorage.getItem(this.getKey('sidebar_open'));
-    if (sidebarOpen === 'true') {
-      document.body.classList.remove('sidebar-closed');
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) sidebar.style.display = 'flex';
-    } else if (sidebarOpen === 'false') {
-      document.body.classList.add('sidebar-closed');
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) sidebar.style.display = 'none';
-    }
-
-    // 2. Restore Active Tab
-    const tabId = localStorage.getItem(this.getKey('active_tab'));
-    if (tabId) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-      const content = document.getElementById(`tab-${tabId}`);
-      if (btn && content) {
-        btn.classList.add('active');
-        content.classList.add('active');
+    try {
+      // 1. Restore Sidebar
+      const sidebarOpen = localStorage.getItem(this.getKey('sidebar_open'));
+      if (sidebarOpen === 'true') {
+        document.body.classList.remove('sidebar-closed');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.style.display = 'flex';
+      } else if (sidebarOpen === 'false') {
+        document.body.classList.add('sidebar-closed');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.style.display = 'none';
       }
-    }
 
-    // 3. Silent PDF Recovery
-    const docId = localStorage.getItem(this.getKey('active_doc'));
-    if (docId) {
-      window.activeDocId = docId;
-      const isInMemory = window.pdfDocs?.some(d => String(d.id) === String(docId));
-      if (!isInMemory) {
-        try {
-          const { getDocument } = await import('./api.js');
-          const data = await getDocument(docId);
-          if (data && data.documento) {
-            window.pdfDocs = window.pdfDocs || [];
-            // Prevent duplicates
-            if (!window.pdfDocs.some(d => String(d.id) === String(docId))) {
-               window.pdfDocs.push({
-                 id: data.documento.id,
-                 name: data.documento.nombre,
-                 content: data.documento.contenido,
-                 pages: data.documento.paginas
-               });
-            }
-            const { renderTabs } = await import('./ui-components.js');
-            renderTabs();
-            const dropZone = document.getElementById('dropZone');
-            const toolPanel = document.getElementById('toolPanel');
-            if (dropZone) dropZone.classList.add('collapsed');
-            if (toolPanel) toolPanel.style.display = 'flex';
-          }
-        } catch (e) {
-          console.error('[Persistence] Silent PDF Recovery failed:', e);
-          localStorage.removeItem(this.getKey('active_doc'));
+      // 2. Restore Active Tab
+      const tabId = localStorage.getItem(this.getKey('active_tab'));
+      if (tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+        const content = document.getElementById(`tab-${tabId}`);
+        if (btn && content) {
+          btn.classList.add('active');
+          content.classList.add('active');
         }
       }
+
+      // 3. Silent PDF Recovery
+      const docId = localStorage.getItem(this.getKey('active_doc'));
+      if (docId) {
+        window.activeDocId = docId;
+        const isInMemory = window.pdfDocs?.some(d => String(d.id) === String(docId));
+        if (!isInMemory) {
+          try {
+            const { getDocument } = await import('./api.js');
+            const data = await getDocument(docId);
+            if (data && data.documento) {
+              window.pdfDocs = window.pdfDocs || [];
+              // Prevent duplicates
+              if (!window.pdfDocs.some(d => String(d.id) === String(docId))) {
+                 window.pdfDocs.push({
+                   id: data.documento.id,
+                   name: data.documento.nombre,
+                   content: data.documento.contenido,
+                   pages: data.documento.paginas
+                 });
+              }
+              const { renderTabs } = await import('./ui-components.js');
+              renderTabs();
+              const dropZone = document.getElementById('dropZone');
+              const toolPanel = document.getElementById('toolPanel');
+              if (dropZone) dropZone.classList.add('collapsed');
+              if (toolPanel) toolPanel.style.display = 'flex';
+            }
+          } catch (e) {
+            console.error('[Persistence] Silent PDF Recovery failed:', e);
+            localStorage.removeItem(this.getKey('active_doc'));
+          }
+        }
+      }
+      
+      // 4. Restore scroll positions
+      setTimeout(() => this.restoreScrollPositions(), 100);
+    } catch (err) {
+      console.error('[Persistence] Boot failed:', err);
+      // Graceful degradation: clean slate
+      try {
+        localStorage.removeItem(this.getKey('active_doc'));
+        localStorage.removeItem(this.getKey('active_tab'));
+      } catch (e) {}
     }
-    
-    // 4. Restore scroll positions
-    setTimeout(() => this.restoreScrollPositions(), 100);
   }
 }
 
