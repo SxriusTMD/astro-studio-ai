@@ -666,6 +666,75 @@ export function initDragDrop() {
   const uploadBtn = document.getElementById('uploadBtn');
   const btnChangePdf = document.getElementById('btnChangePdf');
 
+  if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-active');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-active');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+  }
+}
+
+export function initLegalModal() {
+  const btn = document.getElementById('btnTerms');
+  if (!btn) return;
+  
+  const modalOverlay = document.createElement('div');
+  modalOverlay.className = 'fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity opacity-0 pointer-events-none duration-300';
+  modalOverlay.style.display = 'flex';
+  
+  const modalBox = document.createElement('div');
+  modalBox.className = 'bg-[#0e0e2a] border border-[#1e1e4a] rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-[0_10px_40px_rgba(0,0,0,0.5)] transform scale-95 transition-transform duration-300';
+  
+  const header = document.createElement('div');
+  header.className = 'flex items-center justify-between p-6 border-b border-[#1e1e4a]';
+  const title = document.createElement('h3');
+  title.className = 'text-xl font-semibold text-white font-["Space_Grotesk"]';
+  title.textContent = 'Soberanía del Usuario y Privacidad';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'text-[#606088] hover:text-white transition-colors text-2xl leading-none';
+  closeBtn.innerHTML = '&times;'; // Safe as it's a fixed string
+  
+  header.replaceChildren(title, closeBtn);
+  
+  const body = document.createElement('div');
+  body.className = 'p-6 overflow-y-auto flex-1 text-[#d1d5db] text-sm leading-relaxed space-y-4';
+  
+  const p1 = document.createElement('p');
+  p1.textContent = 'En AeroLex AI, el Procesamiento Local es nuestra prioridad. Tus documentos PDF se procesan en tu dispositivo. Solo se envía a nuestros servidores el texto estrictamente necesario cuando interactúas con la Inteligencia Artificial.';
+  const p2 = document.createElement('p');
+  p2.textContent = 'Garantizamos tu Soberanía del Usuario: eres dueño de tus notas, resúmenes y flashcards. Puedes eliminar todas tus sesiones desde tu historial y los datos serán purgados de nuestra base de datos en PostgreSQL inmediatamente.';
+  
+  body.replaceChildren(p1, p2);
+  
+  modalBox.replaceChildren(header, body);
+  modalOverlay.replaceChildren(modalBox);
+  document.body.appendChild(modalOverlay);
+  
+  const closeModal = () => {
+    modalOverlay.classList.replace('opacity-100', 'opacity-0');
+    modalOverlay.classList.add('pointer-events-none');
+    modalBox.classList.replace('scale-100', 'scale-95');
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+  
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    modalOverlay.classList.replace('opacity-0', 'opacity-100');
+    modalOverlay.classList.remove('pointer-events-none');
+    modalBox.classList.replace('scale-95', 'scale-100');
+  });
+}
+
   if (uploadBtn) uploadBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput?.click(); });
   if (dropZone) dropZone.addEventListener('click', () => fileInput?.click());
   if (btnChangePdf) btnChangePdf.addEventListener('click', (e) => { e.stopPropagation(); fileInput?.click(); });

@@ -9,7 +9,7 @@ import {
   initExportButtons, initToastSave, initHistoryPanel,
   initTabs, initDragDrop, initLibraryPanel, initUpgradeModal,
   initUserDropdownClose, initSidebarEvents, initHeaderScroll,
-  initSessionClickDelegation
+  initSessionClickDelegation, initLegalModal
 } from './ui-components.js';
 
 function init() {
@@ -48,6 +48,7 @@ function init() {
   initPlanGenerator();
   initSummaryGenerator();
   initExamMode();
+  initLegalModal();
 
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     clearStorage();
@@ -87,8 +88,9 @@ function init() {
   (async () => {
     try {
       await initAuth();
-      const { PersistenceManager } = await import('./persistence.js');
+      const { PersistenceManager, EngagementTracker } = await import('./persistence.js');
       await PersistenceManager.restoreWorkspace();
+      EngagementTracker.init();
       
       const chatMessages = document.getElementById('chatMessages');
       if (chatMessages) {

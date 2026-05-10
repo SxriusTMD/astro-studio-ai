@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AeroLex AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2585,15 +2585,16 @@ body:not(.sidebar-closed) .sidebar {
 <tr><td>PDFs simultáneos</td><td>3</td><td>Ilimitados</td></tr>
 <tr><td>Chat por día</td><td>10</td><td>Ilimitado</td></tr>
 <tr><td>Exámenes por día</td><td>3</td><td>Ilimitado</td></tr>
-<tr><td>Flashcards</td><td>âœ…</td><td>âœ…</td></tr>
-<tr><td>Resumen</td><td>âœ…</td><td>âœ…</td></tr>
-<tr><td>Plan de Estudio</td><td>âœ…</td><td>âœ…</td></tr>
+<tr><td>Chat con PDF</td><td>✅</td><td>✅</td></tr>
+<tr><td>Flashcards</td><td>✅</td><td>✅</td></tr>
+<tr><td>Resumen</td><td>✅</td><td>✅</td></tr>
+<tr><td>Plan de Estudio</td><td>✅</td><td>✅</td></tr>
 </tbody>
 </table>
 </div>
 
 <div class="upgrade-actions">
-<button class="btn btn-primary" id="getPremiumBtn">â­ Obtener Premium — $X/mes</button>
+<button class="btn btn-primary" id="getPremiumBtn">⭐ Obtener Premium — $X/mes</button>
 <button class="btn btn-secondary" id="backFreeBtn">Volver al límite gratuito</button>
 </div>
 </div>
@@ -2603,7 +2604,7 @@ body:not(.sidebar-closed) .sidebar {
 <header class="flex-none h-14 md:h-16 bg-[rgba(10,10,26,0.85)] backdrop-blur-md border-b border-[#1e1e4a] z-[101] flex-shrink-0">
 <div class="flex items-center justify-between px-4 md:px-6 h-full max-w-[1400px] mx-auto">
   <div class="flex items-center gap-3 flex-none">
-    <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar">â˜°</button>
+    <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar">☰</button>
     <div class="logo-section flex items-center gap-3">
       <div class="logo-icon">🚀</div>
       <div>
@@ -2615,9 +2616,9 @@ body:not(.sidebar-closed) .sidebar {
   <div class="flex items-center gap-3 flex-none">
     <div class="header-tools flex items-center gap-2">
       <div class="plan-indicator" id="planIndicator"></div>
-      <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos">ðŸ“š</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos">📚</button>
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones">🕒</button>
-      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;">⬇️</button>
+      <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;">⬇️ </button>
     </div>
     <div class="user-profile" id="userProfile">
       <div class="user-avatar-container" id="userAvatarContainer">
@@ -2654,7 +2655,7 @@ body:not(.sidebar-closed) .sidebar {
   <div class="menu-usage" id="menuUsage"></div>
   <div class="menu-divider"></div>
   <button class="menu-item" id="menuUpgrade">
-    â­ Mejorar a Premium
+    ⭐ Mejorar a Premium
   </button>
   <div class="menu-divider"></div>
   <button class="menu-item menu-item-danger" id="menuLogout">
@@ -2935,7 +2936,7 @@ body:not(.sidebar-closed) .sidebar {
 <footer class="flex flex-col sm:flex-row items-center justify-between px-6 py-5 text-[13px] text-[#606088] border-t border-white/5 flex-shrink-0 gap-4 sm:gap-0">
   <div class="flex items-center gap-6">
     <span class="font-semibold text-white/50">AeroLex AI © 2026</span>
-    <a href="#" class="hover:text-white transition-colors decoration-transparent">Términos y Privacidad</a>
+    <a href="#" id="btnTerms" class="hover:text-white transition-colors decoration-transparent">Términos y Privacidad</a>
   </div>
   <div class="flex items-center gap-2">
     <span class="w-2 h-2 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>

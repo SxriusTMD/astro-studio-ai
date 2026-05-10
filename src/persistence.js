@@ -93,3 +93,55 @@ export class PersistenceManager {
     setTimeout(() => this.restoreScrollPositions(), 100);
   }
 }
+
+export class EngagementTracker {
+  static startTime = Date.now();
+  static currentSection = 'chat';
+  static engagementData = {};
+
+  static init() {
+    this.engagementData = JSON.parse(localStorage.getItem(PersistenceManager.getKey('engagement')) || '{}');
+    
+    // Monitor tab switching to calculate time spent
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const newSection = e.currentTarget.dataset.tab;
+        this.recordTime();
+        this.currentSection = newSection;
+        this.startTime = Date.now();
+      });
+    });
+
+    // Check for proactive chat on open
+    const chatBtn = document.querySelector('.tab-btn[data-tab="chat"]');
+    if (chatBtn) {
+      chatBtn.addEventListener('click', () => {
+        this.checkProactiveChat();
+      });
+    }
+  }
+
+  static recordTime() {
+    if (!this.currentSection) return;
+    const timeSpent = Math.floor((Date.now() - this.startTime) / 1000);
+    this.engagementData[this.currentSection] = (this.engagementData[this.currentSection] || 0) + timeSpent;
+    localStorage.setItem(PersistenceManager.getKey('engagement'), JSON.stringify(this.engagementData));
+  }
+
+  static checkProactiveChat() {
+    // If user spent > 60s in flashcards, summary, or plan, pre-fill chat
+    const sections = ['flashcards', 'summary', 'plan'];
+    for (const section of sections) {
+      if (this.engagementData[section] > 60) {
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput && !chatInput.value) {
+          const topic = section === 'flashcards' ? 'las flashcards' : section === 'summary' ? 'el resumen' : 'el plan de estudio';
+          chatInput.value = `Noté que estuviste analizando a fondo ${topic}. ¿Puedes explicarme esto en términos más simples?`;
+          this.engagementData[section] = 0; // Reset after prompting
+          localStorage.setItem(PersistenceManager.getKey('engagement'), JSON.stringify(this.engagementData));
+          break;
+        }
+      }
+    }
+  }
+}
