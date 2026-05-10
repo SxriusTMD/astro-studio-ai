@@ -363,20 +363,18 @@ function readExamProgressForSession(sessionId, options = {}) {
   return null;
 }
 
-async function rehydrateExamAfterLoad(expectedSessionId) {
-  await waitForSessionIdAfterLoad(expectedSessionId);
+function mountExamRecoveringState() {
+  const examContent = document.getElementById('examContent');
+  if (!examContent) return;
+  examContent.replaceChildren();
+  const p = document.createElement('p');
+  p.className = 'exam-rehydrate-loader';
+  p.style.cssText = 'text-align:center;padding:28px 16px;color:var(--text-muted);font-size:14px;';
+  p.textContent = '⏳ Recuperando examen…';
+  examContent.appendChild(p);
+}
 
-  const progress = readRawExamProgressBlob();
-  console.log('ID Guardado:', progress?.sessionId, 'ID Actual:', window.currentSessionId);
-
-  console.log('[ExamDebug] rehydrateExamAfterLoad', {
-    questionCount: examQuestions.length,
-    examIndex,
-    answersLen: examAnswers.length,
-    currentSessionId: window.currentSessionId,
-    expectedSessionId,
-  });
-
+function paintExamPanelFromHydratedState() {
   if (!examQuestions.length) return;
   const examContent = document.getElementById('examContent');
   if (!examContent) return;
@@ -404,12 +402,88 @@ async function rehydrateExamAfterLoad(expectedSessionId) {
   if (examStartTime) startExamTimer();
 }
 
+async function rehydrateExamAfterLoad(expectedSessionId) {
+  await waitForSessionIdAfterLoad(expectedSessionId);
+
+  const progress = readRawExamProgressBlob();
+  console.log('ID Guardado:', progress?.sessionId, 'ID Actual:', window.currentSessionId);
+
+  console.log('[ExamDebug] rehydrateExamAfterLoad', {
+    questionCount: examQuestions.length,
+    examIndex,
+    answersLen: examAnswers.length,
+    currentSessionId: window.currentSessionId,
+    expectedSessionId,
+  });
+
+  if (!examQuestions.length) return;
+  paintExamPanelFromHydratedState();
+}
+
+async function recoverExamQuestionsForCurrentSession() {
+  const sid = window.currentSessionId;
+  if (sid == null || sid === '') {
+    ensureExamStartButtonAfterLoad();
+    return;
+  }
+  const progress = readExamProgressForSession(sid, { silent: true });
+  if (!progress) {
+    ensureExamStartButtonAfterLoad();
+    return;
+  }
+  try {
+    const data = await getSession(sid);
+    examQuestions = normalizeExamQuestionsFromSession(data.session?.exam);
+    if (!examQuestions.length) {
+      clearExamProgressStorage();
+      ensureExamStartButtonAfterLoad();
+      return;
+    }
+    examIndex = Math.min(progress.examIndex, examQuestions.length);
+    examAnswers = progress.examAnswers;
+    await rehydrateExamAfterLoad(sid);
+  } catch (e) {
+    console.error('[Exam] recoverExamQuestionsForCurrentSession', e);
+    ensureExamStartButtonAfterLoad();
+  }
+}
+
+/**
+ * Tras re-render de pestañas PDF: si el usuario está en el tab Examen y hay progreso válido,
+ * pinta la pregunta de inmediato (evita el flash del botón Iniciar).
+ */
+export function syncExamPanelAfterRenderTabs() {
+  const active = document.querySelector('.tab-btn.active')?.dataset?.tab;
+  if (active !== 'exam') return;
+
+  const sid = window.currentSessionId;
+  if (sid == null || sid === '') return;
+
+  const progress = readExamProgressForSession(sid, { silent: true });
+  if (!progress) return;
+
+  if (examQuestions.length > 0) {
+    const examContent = document.getElementById('examContent');
+    if (examContent?.querySelector('#startExam')) {
+      examContent.replaceChildren();
+    }
+    paintExamPanelFromHydratedState();
+    return;
+  }
+
+  mountExamRecoveringState();
+  void recoverExamQuestionsForCurrentSession();
+}
+
 /** Inserta el botón Iniciar solo si el panel de examen sigue vacío (evita pisar rehidratación o resultados). */
 function ensureExamStartButtonAfterLoad() {
   const examContent = document.getElementById('examContent');
   if (!examContent) return;
   if (examContent.querySelector('.exam-card') || examContent.querySelector('.exam-results')) return;
   if (examContent.querySelector('#startExam')) return;
+
+  const sid = window.currentSessionId;
+  if (sid != null && sid !== '' && readExamProgressForSession(sid, { silent: true })) return;
 
   examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
   document.getElementById('startExam')?.addEventListener('click', handleStartExam);
@@ -724,6 +798,13 @@ export async function loadSession(id) {
 
     const loadedSessionId = normalizeChatSessionId(session.id);
     window.currentSessionId = loadedSessionId;
+
+    const examProgress = readExamProgressForSession(loadedSessionId, { silent: true });
+    const activeTabEarly = document.querySelector('.tab-btn.active')?.dataset?.tab;
+    if (activeTabEarly === 'exam' && examProgress) {
+      mountExamRecoveringState();
+    }
+
     window.pdfDocs = session.pdfs || [];
     const savedDoc = localStorage.getItem('aerolex_active_doc');
     if (savedDoc && window.pdfDocs.some(d => String(d.id) === String(savedDoc))) {
@@ -737,7 +818,6 @@ export async function loadSession(id) {
     examQuestions = normalizeExamQuestionsFromSession(session.exam);
     examIndex = 0;
     examAnswers = [];
-    const examProgress = readExamProgressForSession(loadedSessionId);
     if (examProgress && examQuestions.length) {
       examIndex = Math.min(examProgress.examIndex, examQuestions.length);
       examAnswers = examProgress.examAnswers;
@@ -799,15 +879,38 @@ export async function loadSession(id) {
 
     if (examQuestions.length) {
       await rehydrateExamAfterLoad(loadedSessionId);
+      syncExamPanelAfterRenderTabs();
     } else {
       const orphan = readExamProgressForSession(loadedSessionId, { silent: true });
       if (orphan) {
-        console.warn('[ExamDebug] Progreso en storage sin preguntas en la sesión; limpiando.');
-        clearExamProgressStorage();
+        mountExamRecoveringState();
+        try {
+          const refetch = await getSession(loadedSessionId);
+          examQuestions = normalizeExamQuestionsFromSession(refetch.session?.exam);
+          if (examQuestions.length) {
+            examIndex = Math.min(orphan.examIndex, examQuestions.length);
+            examAnswers = orphan.examAnswers;
+            await rehydrateExamAfterLoad(loadedSessionId);
+            syncExamPanelAfterRenderTabs();
+          } else {
+            console.warn('[ExamDebug] Progreso en storage pero examen vacío en servidor; limpiando.');
+            clearExamProgressStorage();
+            const examPanel = document.getElementById('examContent');
+            if (examPanel) examPanel.replaceChildren();
+            ensureExamStartButtonAfterLoad();
+          }
+        } catch (err) {
+          console.error('[Exam] Refetch sesión para examen', err);
+          clearExamProgressStorage();
+          const examPanel = document.getElementById('examContent');
+          if (examPanel) examPanel.replaceChildren();
+          ensureExamStartButtonAfterLoad();
+        }
+      } else {
+        const examPanel = document.getElementById('examContent');
+        if (examPanel) examPanel.replaceChildren();
+        ensureExamStartButtonAfterLoad();
       }
-      const examPanel = document.getElementById('examContent');
-      if (examPanel) examPanel.replaceChildren();
-      ensureExamStartButtonAfterLoad();
     }
   } catch (e) {
     console.error('Load session error:', e);

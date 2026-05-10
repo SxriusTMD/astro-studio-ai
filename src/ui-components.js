@@ -1,6 +1,6 @@
 import { saveDocument, fetchDocuments, getDocument, deleteDocument as apiDeleteDocument } from './api.js';
 import { showUpgradeModal, saveToStorage } from './auth.js';
-import { addChatMessage, saveCurrentSession, loadSession, newSession, loadSessions, renderHistory } from './chat.js';
+import { addChatMessage, saveCurrentSession, loadSession, newSession, loadSessions, renderHistory, syncExamPanelAfterRenderTabs } from './chat.js';
 
 // ===== STARS CANVAS =====
 
@@ -260,6 +260,8 @@ export function renderTabs() {
   addTab.textContent = '+';
   addTab.addEventListener('click', () => document.getElementById('fileInput').click());
   pdfTabs.appendChild(addTab);
+
+  syncExamPanelAfterRenderTabs();
 }
 
 export function removeDoc(id) {
@@ -648,6 +650,7 @@ export function initTabs() {
       btn.classList.add('active');
       targetPanel.classList.add('active');
       localStorage.setItem('aerolex_active_tab', btn.dataset.tab);
+      syncExamPanelAfterRenderTabs();
     });
   });
 
