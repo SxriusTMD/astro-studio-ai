@@ -1015,10 +1015,10 @@ body:not(.sidebar-closed) .sidebar {
     .tabs {
       display: flex;
       gap: 8px;
-      background: rgba(255,255,255,0.015);
-      border: 1px solid rgba(255,255,255,0.04);
-      border-bottom: 1px solid rgba(255,255,255,0.02);
-      border-radius: 16px 16px 0 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-radius: 0;
       padding: 12px 16px 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
@@ -1031,13 +1031,13 @@ body:not(.sidebar-closed) .sidebar {
     .tab-btn {
       flex: 1;
       min-width: fit-content;
-      padding: 8px 14px;
+      padding: 12px 16px;
       background: transparent;
       border: none;
       border-radius: 8px;
       color: var(--text-muted);
       font-family: 'Inter', sans-serif;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -1066,10 +1066,9 @@ body:not(.sidebar-closed) .sidebar {
       min-height: 0;
       overflow-y: auto;
       margin-top: 0;
-      background: rgba(255,255,255,0.015);
-      border: 1px solid rgba(255,255,255,0.04);
-      border-top: none;
-      border-radius: 0 0 16px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
       padding: 16px;
     }
 
@@ -1080,16 +1079,14 @@ body:not(.sidebar-closed) .sidebar {
 
     /* ===== TAB 1 - CHAT ===== */
     .chat-container {
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: var(--radius);
+      background: transparent;
+      border: none;
+      border-radius: 0;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       height: 100%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: none;
     }
 
     .chat-messages {
@@ -1099,17 +1096,18 @@ body:not(.sidebar-closed) .sidebar {
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 20px;
     }
 
     
 
     .message {
       max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 14px;
-      font-size: 14px;
-      line-height: 1.6;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #e5e7eb;
       animation: messageIn 0.3s ease;
     }
 
@@ -1120,19 +1118,20 @@ body:not(.sidebar-closed) .sidebar {
 
     .message.user {
       align-self: flex-end;
-      background: var(--gradient-primary);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.05);
       color: #fff;
       border-bottom-right-radius: 4px;
-      max-width: 70%;
+      max-width: 75%;
     }
 
     .message.ai {
       align-self: flex-start;
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 4px;
-      max-width: 85%;
+      background: transparent;
+      border: none;
+      padding-left: 0;
+      padding-right: 0;
+      max-width: 95%;
     }
 
     .message.ai.loading {
@@ -1991,21 +1990,22 @@ body:not(.sidebar-closed) .sidebar {
     .pdf-tab {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
+      gap: 8px;
+      padding: 10px 14px;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px 10px 0 0;
-      font-size: 13px;
+      border-radius: 12px 12px 0 0;
+      font-size: 14px;
       cursor: pointer;
       transition: var(--transition);
       white-space: nowrap;
-      flex-shrink: 0;
+      flex-shrink: 1;
+      min-width: 0;
       max-width: 200px;
       color: var(--text-secondary);
     }
     .pdf-tab .tab-name {
-      max-width: 130px;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -2031,11 +2031,11 @@ body:not(.sidebar-closed) .sidebar {
       display: flex;
       align-items: center;
       gap: 4px;
-      padding: 6px 14px;
+      padding: 10px 16px;
       background: transparent;
       border: 1px dashed rgba(139,92,246,0.8);
-      border-radius: 10px 10px 0 0;
-      font-size: 13px;
+      border-radius: 12px 12px 0 0;
+      font-size: 16px;
       color: rgba(139,92,246,0.8);
       cursor: pointer;
       transition: var(--transition);
@@ -2487,7 +2487,7 @@ body:not(.sidebar-closed) .sidebar {
     .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; max-height: none; padding: 0; border: none; cursor: pointer; background: transparent; backdrop-filter: none; overflow: visible; }
     .drop-zone.collapsed { display: none; flex: none; min-height: 0; max-height: 0; padding: 0; margin: 0; border: 0; overflow: hidden; }
     .drop-zone.collapsed + .tool-panel { margin-top: 0; }
-    .tool-panel { display: none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; margin-top: 0; }
+    .tool-panel { display: none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; margin-top: 0; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; }
     .tool-panel.visible { display: flex; }
     .message { white-space: pre-wrap; line-height: 1.75; }
     .message.user { white-space: pre-wrap; }
@@ -2674,7 +2674,7 @@ body:not(.sidebar-closed) .sidebar {
   <section class="tool-panel flex-col flex-1 min-h-0 overflow-hidden" id="toolPanel">
 
     <!-- PDF pills bar -->
-    <div class="flex-none flex items-center gap-3 px-4 py-3 overflow-x-auto" id="pdfBar">
+    <div class="flex-none flex items-center gap-3 px-4 py-3 overflow-x-auto border-b border-white/5" id="pdfBar">
       <div id="pdf-tabs"></div>
       <button class="btn-change-pdf flex-none" id="btnChangePdf" title="Cambiar PDF">📎 Cambiar PDF</button>
     </div>
@@ -2697,9 +2697,9 @@ body:not(.sidebar-closed) .sidebar {
             <p>Sube un PDF y haz cualquier pregunta sobre tus apuntes</p>
           </div>
         </div>
-        <div class="chat-input-area flex-none flex gap-2.5 p-4 border-t border-white/10">
-          <input type="text" id="chatInput" placeholder="Pregunta sobre tu PDF..." autocomplete="off" class="flex-1 px-4 py-2.5 rounded-xl border border-[#1e1e4a] bg-[#07071a] text-[#e8e8f0] text-sm outline-none focus:border-[#8b5cf6] focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)] transition-all placeholder:text-[#606088] font-['Inter']">
-          <button class="btn btn-primary btn-small flex-none min-w-[80px]" id="chatSend">Enviar</button>
+        <div class="chat-input-area flex-none flex gap-3 p-4 border-t border-white/5 bg-transparent">
+          <input type="text" id="chatInput" placeholder="Pregunta sobre tu PDF..." autocomplete="off" class="flex-1 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] text-[#e8e8f0] text-[15px] outline-none focus:border-white/20 focus:bg-white/[0.04] transition-all placeholder:text-[#606088] font-['Inter']">
+          <button class="btn btn-primary flex-none px-6 rounded-xl" id="chatSend">Enviar</button>
         </div>
       </div>
     </div>
