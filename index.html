@@ -38,7 +38,7 @@ tailwind.config = {
       --bg-surface: #12123a;
       --border: #1e1e4a;
       --border-active: #3b3b7a;
-      --text-primary: #e8e8f0;
+      --text-primary: #d1d5db;
       --text-secondary: #9090b8;
       --text-muted: #606088;
       --accent-cyan: #00e5ff;
@@ -46,7 +46,7 @@ tailwind.config = {
       --accent-purple: #6c3bd2;
       --gradient-primary: linear-gradient(135deg, #6c3bd2, #4f46e5);
       --gradient-accent: linear-gradient(135deg, #00e5ff, #8b5cf6);
-      --shadow-glow: 0 0 40px rgba(108, 59, 210, 0.15);
+      --shadow-glow: 0 0 30px rgba(108, 59, 210, 0.08);
       --radius: 16px;
       --radius-sm: 10px;
       --radius-xs: 6px;
@@ -81,6 +81,7 @@ tailwind.config = {
       height: 100vh;
       z-index: -1;
       pointer-events: none;
+      opacity: 0.08;
     }
 
     #loadingScreen {
@@ -99,14 +100,14 @@ tailwind.config = {
       pointer-events: none;
     }
 
-    /* ===== LAYOUT ===== */
+/* ===== LAYOUT ===== */
 .app-container {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px 40px 0;
+  padding: 32px 48px 0;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -115,10 +116,10 @@ tailwind.config = {
 }
 
     @media (min-width: 1600px) {
-      .app-container { max-width: 1400px; padding: 16px 56px 0; }
+      .app-container { max-width: 1400px; padding: 32px 64px 0; }
     }
     @media (max-width: 768px) {
-      .app-container { padding: 10px 14px 0; }
+      .app-container { padding: 16px 20px 0; }
     }
 
 /* ===== HEADER ===== */
@@ -139,7 +140,6 @@ header.header-compact .logo-text {
   font-size: 16px;
 }
 header.header-compact .tagline,
-header.header-compact .status-badge,
 header.header-compact .plan-indicator {
   display: none;
 }
@@ -150,7 +150,6 @@ header.header-compact .logo-icon {
 }
 @media (min-width: 769px) {
   header.header-compact .tagline,
-  header.header-compact .status-badge,
   header.header-compact .plan-indicator {
     display: none;
   }
@@ -1016,12 +1015,11 @@ body:not(.sidebar-closed) .sidebar {
     .tabs {
       display: flex;
       gap: 8px;
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-      padding: 12px 12px 0;
+      background: rgba(255,255,255,0.015);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+      border-radius: 16px 16px 0 0;
+      padding: 12px 16px 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       flex-shrink: 0;
@@ -1067,7 +1065,12 @@ body:not(.sidebar-closed) .sidebar {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      margin-top: 24px;
+      margin-top: 0;
+      background: rgba(255,255,255,0.015);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+      padding: 16px;
     }
 
     @keyframes fadeIn {
@@ -2579,18 +2582,13 @@ body:not(.sidebar-closed) .sidebar {
     <div class="logo-section flex items-center gap-3">
       <div class="logo-icon">🚀</div>
       <div>
-        <div class="logo-text">AeroLex AI</div>
-        <div class="tagline">Tu asistente de estudio galáctico</div>
+        <div class="logo-text font-semibold text-[17px] tracking-tight">AeroLex AI</div>
       </div>
     </div>
   </div>
   <div class="flex-1 min-w-0"></div>
   <div class="flex items-center gap-3 flex-none">
     <div class="header-tools flex items-center gap-2">
-      <div class="status-badge offline" id="status-badge">
-        <span class="dot"></span>
-        <span id="status-text" class="hidden md:inline">Sin PDF</span>
-      </div>
       <div class="plan-indicator" id="planIndicator"></div>
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos">ðŸ“š</button>
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones">🕒</button>
@@ -2643,11 +2641,13 @@ body:not(.sidebar-closed) .sidebar {
 
   <!-- DROP ZONE -->
   <section class="drop-zone flex flex-col items-center justify-center" id="dropZone">
-    <div class="flex flex-col items-center justify-center gap-3 p-8 w-96 h-64 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.03] backdrop-blur-sm cursor-pointer hover:border-[#00e5ff] hover:scale-[1.01] transition-all duration-300">
-      <span class="text-3xl">📄</span>
-      <h3 class="font-['Space_Grotesk'] text-lg font-semibold text-[#e8e8f0] m-0">Sube tu PDF de apuntes</h3>
-      <p class="text-sm text-[#9090b8] m-0">Arrastra y suelta o haz clic para seleccionar</p>
-      <button class="px-6 py-2.5 rounded-xl bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white text-sm font-semibold shadow-[0_4px_16px_rgba(108,59,210,0.3)] hover:shadow-[0_6px_24px_rgba(108,59,210,0.45)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border-none font-['Inter']" id="uploadBtn">Seleccionar archivo</button>
+    <div class="flex flex-col items-center justify-center gap-3 p-10 w-full max-w-3xl min-h-[400px] rounded-[24px] border border-white/10 bg-white/[0.02] backdrop-blur-sm cursor-pointer hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300 shadow-2xl">
+      <div class="w-16 h-16 mb-2 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg">
+        <span class="text-3xl">📄</span>
+      </div>
+      <h3 class="font-['Space_Grotesk'] text-2xl font-semibold text-white m-0 tracking-tight">Tu espacio de estudio inteligente</h3>
+      <p class="text-base text-[#9090b8] text-center max-w-md m-0 mb-4">Sube tus PDFs, apuntes o presentaciones y deja que AeroLex extraiga lo más importante para ti.</p>
+      <button class="px-8 py-3.5 rounded-[12px] bg-white text-[#07071a] text-[15px] font-semibold hover:bg-[#e8e8f0] transition-all duration-300 cursor-pointer border-none font-['Inter'] shadow-[0_8px_20px_rgba(255,255,255,0.08)]" id="uploadBtn">Seleccionar documento</button>
       <input type="file" id="fileInput" accept=".pdf" class="hidden">
     </div>
 
@@ -2907,9 +2907,16 @@ body:not(.sidebar-closed) .sidebar {
 </div>
 
 <!-- ===== FOOTER ===== -->
-    <footer>
-      AeroLex AI — Inteligencia documental rigurosa.
-    </footer>
+<footer class="flex flex-col sm:flex-row items-center justify-between px-6 py-5 text-[13px] text-[#606088] border-t border-white/5 flex-shrink-0 gap-4 sm:gap-0">
+  <div class="flex items-center gap-6">
+    <span class="font-semibold text-white/50">AeroLex AI © 2026</span>
+    <a href="#" class="hover:text-white transition-colors decoration-transparent">Términos y Privacidad</a>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>
+    Sistemas Operativos
+  </div>
+</footer>
   </div>
 
   <script type="module" src="/src/main.js"></script>
