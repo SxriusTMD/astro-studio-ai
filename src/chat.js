@@ -801,7 +801,7 @@ export function renderSessionList(sessions) {
     if (s.pdfs?.length) {
       const pdfs = document.createElement('div');
       pdfs.className = 'session-pdfs';
-      pdfs.textContent = `📄 ${s.pdfs.length} PDF(s)`;
+      pdfs.innerHTML = `<svg class="w-4 h-4 mr-1 inline-block text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>${s.pdfs.length} PDF(s)`;
       div.appendChild(pdfs);
     }
     
@@ -868,7 +868,7 @@ export async function loadSession(id) {
         empty.className = 'empty-chat';
         const icon = document.createElement('div');
         icon.className = 'icon';
-        icon.textContent = '🚀';
+        icon.innerHTML = '<svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>';
         const p = document.createElement('p');
         p.textContent = 'Chat cargado de sesión';
         empty.appendChild(icon);
@@ -895,7 +895,7 @@ export async function loadSession(id) {
     if (window.summaryData) {
       const summaryText = document.getElementById('summaryText');
       if (summaryText) {
-        summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${window.summaryData.text.replace(/\n/g, '<br>')}`;
+        summaryText.innerHTML = `<h4><svg class="w-5 h-5 mr-2 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>Resumen de tus apuntes</h4>${window.summaryData.text.replace(/\n/g, '<br>')}`;
       }
       document.getElementById('exportSummary').style.display = 'inline-block';
     }
@@ -907,7 +907,7 @@ export async function loadSession(id) {
           const d = new Date(item.fecha);
           const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
           const tagClass = i < window.planData.items.length - 1 ? 'tag-cyan' : 'tag-purple';
-          const label = i < window.planData.items.length - 1 ? 'Por hacer' : '📝 Examen';
+          const label = i < window.planData.items.length - 1 ? 'Por hacer' : '<svg class="w-4 h-4 mr-1 inline-block text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Examen';
           planBody.innerHTML += `<tr>
             <td>Día ${item.dia}</td>
             <td>${dateStr}</td>
@@ -980,7 +980,7 @@ export function newSession() {
 
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
-    chatMessages.innerHTML = '<div class="empty-chat"><div class="icon">🚀</div><p>Carga un PDF para comenzar</p></div>';
+    chatMessages.innerHTML = '<div class="empty-chat"><div class="icon"><svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg></div><p>Carga un PDF para comenzar</p></div>';
   }
   document.getElementById('summaryText').innerHTML = '';
   document.getElementById('planBody').innerHTML = '';
@@ -1099,7 +1099,8 @@ export function renderHistory() {
     
     const title = document.createElement('div');
     title.className = 'h-name';
-    title.textContent = `📘 ${s.pdfName}`;
+    title.innerHTML = `<svg class="w-4 h-4 mr-1 inline-block text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>`;
+    title.appendChild(document.createTextNode(s.pdfName));
     
     const dateDiv = document.createElement('div');
     dateDiv.className = 'h-date';
@@ -1111,7 +1112,8 @@ export function renderHistory() {
     if (preview) {
       const prevDiv = document.createElement('div');
       prevDiv.className = 'h-preview';
-      prevDiv.textContent = `💬 "${preview}..."`;
+      prevDiv.innerHTML = `<svg class="w-3 h-3 mr-1 inline-block text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
+      prevDiv.appendChild(document.createTextNode(`"${preview}..."`));
       div.appendChild(prevDiv);
     }
     return div;
@@ -1155,7 +1157,7 @@ export function restoreSession(id) {
       empty.className = 'empty-chat';
       const icon = document.createElement('div');
       icon.className = 'icon';
-      icon.textContent = '🚀';
+      icon.innerHTML = '<svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>';
       const p = document.createElement('p');
       p.textContent = 'Historial cargado';
       empty.appendChild(icon);
@@ -1218,7 +1220,7 @@ export function restoreFromStorage() {
     window.summaryData = summary;
     const summaryText = document.getElementById('summaryText');
     if (summaryText) {
-      summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${summary.text.replace(/\n/g, '<br>')}`;
+      summaryText.innerHTML = `<h4><svg class="w-5 h-5 mr-2 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>Resumen de tus apuntes</h4>${summary.text.replace(/\n/g, '<br>')}`;
     }
     document.getElementById('exportSummary').style.display = 'inline-block';
     updateExportAllButton();
@@ -1324,7 +1326,7 @@ export function initPlanGenerator() {
           const d = new Date(item.fecha);
           const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
           const tagClass = i < data.plan.length - 1 ? 'tag-cyan' : 'tag-purple';
-          const label = i < data.plan.length - 1 ? 'Por hacer' : '📝 Examen';
+          const label = i < data.plan.length - 1 ? 'Por hacer' : '<svg class="w-4 h-4 mr-1 inline-block text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Examen';
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>Día ${item.dia}</td>
@@ -1371,7 +1373,7 @@ export function initSummaryGenerator() {
 
     try {
       const data = await generateSummary(getCombinedContext(), window.currentSessionId);
-      summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${data.text.replace(/\n/g, '<br>')}`;
+      summaryText.innerHTML = `<h4><svg class="w-5 h-5 mr-2 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>Resumen de tus apuntes</h4>${data.text.replace(/\n/g, '<br>')}`;
       window.summaryData = { text: data.text, pdfs: window.pdfDocs.map(d => d.name) };
       saveToStorage('summary', window.summaryData);
       document.getElementById('exportSummary').style.display = 'inline-block';
