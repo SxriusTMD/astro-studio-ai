@@ -181,8 +181,8 @@ passport.use(new GoogleStrategy({
       await pool.query(`
         INSERT INTO usuarios (google_id, nombre, email, foto)
         VALUES ($1, $2, $3, $4)
-        ON CONFLICT (google_id) DO UPDATE
-        SET nombre = EXCLUDED.nombre, email = EXCLUDED.email, foto = EXCLUDED.foto
+        ON CONFLICT (email) DO UPDATE
+        SET nombre = EXCLUDED.nombre, google_id = EXCLUDED.google_id, foto = EXCLUDED.foto
       `, [userProfile.id, userProfile.displayName, userProfile.email, userProfile.photo]);
     } catch (err) {
       console.error('Error guardando usuario:', err.message);

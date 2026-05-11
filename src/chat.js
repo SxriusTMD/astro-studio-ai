@@ -755,6 +755,15 @@ export async function handleStartExam() {
 // ===== SESSION MANAGEMENT =====
 
 export async function loadSessions() {
+  if (!window.userLimits?.google_id) {
+    console.log('Esperando inicialización de usuario para cargar sesiones...');
+    await new Promise(resolve => setTimeout(resolve, 800));
+    if (!window.userLimits?.google_id) {
+      console.warn('Usuario no identificado, loadSessions abortado.');
+      return;
+    }
+  }
+  
   try {
     const data = await fetchSessions();
     const sessions = data.sessions || [];
