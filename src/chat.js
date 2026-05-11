@@ -872,7 +872,7 @@ export async function loadSession(id) {
         empty.className = 'empty-chat';
         const icon = document.createElement('div');
         icon.className = 'icon';
-        icon.innerHTML = '<svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(79,70,229,0.3));"><path d="M12 2L2 22l10-4 10 4L12 2z" stroke="#4F46E5" fill="rgba(79, 70, 229, 0.15)"></path><path d="M12 22v-4" stroke="#F97316" stroke-width="2"></path><circle cx="12" cy="15" r="1.5" fill="#F97316" stroke="none"></circle><path d="M9 19l3 3 3-3" stroke="#F97316" stroke-width="1.5"></path></svg>';
+        icon.innerHTML = '<img src="assets/AeroLexAI_Ship_Trans.png" class="h-16 w-auto mx-auto opacity-80 object-contain" alt="AeroLex AI">';
         const p = document.createElement('p');
         p.textContent = 'Chat cargado de sesión';
         empty.appendChild(icon);
@@ -984,7 +984,7 @@ export function newSession() {
 
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
-    chatMessages.innerHTML = '<div class="empty-chat"><div class="icon"><svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(79,70,229,0.3));"><path d="M12 2L2 22l10-4 10 4L12 2z" stroke="#4F46E5" fill="rgba(79, 70, 229, 0.15)"></path><path d="M12 22v-4" stroke="#F97316" stroke-width="2"></path><circle cx="12" cy="15" r="1.5" fill="#F97316" stroke="none"></circle><path d="M9 19l3 3 3-3" stroke="#F97316" stroke-width="1.5"></path></svg></div><p>Carga un PDF para comenzar</p></div>';
+    chatMessages.innerHTML = '<div class="empty-chat"><div class="icon"><img src="assets/AeroLexAI_Ship_Trans.png" class="h-20 w-auto mx-auto opacity-70 object-contain" alt="AeroLex AI"></div><p>Carga un PDF para comenzar</p></div>';
   }
   document.getElementById('summaryText').innerHTML = '';
   document.getElementById('planBody').innerHTML = '';
@@ -1161,7 +1161,7 @@ export function restoreSession(id) {
       empty.className = 'empty-chat';
       const icon = document.createElement('div');
       icon.className = 'icon';
-      icon.innerHTML = '<svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(79,70,229,0.3));"><path d="M12 2L2 22l10-4 10 4L12 2z" stroke="#4F46E5" fill="rgba(79, 70, 229, 0.15)"></path><path d="M12 22v-4" stroke="#F97316" stroke-width="2"></path><circle cx="12" cy="15" r="1.5" fill="#F97316" stroke="none"></circle><path d="M9 19l3 3 3-3" stroke="#F97316" stroke-width="1.5"></path></svg>';
+      icon.innerHTML = '<img src="assets/AeroLexAI_Ship_Trans.png" class="h-16 w-auto mx-auto opacity-80 object-contain" alt="AeroLex AI">';
       const p = document.createElement('p');
       p.textContent = 'Historial cargado';
       empty.appendChild(icon);
