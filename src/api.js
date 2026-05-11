@@ -41,31 +41,31 @@ export async function sendChat(prompt, pdfContent, sessionId = null) {
   });
 }
 
-export async function generateFlashcards(pdfContent) {
+export async function generateFlashcards(pdfContent, sessionId = null) {
   return request('/api/flashcards', {
     method: 'POST',
-    body: JSON.stringify({ pdfContent }),
+    body: JSON.stringify({ pdfContent, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
   });
 }
 
-export async function createStudyPlan(pdfContent, materia, fechaExamen) {
+export async function createStudyPlan(pdfContent, materia, fechaExamen, sessionId = null) {
   return request('/api/plan', {
     method: 'POST',
-    body: JSON.stringify({ pdfContent, materia, fechaExamen }),
+    body: JSON.stringify({ pdfContent, materia, fechaExamen, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
   });
 }
 
-export async function generateSummary(pdfContent) {
+export async function generateSummary(pdfContent, sessionId = null) {
   return request('/api/resumen', {
     method: 'POST',
-    body: JSON.stringify({ pdfContent }),
+    body: JSON.stringify({ pdfContent, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
   });
 }
 
-export async function generateExam(pdfContent) {
+export async function generateExam(pdfContent, sessionId = null) {
   return request('/api/examen', {
     method: 'POST',
-    body: JSON.stringify({ pdfContent }),
+    body: JSON.stringify({ pdfContent, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
   });
 }
 

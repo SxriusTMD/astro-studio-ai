@@ -617,6 +617,22 @@ REGLAS DE FORMATO:
       [userId]
     );
     
+    // 3. Persistencia atómica de mensajes
+    if (sessionId != null && sessionId !== '') {
+      try {
+        const nuevosMensajes = [
+          { role: 'user', content: prompt },
+          { role: 'ai', content: text }
+        ];
+        await pool.query(
+          `UPDATE chat_sessions SET messages = COALESCE(messages, '[]'::jsonb) || $1::jsonb WHERE id = $2 AND google_id = $3`,
+          [JSON.stringify(nuevosMensajes), sessionId, userId]
+        );
+      } catch (errDb) {
+        console.error('Error guardando mensaje atómico:', errDb);
+      }
+    }
+    
     res.json({ text, chat_used: result.rows[0].chat_count });
   } catch (err) {
     console.error('Proxy error:', err);
@@ -625,7 +641,7 @@ REGLAS DE FORMATO:
 });
 
 app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
-  const { pdfContent } = req.body;
+  const { pdfContent, sessionId } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
   const prompt = 'Genera exactamente 5 flashcards de estudio basadas en este documento. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"pregunta":"...","respuesta":"..."}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
@@ -637,6 +653,18 @@ app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
     const cards = JSON.parse(jsonMatch[0]);
+    
+    if (sessionId != null && sessionId !== '') {
+      try {
+        await pool.query(
+          `UPDATE chat_sessions SET flashcards = $1::jsonb WHERE id = $2 AND google_id = $3`,
+          [JSON.stringify(cards), sessionId, req.user.id]
+        );
+      } catch (errDb) {
+        console.error('Error guardando flashcards atómicamente:', errDb);
+      }
+    }
+    
     res.json({ cards });
   } catch (err) {
     console.error('Flashcards error:', err);
@@ -645,7 +673,7 @@ app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
 });
 
 app.post('/api/resumen', ensureAuthenticated, async (req, res) => {
-  const { pdfContent } = req.body;
+  const { pdfContent, sessionId } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
   const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en español: INTRODUCCIÓN, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÓN. Formato limpio y claro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
@@ -654,6 +682,18 @@ app.post('/api/resumen', ensureAuthenticated, async (req, res) => {
     const text = await callNVIDIA([
       { role: 'user', content: prompt }
     ]);
+    
+    if (sessionId != null && sessionId !== '') {
+      try {
+        await pool.query(
+          `UPDATE chat_sessions SET summary = $1::jsonb WHERE id = $2 AND google_id = $3`,
+          [JSON.stringify({ text }), sessionId, req.user.id]
+        );
+      } catch (errDb) {
+        console.error('Error guardando resumen atómicamente:', errDb);
+      }
+    }
+    
     res.json({ text });
   } catch (err) {
     console.error('Resumen error:', err);
@@ -662,7 +702,7 @@ app.post('/api/resumen', ensureAuthenticated, async (req, res) => {
 });
 
 app.post('/api/examen', ensureAuthenticated, async (req, res) => {
-  const { pdfContent } = req.body;
+  const { pdfContent, sessionId } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
   const prompt = 'Genera exactamente 5 preguntas de opcion multiple basadas en este documento. Cada pregunta debe tener 4 opciones identificadas como A), B), C) y D). Responde UNICAMENTE con un array JSON valido con este formato exacto: [{"pregunta":"...","opciones":["A) ...","B) ...","C) ...","D) ..."],"respuesta_correcta":"A"}]. En respuesta_correcta usa solo una letra: "A", "B", "C" o "D". Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
@@ -672,6 +712,18 @@ app.post('/api/examen', ensureAuthenticated, async (req, res) => {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
     const preguntas = JSON.parse(jsonMatch[0]);
+    
+    if (sessionId != null && sessionId !== '') {
+      try {
+        await pool.query(
+          `UPDATE chat_sessions SET exam = $1::jsonb WHERE id = $2 AND google_id = $3`,
+          [JSON.stringify(preguntas), sessionId, req.user.id]
+        );
+      } catch (errDb) {
+        console.error('Error guardando examen atómicamente:', errDb);
+      }
+    }
+    
     res.json({ preguntas });
   } catch (err) {
     console.error('Examen error:', err);
@@ -680,7 +732,7 @@ app.post('/api/examen', ensureAuthenticated, async (req, res) => {
 });
 
 app.post('/api/plan', ensureAuthenticated, async (req, res) => {
-  const { pdfContent, materia, fechaExamen } = req.body;
+  const { pdfContent, materia, fechaExamen, sessionId } = req.body;
   if (!pdfContent || !materia || !fechaExamen) {
     return res.status(400).json({ error: 'pdfContent, materia y fechaExamen requeridos' });
   }
@@ -701,16 +753,39 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
     const jsonMatch = text.match(/\[[\s\S]*\]/);
+    let planDataToSave = null;
+    let responseData = { diasRestantes: diffDays };
+
     if (jsonMatch) {
       try {
         const plan = JSON.parse(jsonMatch[0]);
-        return res.json({ plan, diasRestantes: diffDays });
+        planDataToSave = { items: plan, subject: materia, examDate: fechaExamen };
+        responseData.plan = plan;
       } catch (parseErr) {
         console.error('Plan JSON parse error:', parseErr.message);
+        planDataToSave = { items: [], subject: materia, examDate: fechaExamen, fallback: true, text };
+        responseData.planTexto = text;
+        responseData.fallback = true;
+      }
+    } else {
+      // Fallback: devolver el texto plano como plan legible
+      planDataToSave = { items: [], subject: materia, examDate: fechaExamen, fallback: true, text };
+      responseData.planTexto = text;
+      responseData.fallback = true;
+    }
+
+    if (sessionId != null && sessionId !== '') {
+      try {
+        await pool.query(
+          `UPDATE chat_sessions SET study_plan = $1::jsonb WHERE id = $2 AND google_id = $3`,
+          [JSON.stringify(planDataToSave), sessionId, req.user.id]
+        );
+      } catch (errDb) {
+        console.error('Error guardando plan atómicamente:', errDb);
       }
     }
-    // Fallback: devolver el texto plano como plan legible
-    return res.json({ planTexto: text, diasRestantes: diffDays, fallback: true });
+
+    return res.json(responseData);
   } catch (err) {
     console.error('Plan error:', err.message, err.stack);
     console.error('Request body:', JSON.stringify(req.body).slice(0, 200));

@@ -727,7 +727,7 @@ export async function handleStartExam() {
   }
 
   try {
-    const data = await generateExam(getCombinedContext());
+    const data = await generateExam(getCombinedContext(), window.currentSessionId);
     examQuestions = (data.preguntas || []).map(normalizeExamQuestion).filter(Boolean).slice(0, 5);
     if (examQuestions.length < 5) throw new Error('Examen sin 5 preguntas de opcion multiple');
     examIndex = 0;
@@ -868,6 +868,8 @@ export async function loadSession(id) {
     window.flashcardsData = session.flashcards || null;
     window.summaryData = session.summary || null;
     window.planData = session.study_plan || null;
+    window.currentExamData = session.exam || null;
+    
     examQuestions = normalizeExamQuestionsFromSession(session.exam);
     examIndex = 0;
     examAnswers = [];
@@ -1284,7 +1286,7 @@ export function initFlashcardGenerator() {
     genFlashcards.disabled = true;
     genFlashcards.textContent = '⏳ Generando...';
     try {
-      const data = await apiFlashcards(getCombinedContext());
+      const data = await apiFlashcards(getCombinedContext(), window.currentSessionId);
       if (data.cards && data.cards.length > 0) {
         renderFlashcards(data.cards);
         window.flashcardsData = data.cards.map(c => ({ pregunta: c.pregunta, respuesta: c.respuesta }));
@@ -1325,7 +1327,7 @@ export function initPlanGenerator() {
     createPlanBtn.textContent = '⏳ Generando...';
 
     try {
-      const data = await createStudyPlan(getCombinedContext(), subject, examDate);
+      const data = await createStudyPlan(getCombinedContext(), subject, examDate, window.currentSessionId);
       if (data.error) {
         alert(data.error);
         createPlanBtn.disabled = false;
@@ -1395,7 +1397,7 @@ export function initSummaryGenerator() {
     summaryText.innerHTML = '<p style="color:var(--text-muted);">⏳ Generando resumen inteligente...</p>';
 
     try {
-      const data = await generateSummary(getCombinedContext());
+      const data = await generateSummary(getCombinedContext(), window.currentSessionId);
       summaryText.innerHTML = `<h4>📝 Resumen de tus apuntes</h4>${data.text.replace(/\n/g, '<br>')}`;
       window.summaryData = { text: data.text, pdfs: window.pdfDocs.map(d => d.name) };
       saveToStorage('summary', window.summaryData);
