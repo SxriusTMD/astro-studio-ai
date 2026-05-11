@@ -323,6 +323,14 @@ header.header-compact .logo-icon {
   box-shadow: 0 0 20px rgba(108, 59, 210, 0.3);
 }
 
+.aerolex-logo .engine-glow {
+  transition: filter 0.3s ease;
+}
+
+.aerolex-logo:hover .engine-glow {
+  filter: drop-shadow(0 0 8px #F97316);
+}
+
 .menu-toggle {
   display: none;
   background: none;
@@ -2606,7 +2614,13 @@ body:not(.sidebar-closed) .sidebar {
   <div class="flex items-center gap-3 flex-none">
     <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></button>
     <div class="logo-section flex items-center gap-3">
-      <div class="logo-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px rgba(79,70,229,0.3));"><path d="M12 2L2 22l10-4 10 4L12 2z" stroke="#4F46E5" fill="rgba(79, 70, 229, 0.15)"></path><path d="M12 22v-4" stroke="#F97316" stroke-width="2"></path><circle cx="12" cy="15" r="1.5" fill="#F97316" stroke="none"></circle><path d="M9 19l3 3 3-3" stroke="#F97316" stroke-width="1.5"></path></svg></div>
+      <svg class="aerolex-logo h-10 w-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2.5C12 2.5 7 7.5 7 15.5L5 20H19L17 15.5C17 7.5 12 2.5 12 2.5Z" fill="#FFFFFF"/>
+        <path d="M12 11C10.8954 11 10 10.1046 10 9C10 7.89543 10.8954 7 12 7C13.1046 7 14 7.89543 14 9C14 10.1046 13.1046 11 12 11Z" fill="#0A0A1F" stroke="#4F46E5" stroke-width="1.5"/>
+        <circle class="engine-glow" cx="9.5" cy="21.5" r="1.5" fill="#F97316"/>
+        <circle class="engine-glow" cx="14.5" cy="21.5" r="1.5" fill="#F97316"/>
+        <circle class="engine-glow" cx="12" cy="22" r="2" fill="#F97316"/>
+      </svg>
       <div>
         <div class="logo-text font-semibold text-[17px] tracking-tight">AeroLex AI</div>
       </div>
