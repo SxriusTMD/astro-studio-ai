@@ -93,7 +93,17 @@ export function updatePlanIndicator() {
   } else {
     const remaining = Math.max(0, (chat_limit || 10) - chat_used);
     indicator.className = 'plan-indicator';
-    indicator.textContent = `💬 ${remaining}/${chat_limit}`;
+    indicator.textContent = `Mensajes: ${chat_used}/${chat_limit || 10}`;
+    
+    // Sync chat UI
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
+    if (chatInput && chatSend && chat_used >= (chat_limit || 10)) {
+      chatInput.disabled = true;
+      chatInput.classList.add('opacity-50', 'cursor-not-allowed');
+      chatSend.disabled = true;
+      chatSend.classList.add('opacity-50', 'cursor-not-allowed');
+    }
   }
   updateUserMenu();
 }
@@ -174,7 +184,7 @@ export function showUpgradeModal(type) {
   if (!overlay || !desc) return;
 
   const messages = {
-    chat: 'Alcanzaste tus 10 preguntas de hoy. Vuelve mañana o hazte Premium.',
+    chat: 'Has alcanzado el límite de tu Plan Gratuito (10 mensajes diarios).',
     exam: 'Alcanzaste tus 3 exámenes de hoy. Vuelve mañana o hazte Premium.',
     pdf: 'El plan gratuito permite hasta 3 PDFs. Hazte Premium para más.'
   };

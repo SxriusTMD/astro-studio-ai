@@ -76,6 +76,11 @@ function init() {
     if (e.key === 'Enter') handleChat();
   });
 
+  document.getElementById('planIndicator')?.addEventListener('click', async () => {
+    const { showUpgradeModal } = await import('./auth.js');
+    showUpgradeModal('chat');
+  });
+
   if (window.location.search.includes('verified=true')) {
     const msgEl = document.getElementById('verifySuccessMsg');
     if (msgEl) {

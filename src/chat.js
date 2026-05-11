@@ -165,6 +165,10 @@ export async function handleChat() {
   }
 
   if (window.userLimits && window.userLimits.plan === 'free' && window.userLimits.chat_used >= 10) {
+    chatInput.disabled = true;
+    chatInput.classList.add('opacity-50', 'cursor-not-allowed');
+    chatSend.disabled = true;
+    chatSend.classList.add('opacity-50', 'cursor-not-allowed');
     showUpgradeModal('chat');
     return;
   }
