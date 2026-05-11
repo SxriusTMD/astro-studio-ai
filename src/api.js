@@ -30,6 +30,10 @@ export async function incrementCounter(type) {
   });
 }
 
+export async function upgradeToPro() {
+  return request('/api/user/upgrade-success', { method: 'POST' });
+}
+
 export async function sendChat(prompt, pdfContent, sessionId = null) {
   return request('/api/chat', {
     method: 'POST',

@@ -559,6 +559,38 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// POST /api/user/increment - increment a counter
+app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
+  const { type } = req.body;
+  if (!['chat', 'exam'].includes(type)) return res.status(400).json({ error: 'Tipo inválido' });
+  
+  try {
+    const column = type === 'chat' ? 'chat_count' : 'exam_count';
+    const result = await pool.query(
+      `UPDATE usuarios SET ${column} = ${column} + 1 WHERE google_id = $1 RETURNING ${column}`,
+      [req.user.id]
+    );
+    res.json({ [type + '_used']: result.rows[0][column] });
+  } catch (err) {
+    console.error('Increment error:', err);
+    res.status(500).json({ error: 'Error al incrementar contador' });
+  }
+});
+
+// POST /api/user/upgrade-success - Simulates a successful payment webhook
+app.post('/api/user/upgrade-success', ensureAuthenticated, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE usuarios SET plan = 'premium' WHERE google_id = $1 RETURNING plan`,
+      [req.user.id]
+    );
+    res.json({ success: true, plan: result.rows[0].plan });
+  } catch (err) {
+    console.error('Upgrade error:', err);
+    res.status(500).json({ error: 'Error al actualizar el plan' });
+  }
+});
+
 app.post('/api/chat', ensureAuthenticated, async (req, res) => {
   const { prompt, pdfContent, sessionId } = req.body;
 
@@ -592,6 +624,16 @@ REGLAS DE FORMATO:
     : prompt;
 
   try {
+    // 0. Server-Side Guardrail: Check limits before calling AI
+    const userResult = await pool.query(
+      'SELECT plan, chat_count FROM usuarios WHERE google_id = $1',
+      [req.user.id]
+    );
+    const user = userResult.rows[0];
+    if (user && user.plan === 'free' && user.chat_count >= 10) {
+      return res.status(403).json({ error: 'Limit reached', code: 'LIMIT_EXCEEDED' });
+    }
+
     // 1. Primero llamar a NVIDIA NIM
     const text = await callNVIDIA([
       { role: 'system', content: systemInstruction },

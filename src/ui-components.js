@@ -780,7 +780,51 @@ export function initUpgradeModal() {
   document.getElementById('upgradeOverlay')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) import('./auth.js').then(m => m.closeUpgradeModal());
   });
-  document.getElementById('getPremiumBtn')?.addEventListener('click', () => mostrarToast('🚀 Función Premium — próximamente'));
+
+  const getPremiumBtn = document.getElementById('getPremiumBtn');
+  if (getPremiumBtn) {
+    getPremiumBtn.addEventListener('click', async () => {
+      const originalText = getPremiumBtn.textContent;
+      getPremiumBtn.disabled = true;
+      getPremiumBtn.textContent = 'Procesando Transacción...';
+      getPremiumBtn.style.opacity = '0.7';
+
+      // Simulamos latencia de pasarela de pago (Stripe)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      try {
+        const { upgradeToPro } = await import('./api.js');
+        const data = await upgradeToPro();
+        
+        if (data.success) {
+          mostrarToast('✨ ¡Bienvenido a AeroLex Pro!');
+          
+          const { fetchUserLimits, closeUpgradeModal } = await import('./auth.js');
+          await fetchUserLimits(); // Esto actualiza window.userLimits y refresca la UI (badge, inputs)
+          
+          // Re-habilitar inputs si estaban bloqueados
+          const chatInput = document.getElementById('chatInput');
+          const chatSend = document.getElementById('chatSend');
+          if (chatInput && chatSend) {
+            chatInput.disabled = false;
+            chatInput.classList.remove('opacity-50', 'cursor-not-allowed');
+            chatSend.disabled = false;
+            chatSend.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+
+          closeUpgradeModal();
+        }
+      } catch (err) {
+        console.error('Error en upgrade:', err);
+        mostrarToast('❌ Error al procesar el pago. Inténtalo de nuevo.');
+      } finally {
+        getPremiumBtn.disabled = false;
+        getPremiumBtn.textContent = originalText;
+        getPremiumBtn.style.opacity = '1';
+      }
+    });
+  }
+
   document.getElementById('backFreeBtn')?.addEventListener('click', () => {
     import('./auth.js').then(m => m.closeUpgradeModal());
   });

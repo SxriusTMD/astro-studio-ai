@@ -87,17 +87,26 @@ export function updatePlanIndicator() {
   if (!indicator || !window.userLimits) return;
 
   const { plan, chat_used, chat_limit } = window.userLimits;
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+
   if (plan === 'premium') {
-    indicator.className = 'plan-indicator premium';
-    indicator.textContent = '⭐ Premium';
+    indicator.className = 'plan-indicator premium cursor-default';
+    indicator.textContent = 'Plan Pro ✨';
+    
+    // Ensure inputs are enabled for Pro
+    if (chatInput && chatSend) {
+      chatInput.disabled = false;
+      chatInput.classList.remove('opacity-50', 'cursor-not-allowed');
+      chatSend.disabled = false;
+      chatSend.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
   } else {
     const remaining = Math.max(0, (chat_limit || 10) - chat_used);
-    indicator.className = 'plan-indicator';
+    indicator.className = 'plan-indicator cursor-pointer';
     indicator.textContent = `Mensajes: ${chat_used}/${chat_limit || 10}`;
     
     // Sync chat UI
-    const chatInput = document.getElementById('chatInput');
-    const chatSend = document.getElementById('chatSend');
     if (chatInput && chatSend && chat_used >= (chat_limit || 10)) {
       chatInput.disabled = true;
       chatInput.classList.add('opacity-50', 'cursor-not-allowed');
