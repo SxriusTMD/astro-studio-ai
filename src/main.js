@@ -111,9 +111,7 @@ function init() {
     }
   })();
 
-  console.log('🌌 AeroLex AI — IA conectada');
-  console.log('🤖 Modelo: Gemma-4-31B-IT via NVIDIA NIM');
-  console.log('📌 Para cambiar de modelo, reemplaza window.askAI()');
+  // Inicialización terminada
 }
 
 if (document.readyState === 'loading') {

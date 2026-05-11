@@ -310,7 +310,6 @@ function rehydrateSummaryMetrics() {
 function persistExamProgress() {
   const capturedSessionId = window.currentSessionId;
   if (capturedSessionId == null || capturedSessionId === '') {
-    console.warn('[ExamDebug] persistExamProgress omitido: window.currentSessionId no está listo');
     return;
   }
   if (!examQuestions.length) return;
@@ -381,31 +380,18 @@ function readExamProgressForSession(sessionId, options = {}) {
       if (!progress) continue;
 
       if (!sessionIdsMatch(progress.sessionId, sid)) {
-        if (!silent) {
-          console.log('[ExamDebug] Progress raw mismatch:', {
-            progress,
-            expectedSessionId: sid,
-            storageKey: key,
-            compareSaved: progress.sessionId != null ? String(progress.sessionId) : progress.sessionId,
-            compareExpected: String(sid),
-          });
-        }
         continue;
       }
 
-      if (!silent) {
-        console.log('[ExamDebug] Progress found:', progress, { storageKey: key, sessionIdComparedAs: String(sid) });
-      }
       return {
         examIndex: Math.max(0, Number(progress.examIndex) || 0),
         examAnswers: Array.isArray(progress.examAnswers) ? progress.examAnswers : [],
       };
     } catch (e) {
-      if (!silent) console.log('[ExamDebug] Progress read/parse error:', key, e);
+      // Ignorar error de parseo
     }
   }
 
-  if (!silent) console.log('[ExamDebug] No matching exam progress for session', String(sid), { triedKeys: tried });
   return null;
 }
 
@@ -452,16 +438,6 @@ async function rehydrateExamAfterLoad(expectedSessionId) {
   await waitForSessionIdAfterLoad(expectedSessionId);
 
   const progress = readRawExamProgressBlob();
-  console.log('ID Guardado:', progress?.sessionId, 'ID Actual:', window.currentSessionId);
-
-  console.log('[ExamDebug] rehydrateExamAfterLoad', {
-    questionCount: examQuestions.length,
-    examIndex,
-    answersLen: examAnswers.length,
-    currentSessionId: window.currentSessionId,
-    expectedSessionId,
-  });
-
   if (!examQuestions.length) return;
   paintExamPanelFromHydratedState();
 }
@@ -756,10 +732,8 @@ export async function handleStartExam() {
 
 export async function loadSessions() {
   if (!window.userLimits?.google_id) {
-    console.log('Esperando inicialización de usuario para cargar sesiones...');
     await new Promise(resolve => setTimeout(resolve, 800));
     if (!window.userLimits?.google_id) {
-      console.warn('Usuario no identificado, loadSessions abortado.');
       return;
     }
   }
@@ -965,7 +939,6 @@ export async function loadSession(id) {
             await rehydrateExamAfterLoad(loadedSessionId);
             syncExamPanelAfterRenderTabs();
           } else {
-            console.warn('[ExamDebug] Progreso en storage pero examen vacío en servidor; limpiando.');
             clearExamProgressStorage();
             const examPanel = document.getElementById('examContent');
             if (examPanel) examPanel.replaceChildren();

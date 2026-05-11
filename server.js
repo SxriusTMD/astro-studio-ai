@@ -51,7 +51,7 @@ const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
       subject: '? Brevo API conectada - AeroLex AI',
       htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
     });
-    console.log(`? Brevo API Health Check exitoso — messageId: ${result.data?.messageId || 'OK'}`);
+
   } catch (err) {
     console.error('? Brevo API Health Check falló:', err.message);
     if (err.body) console.error('   Brevo detalle:', JSON.stringify(err.body, null, 2));
@@ -69,7 +69,7 @@ let dbOk = false;
   try {
     await pool.connect();
     dbOk = true;
-    console.log('? PostgreSQL conectado');
+
 
 await pool.query(`
     CREATE TABLE IF NOT EXISTS usuarios (
@@ -116,7 +116,7 @@ await pool.query(`
     created_at TIMESTAMP DEFAULT NOW()
   )
   `);
-    console.log('? Tablas creadas/verificadas');
+
     
     // Migración: columnas para auth por email
     try {
@@ -126,7 +126,7 @@ await pool.query(`
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(255) UNIQUE`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS auth_method VARCHAR(50) DEFAULT 'google'`);
-      console.log('? Migración email auth completada');
+
     } catch (err) {
       console.error('?? Migración email auth:', err.message);
     }
@@ -137,13 +137,13 @@ await pool.query(`
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS summary JSONB`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS exam JSONB DEFAULT '[]'::jsonb`);
       await pool.query(`ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS study_plan JSONB`);
-      console.log('? Migración columnas de estudio completada');
+
     } catch (err) {
       console.error('?? Migración columnas de estudio:', err.message);
     }
   } catch (err) {
     console.error('?? PostgreSQL no disponible:', err.message);
-    console.log('?? La app funcionará sin BD');
+
   }
 })();
 app.set('trust proxy', 1);
@@ -262,7 +262,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Enviar correo de verificación
     try {
-      console.log(`?? Intentando envío desde: AeroLex AI (aerolexai@gmail.com) ? ${email}`);
+
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       const mailRes = await brevoClient.transactionalEmails.sendTransacEmail({
         sender: { email: 'aerolexai@gmail.com', name: 'AeroLex AI' },
@@ -278,7 +278,7 @@ app.post('/api/auth/register', async (req, res) => {
           </div>
         `
       });
-      console.log(`? Correo enviado vía Brevo a ${email} — messageId: ${mailRes.data?.messageId || mailRes.rawResponse?.headers?.get?.('x-message-id') || 'OK'}`);
+
     } catch (mailErr) {
       console.error('? Error enviando correo a', email, ':', mailErr.message);
       if (mailErr.body) console.error('   Brevo detalle:', JSON.stringify(mailErr.body, null, 2));
@@ -459,9 +459,7 @@ async function callNVIDIA(messages) {
       
       if (!nvidiaRes.ok) {
         const errText = await nvidiaRes.text();
-        // Reintentar solo en errores 503
         if (nvidiaRes.status === 503 && attempt < maxRetries) {
-          console.log(`NVIDIA API 503 - intento ${attempt + 1}, reintentando...`);
           await new Promise(resolve => setTimeout(resolve, 3000));
           continue;
         }
@@ -472,9 +470,7 @@ async function callNVIDIA(messages) {
       return data.choices[0].message.content;
     } catch (err) {
       lastError = err;
-      // Si es AbortError o 503 y quedan reintentos
       if (err.name === 'AbortError' || (err.message.includes('503') && attempt < maxRetries)) {
-        console.log(`NVIDIA API timeout/503 - intento ${attempt + 1}, reintentando...`);
         if (attempt < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, 3000));
           continue;
@@ -495,9 +491,7 @@ async function resetDailyCounters(googleId) {
      RETURNING last_reset`,
     [googleId]
   );
-  if (result.rows.length > 0) {
-    console.log('? Contadores reseteados para', googleId, 'last_reset:', result.rows[0].last_reset);
-  }
+  // contadores reseteados
 }
 
 // GET /api/user/limits - returns current plan and usage
@@ -512,8 +506,6 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
     );
     const row = result.rows[0];
     const isPremium = row.plan === 'premium';
-    
-    console.log('?? Limits:', row);
     
     res.json({
       google_id: userId,
@@ -598,10 +590,6 @@ REGLAS DE FORMATO:
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
     : prompt;
-
-  if (sessionId != null && sessionId !== '') {
-    console.log('?? /api/chat sessionId:', sessionId);
-  }
 
   try {
     // 1. Primero llamar a NVIDIA NIM
@@ -895,15 +883,6 @@ app.get('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'Sesión no encontrada' });
     }
     const session = result.rows[0];
-    console.log('?? GET session:', {
-      id: session.id,
-      messagesCount: session.messages?.length,
-      hasFlashcards: Array.isArray(session.flashcards) && session.flashcards.length > 0,
-      hasSummary: !!session.summary,
-      hasExam: Array.isArray(session.exam) && session.exam.length > 0,
-      hasStudyPlan: !!session.study_plan,
-      pdfs: session.pdfs?.length || 0
-    });
     res.json({ session });
   } catch (err) {
     console.error('Get session error:', err);
@@ -915,15 +894,6 @@ app.post('/api/sessions', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
 
   const { title, messages, pdfs, flashcards, summary, exam, study_plan } = req.body;
-  
-  console.log('?? POST /api/sessions', { 
-    title, 
-    messagesCount: messages?.length,
-    hasFlashcards: Array.isArray(flashcards) && flashcards.length > 0,
-    hasSummary: !!summary,
-    hasExam: Array.isArray(exam) && exam.length > 0,
-    hasStudyPlan: !!study_plan
-  });
 
   try {
     const result = await pool.query(
@@ -951,16 +921,6 @@ app.put('/api/sessions/:id', ensureAuthenticated, async (req, res) => {
   if (!dbOk) return res.status(503).json({ error: 'BD no disponible' });
 
   const { messages, pdfs, title, flashcards, summary, exam, study_plan } = req.body;
-  
-  console.log('?? PUT /api/sessions/:id', { 
-    id: req.params.id, 
-    messagesCount: messages?.length,
-    hasFlashcards: Array.isArray(flashcards) && flashcards.length > 0,
-    hasSummary: !!summary,
-    hasExam: Array.isArray(exam) && exam.length > 0,
-    hasStudyPlan: !!study_plan,
-    title 
-  });
 
   try {
     await pool.query(
