@@ -132,6 +132,11 @@ export class EngagementTracker {
 
   static recordTime() {
     if (!this.currentSection) return;
+    
+    // Strict Condition: Timer MUST NOT start unless document is loaded and summarized
+    const summaryText = document.getElementById('summaryText');
+    if (!summaryText || summaryText.innerText.length < 50) return;
+
     const timeSpent = Math.floor((Date.now() - this.startTime) / 1000);
     this.engagementData[this.currentSection] = (this.engagementData[this.currentSection] || 0) + timeSpent;
     localStorage.setItem(PersistenceManager.getKey('engagement'), JSON.stringify(this.engagementData));

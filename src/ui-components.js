@@ -789,34 +789,18 @@ export function initUpgradeModal() {
       getPremiumBtn.textContent = 'Procesando Transacción...';
       getPremiumBtn.style.opacity = '0.7';
 
-      // Simulamos latencia de pasarela de pago (Stripe)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Simulate brief processing
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       try {
-        const { upgradeToPro } = await import('./api.js');
-        const data = await upgradeToPro();
-        
-        if (data.success) {
-          mostrarToast('✨ ¡Bienvenido a AeroLex Pro!');
-          
-          const { fetchUserLimits, closeUpgradeModal } = await import('./auth.js');
-          await fetchUserLimits(); // Esto actualiza window.userLimits y refresca la UI (badge, inputs)
-          
-          // Re-habilitar inputs si estaban bloqueados
-          const chatInput = document.getElementById('chatInput');
-          const chatSend = document.getElementById('chatSend');
-          if (chatInput && chatSend) {
-            chatInput.disabled = false;
-            chatInput.classList.remove('opacity-50', 'cursor-not-allowed');
-            chatSend.disabled = false;
-            chatSend.classList.remove('opacity-50', 'cursor-not-allowed');
-          }
-
-          closeUpgradeModal();
-        }
+        mostrarToast('💳 La pasarela de pagos está en construcción. ¡Pronto podrás ser Pro!');
+        // Close modal after showing toast
+        setTimeout(() => {
+          import('./auth.js').then(m => m.closeUpgradeModal());
+        }, 1500);
       } catch (err) {
         console.error('Error en upgrade:', err);
-        mostrarToast('❌ Error al procesar el pago. Inténtalo de nuevo.');
+        mostrarToast('❌ Error al procesar la solicitud. Inténtalo de nuevo.');
       } finally {
         getPremiumBtn.disabled = false;
         getPremiumBtn.textContent = originalText;
