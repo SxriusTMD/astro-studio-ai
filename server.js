@@ -218,15 +218,38 @@ async function syncUserToDB(email, name) {
     return null;
   }
 
+  const { data: existingUser, error: selectError } = await supabase
+    .from('users')
+    .select('email, name, plan, chat_count')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (selectError) {
+    throw new Error(`Supabase user lookup failed: ${selectError.message}`);
+  }
+
+  if (existingUser) {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ name: name || existingUser.name || email.split('@')[0] })
+      .eq('email', email)
+      .select('email, name, plan, chat_count')
+      .single();
+
+    if (error) {
+      throw new Error(`Supabase user sync failed: ${error.message}`);
+    }
+
+    return data;
+  }
+
   const { data, error } = await supabase
     .from('users')
-    .upsert({
+    .insert({
       email,
       name: name || email.split('@')[0],
       plan: 'free',
       chat_count: 0
-    }, {
-      onConflict: 'email'
     })
     .select()
     .single();
@@ -236,6 +259,49 @@ async function syncUserToDB(email, name) {
   }
 
   return data;
+}
+
+async function getSupabaseUserForLimits(authUser) {
+  if (!supabase) {
+    throw new Error('Supabase no configurado: faltan SUPABASE_URL o SUPABASE_KEY');
+  }
+
+  const email = authUser?.email;
+  if (!email) {
+    throw new Error('Usuario autenticado sin email para validar limites');
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('email, name, plan, chat_count')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase limit lookup failed: ${error.message}`);
+  }
+
+  if (data) return data;
+
+  return syncUserToDB(email, authUser.displayName || email.split('@')[0]);
+}
+
+async function incrementSupabaseChatCount(email, currentCount) {
+  if (!supabase || !email) return null;
+
+  const nextCount = Number(currentCount || 0) + 1;
+  const { data, error } = await supabase
+    .from('users')
+    .update({ chat_count: nextCount })
+    .eq('email', email)
+    .select('chat_count')
+    .single();
+
+  if (error) {
+    throw new Error(`Supabase chat_count increment failed: ${error.message}`);
+  }
+
+  return data?.chat_count ?? nextCount;
 }
 
 app.get('/', (req, res) => {
@@ -676,13 +742,20 @@ REGLAS DE FORMATO:
     : prompt;
 
   try {
-    // 0. Server-Side Guardrail: Check limits before calling AI
-    const userResult = await pool.query(
-      'SELECT plan, chat_count FROM usuarios WHERE google_id = $1',
-      [req.user.id]
-    );
-    const user = userResult.rows[0];
-    if (user && user.plan === 'free' && user.chat_count >= 10) {
+    // 0. Server-Side Guardrail: Check real limits in Supabase before calling AI
+    let supabaseUser;
+    try {
+      supabaseUser = await getSupabaseUserForLimits(req.user);
+    } catch (limitErr) {
+      console.error('Supabase limit validation error:', limitErr.message);
+      return res.status(503).json({ error: 'Error validating limits', code: 'LIMIT_VALIDATION_FAILED' });
+    }
+
+    const plan = String(supabaseUser?.plan || 'free').toLowerCase();
+    const chatCount = Number(supabaseUser?.chat_count || 0);
+    const isUnlimited = plan === 'pro' || plan === 'premium';
+
+    if (!isUnlimited && chatCount >= 10) {
       return res.status(403).json({ error: 'Limit reached', code: 'LIMIT_EXCEEDED' });
     }
 
@@ -694,10 +767,15 @@ REGLAS DE FORMATO:
     
     // 2. SOLO si NVIDIA responde exitosamente, incrementar el contador
     const userId = req.user.id;
-    const result = await pool.query(
-      `UPDATE usuarios SET chat_count = chat_count + 1 WHERE google_id = $1 RETURNING chat_count`,
-      [userId]
-    );
+    let chatUsed = chatCount;
+    if (!isUnlimited) {
+      try {
+        chatUsed = await incrementSupabaseChatCount(supabaseUser.email, chatCount);
+      } catch (incrementErr) {
+        console.error('Supabase chat_count increment error:', incrementErr.message);
+        chatUsed = chatCount;
+      }
+    }
     
     // 3. Persistencia atómica de mensajes
     if (sessionId != null && sessionId !== '') {
@@ -715,7 +793,7 @@ REGLAS DE FORMATO:
       }
     }
     
-    res.json({ text, chat_used: result.rows[0].chat_count });
+    res.json({ text, chat_used: chatUsed });
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(502).json({ error: 'Error al conectar con la IA.' });
