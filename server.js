@@ -7,6 +7,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const { supabase } = require('./src/supabaseClient');
 require('dns').setDefaultResultOrder('ipv4first');
 
 const app = express();
@@ -189,6 +190,12 @@ passport.use(new GoogleStrategy({
     }
   }
 
+  try {
+    await syncUserToDB(userProfile.email, userProfile.displayName);
+  } catch (err) {
+    console.error('Error sincronizando usuario en Supabase:', err.message);
+  }
+
   done(null, userProfile);
 }));
 
@@ -198,6 +205,37 @@ passport.deserializeUser((user, done) => done(null, user));
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated && req.isAuthenticated()) return next();
   return res.status(401).json({ error: 'No autenticado' });
+}
+
+async function syncUserToDB(email, name) {
+  if (!supabase) {
+    console.warn('Supabase no configurado: faltan SUPABASE_URL o SUPABASE_KEY');
+    return null;
+  }
+
+  if (!email) {
+    console.warn('Supabase sync omitido: email requerido');
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .upsert({
+      email,
+      name: name || email.split('@')[0],
+      plan: 'free',
+      chat_count: 0
+    }, {
+      onConflict: 'email'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Supabase user sync failed: ${error.message}`);
+  }
+
+  return data;
 }
 
 app.get('/', (req, res) => {
@@ -318,11 +356,18 @@ app.get('/api/auth/verify-email', async (req, res) => {
       [userId]
     );
     const user = userResult.rows[0];
+    const displayName = user.username || user.nombre || user.email.split('@')[0];
+
+    try {
+      await syncUserToDB(user.email, displayName);
+    } catch (err) {
+      console.error('Error sincronizando usuario en Supabase:', err.message);
+    }
 
     req.login({
       id: user.google_id,
       email: user.email,
-      displayName: user.username || user.nombre || user.email.split('@')[0],
+      displayName,
       photo: user.foto || '',
       authMethod: 'email',
       dbId: userId,
@@ -375,11 +420,18 @@ app.post('/api/auth/login', async (req, res) => {
     if (!match) return res.status(401).json({ error: 'Credenciales inválidas' });
 
     const needsUsername = !user.username;
+    const displayName = user.username || user.nombre || email.split('@')[0];
+
+    try {
+      await syncUserToDB(user.email, displayName);
+    } catch (err) {
+      console.error('Error sincronizando usuario en Supabase:', err.message);
+    }
 
     req.login({
       id: user.google_id,
       email: user.email,
-      displayName: user.username || user.nombre || email.split('@')[0],
+      displayName,
       photo: user.foto || '',
       authMethod: 'email',
       dbId: user.id,
