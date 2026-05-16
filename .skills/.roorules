@@ -1,0 +1,5 @@
+# Reglas de Ingeniería de AeroLex AI
+- NUNCA uses `innerHTML`. Usa siempre `textContent` para evitar vulnerabilidades XSS.
+- Mantén estrictamente el diseño Glassmorphism usando Tailwind (`backdrop-blur-xl`, `bg-slate-900/40`, bordes translúcidos).
+- El logo principal es `AeroLexAI_Ship_Trans.png`, no cambies la extensión ni uses SVGs en su lugar.
+- Protege las API Keys: nunca las escribas "hardcodeadas" en los archivos, usa siempre `process.env`.

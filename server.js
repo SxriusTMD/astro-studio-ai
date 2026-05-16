@@ -976,6 +976,37 @@ app.post('/api/examen', ensureAuthenticated, async (req, res) => {
   }
 });
 
+app.post('/api/exam', ensureAuthenticated, async (req, res) => {
+  const { extracted_text, sessionId } = req.body;
+  if (!extracted_text) return res.status(400).json({ error: 'extracted_text requerido' });
+
+  const prompt = 'Genera exactamente 5 preguntas de opcion multiple basadas en este documento. Responde UNICAMENTE con un array JSON puro (sin markdown, sin bloques de código) con este formato exacto: [{"question": "...", "options": ["A", "B", "C", "D"], "correctAnswer": "A"}]. En correctAnswer usa solo el texto exacto de la opción correcta. Documento:\n' + extracted_text.slice(0, 6000);
+
+  try {
+    const text = await callNVIDIA([{ role: 'user', content: prompt }]);
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
+    const questions = JSON.parse(jsonMatch[0]);
+    
+    // Si necesitas persistencia en bd
+    if (sessionId != null && sessionId !== '') {
+      try {
+        await pool.query(
+          `UPDATE chat_sessions SET exam = $1::jsonb WHERE id = $2 AND google_id = $3`,
+          [JSON.stringify(questions), sessionId, req.user.id]
+        );
+      } catch (errDb) {
+        console.error('Error guardando exam atómicamente:', errDb);
+      }
+    }
+    
+    res.json({ questions });
+  } catch (err) {
+    console.error('Exam error:', err);
+    res.status(502).json({ error: 'Error al generar el examen interactivo.' });
+  }
+});
+
 app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const { pdfContent, materia, fechaExamen, sessionId } = req.body;
   if (!pdfContent || !materia || !fechaExamen) {

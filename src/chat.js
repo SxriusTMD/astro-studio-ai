@@ -4,6 +4,7 @@ import {
   createStudyPlan,
   generateSummary,
   generateExam,
+  generateExamInteractive,
   fetchSessions,
   getSession,
   createSession,
@@ -511,17 +512,24 @@ function ensureExamStartButtonAfterLoad() {
   const sid = window.currentSessionId;
   if (sid != null && sid !== '' && readExamProgressForSession(sid, { silent: true })) return;
 
-  examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
+  examContent.replaceChildren();
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  btn.id = 'startExam';
+  btn.textContent = 'Iniciar Examen';
+  examContent.appendChild(btn);
 }
 
-function renderExamProgress() {
-  let html = '<div class="exam-progress">';
+function renderExamProgressNode() {
+  const container = document.createElement('div');
+  container.className = 'exam-progress';
   examQuestions.forEach((_, i) => {
-    const cls = i < examIndex ? 'done' : i === examIndex ? 'active' : '';
-    html += `<div class="step ${cls}">${i + 1}</div>`;
+    const step = document.createElement('div');
+    step.className = `step ${i < examIndex ? 'done' : i === examIndex ? 'active' : ''}`;
+    step.textContent = i + 1;
+    container.appendChild(step);
   });
-  html += '</div>';
-  return html;
+  return container;
 }
 
 function renderExamQuestion() {
@@ -534,48 +542,106 @@ function renderExamQuestion() {
   const examContent = document.getElementById('examContent');
   if (!examContent) return;
 
-  const optionsHtml = q.opciones.map((option, i) => {
-    const letter = getOptionLetter(option, i);
-    return `<button class="exam-option" type="button" data-letter="${letter}">${escapeHTML(option)}</button>`;
-  }).join('');
+  examContent.replaceChildren();
 
-  examContent.innerHTML = `
-    ${renderExamProgress()}
-    <div class="exam-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <div class="exam-question-number">Pregunta ${examIndex + 1} de ${examQuestions.length}</div>
-        <div id="examTimer" style="font-family:'Space Grotesk',monospace;font-size:14px;color:var(--accent-cyan);min-width:60px;text-align:right;">00:00</div>
-      </div>
-      <div class="exam-question-text">${escapeHTML(q.pregunta)}</div>
-      <div class="exam-options">${optionsHtml}</div>
-      <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn btn-primary" id="confirmAnswer" disabled>Confirmar respuesta</button>
-      </div>
-      <div id="examFeedback"></div>
-    </div>
-  `;
+  // Contenedor principal con Glassmorphism
+  const card = document.createElement('div');
+  card.className = 'exam-card backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)] p-6 rounded-xl';
 
-  const confirmBtn = document.getElementById('confirmAnswer');
-  document.querySelectorAll('.exam-option').forEach((btn) => {
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
+  header.style.marginBottom = '8px';
+
+  const qNumber = document.createElement('div');
+  qNumber.className = 'exam-question-number text-slate-300';
+  qNumber.textContent = `Pregunta ${examIndex + 1} de ${examQuestions.length}`;
+
+  const timer = document.createElement('div');
+  timer.id = 'examTimer';
+  timer.style.fontFamily = "'Space Grotesk',monospace";
+  timer.style.fontSize = '14px';
+  timer.style.color = 'var(--accent-cyan)';
+  timer.style.minWidth = '60px';
+  timer.style.textAlign = 'right';
+  timer.textContent = '00:00';
+
+  header.appendChild(qNumber);
+  header.appendChild(timer);
+  card.appendChild(header);
+
+  const qText = document.createElement('div');
+  qText.className = 'exam-question-text text-lg font-semibold text-white mb-4';
+  qText.textContent = q.pregunta || q.question;
+  card.appendChild(qText);
+
+  const optionsContainer = document.createElement('div');
+  optionsContainer.className = 'exam-options flex flex-col gap-2';
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn btn-primary mt-4 backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  confirmBtn.id = 'confirmAnswer';
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Confirmar respuesta';
+
+  const optionsArray = q.opciones || q.options || [];
+  optionsArray.forEach((option) => {
+    const btn = document.createElement('button');
+    btn.className = 'exam-option p-3 rounded-lg text-left transition-all bg-slate-800/50 hover:bg-slate-700 border border-slate-600 text-slate-200';
+    btn.type = 'button';
+    btn.dataset.value = option;
+    btn.textContent = option;
+
     btn.addEventListener('click', () => {
-      selectedExamOption = btn.dataset.letter;
-      document.querySelectorAll('.exam-option').forEach((optionBtn) => optionBtn.classList.remove('selected'));
-      btn.classList.add('selected');
+      selectedExamOption = btn.dataset.value;
+      optionsContainer.querySelectorAll('.exam-option').forEach(opt => {
+        opt.classList.remove('selected', 'border-purple-500', 'bg-purple-900/30');
+      });
+      btn.classList.add('selected', 'border-purple-500', 'bg-purple-900/30');
       confirmBtn.disabled = false;
     });
+
+    optionsContainer.appendChild(btn);
   });
+
+  card.appendChild(optionsContainer);
+
+  const actions = document.createElement('div');
+  actions.style.marginTop = '16px';
+  actions.style.display = 'flex';
+  actions.style.gap = '10px';
+  actions.style.justifyContent = 'center';
+  actions.style.flexWrap = 'wrap';
+  actions.appendChild(confirmBtn);
+  card.appendChild(actions);
+
+  const feedbackDiv = document.createElement('div');
+  feedbackDiv.id = 'examFeedback';
+  card.appendChild(feedbackDiv);
+
   confirmBtn.addEventListener('click', handleExamAnswer);
+
+  examContent.appendChild(renderExamProgressNode());
+  examContent.appendChild(card);
 }
 
 function handleExamAnswer() {
   if (!selectedExamOption) return;
   const q = examQuestions[examIndex];
-  const correctLetter = getCorrectLetter(q);
-  const isCorrect = selectedExamOption === correctLetter;
+  
+  let isCorrect = false;
+  let correctValue = "";
+  
+  if (q.correctAnswer || q.respuesta_correcta) {
+    const truth = q.correctAnswer || q.respuesta_correcta;
+    isCorrect = (selectedExamOption.trim().toLowerCase() === truth.trim().toLowerCase() || selectedExamOption.startsWith(truth));
+    correctValue = truth;
+  }
 
   examAnswers.push({
-    pregunta: q.pregunta,
-    correcta: correctLetter,
+    pregunta: q.pregunta || q.question,
+    correcta: correctValue,
     usuario: selectedExamOption,
     acierto: isCorrect
   });
@@ -583,38 +649,58 @@ function handleExamAnswer() {
 
   document.querySelectorAll('.exam-option').forEach((btn) => {
     btn.disabled = true;
-    btn.classList.remove('selected');
-    if (btn.dataset.letter === correctLetter) btn.classList.add('correct');
-    if (btn.dataset.letter === selectedExamOption && !isCorrect) btn.classList.add('incorrect');
+    btn.classList.remove('selected', 'border-purple-500', 'bg-purple-900/30');
+    
+    let btnIsCorrect = (btn.dataset.value.trim().toLowerCase() === correctValue.trim().toLowerCase() || btn.dataset.value.startsWith(correctValue));
+
+    if (btnIsCorrect) {
+      btn.classList.add('correct', 'border-green-500', 'bg-green-900/30', 'text-green-300');
+    }
+    if (btn.dataset.value === selectedExamOption && !isCorrect) {
+      btn.classList.add('incorrect', 'border-red-500', 'bg-red-900/30', 'text-red-300');
+    }
   });
 
   document.getElementById('confirmAnswer').disabled = true;
   const feedbackDiv = document.getElementById('examFeedback');
   if (feedbackDiv) {
-    feedbackDiv.innerHTML = `
-      <div class="exam-feedback">
-        <div class="score ${isCorrect ? 'high' : 'low'}">${isCorrect ? 'Correcta' : 'Incorrecta'}</div>
-        <div class="fb-text">
-          ${isCorrect ? 'Bien hecho. Esa era la opcion correcta.' : `Tu respuesta fue ${selectedExamOption}. La respuesta correcta es ${correctLetter}.`}
-        </div>
-        <div style="margin-top:12px;">
-          <button class="btn btn-primary" id="nextQuestion">
-            ${examIndex < examQuestions.length - 1 ? 'Siguiente pregunta' : 'Ver resultados'}
-          </button>
-        </div>
-      </div>
-    `;
-  }
+    feedbackDiv.replaceChildren();
+    
+    const fbCard = document.createElement('div');
+    fbCard.className = 'exam-feedback mt-4 p-4 rounded-lg bg-slate-800/80 border border-slate-700 backdrop-blur-md shadow-[0_0_15px_rgba(139,92,246,0.1)]';
 
-  document.getElementById('nextQuestion').addEventListener('click', () => {
-    examIndex++;
-    persistExamProgress();
-    renderExamQuestion();
-  });
+    const score = document.createElement('div');
+    score.className = `score font-bold text-lg ${isCorrect ? 'text-green-400' : 'text-red-400'}`;
+    score.textContent = isCorrect ? 'Correcta' : 'Incorrecta';
+    fbCard.appendChild(score);
+
+    const fbText = document.createElement('div');
+    fbText.className = 'fb-text text-slate-300 mt-2';
+    fbText.textContent = isCorrect 
+      ? 'Bien hecho. Esa era la opción correcta.' 
+      : `Tu respuesta fue: ${selectedExamOption}. La respuesta correcta es: ${correctValue}.`;
+    fbCard.appendChild(fbText);
+
+    const btnWrapper = document.createElement('div');
+    btnWrapper.style.marginTop = '12px';
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+    nextBtn.id = 'nextQuestion';
+    nextBtn.textContent = examIndex < examQuestions.length - 1 ? 'Siguiente pregunta' : 'Ver resultados';
+    btnWrapper.appendChild(nextBtn);
+    fbCard.appendChild(btnWrapper);
+
+    feedbackDiv.appendChild(fbCard);
+
+    nextBtn.addEventListener('click', () => {
+      examIndex++;
+      persistExamProgress();
+      renderExamQuestion();
+    });
+  }
 }
 
 function renderExamResults() {
-  // Stop timer
   if (examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval = null; }
   localStorage.removeItem(PersistenceManager.getKey('exam_start'));
   clearExamProgressStorage();
@@ -627,37 +713,92 @@ function renderExamResults() {
   const examContent = document.getElementById('examContent');
   if (!examContent) return;
 
-  const resultsHtml = examAnswers.map((a) => {
-    const color = a.acierto ? '#22c55e' : '#ef4444';
-    return `<div class="result-item">
-      <span class="r-icon">${a.acierto ? 'OK' : 'X'}</span>
-      <span class="r-question">${escapeHTML(a.pregunta).substring(0, 70)}...</span>
-      <span style="font-weight:600;color:${color};">${a.usuario} / ${a.correcta}</span>
-    </div>`;
-  }).join('');
+  examContent.replaceChildren();
 
-  examContent.innerHTML = `
-    <div class="exam-results">
-      <div class="exam-progress">${examQuestions.map((_, i) => `<div class="step done">${i + 1}</div>`).join('')}</div>
-      <div style="text-align:center;margin:24px 0;">
-        <div style="color:var(--text-muted);font-size:14px;margin-bottom:4px;">Puntaje final</div>
-        <div class="final-score">${correctCount}/${examQuestions.length}</div>
-        <div style="margin-top:8px;font-size:14px;color:var(--text-secondary);">
-          ${correctCount} aciertos - ${wrongCount} errores &middot; ${timerStr}
-        </div>
-      </div>
-      <div style="margin-top:20px;">
-        <h4 style="margin-bottom:12px;text-align:left;">Resumen de aciertos y errores</h4>
-        ${resultsHtml}
-      </div>
-      <div class="exam-actions">
-        <button class="btn btn-primary" id="retryExam">Reintentar</button>
-        <button class="btn btn-secondary" id="backToExam">Nuevo examen</button>
-      </div>
-    </div>
-  `;
+  const resultsCard = document.createElement('div');
+  resultsCard.className = 'exam-results backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 p-6 rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.1)]';
 
-  document.getElementById('retryExam').addEventListener('click', () => {
+  resultsCard.appendChild(renderExamProgressNode());
+
+  const scoreDiv = document.createElement('div');
+  scoreDiv.style.textAlign = 'center';
+  scoreDiv.style.margin = '24px 0';
+  
+  const label = document.createElement('div');
+  label.style.color = 'var(--text-muted)';
+  label.style.fontSize = '14px';
+  label.style.marginBottom = '4px';
+  label.textContent = 'Puntaje final';
+  scoreDiv.appendChild(label);
+
+  const finalScore = document.createElement('div');
+  finalScore.className = 'final-score text-4xl font-bold text-white';
+  finalScore.textContent = `${correctCount}/${examQuestions.length}`;
+  scoreDiv.appendChild(finalScore);
+
+  const stats = document.createElement('div');
+  stats.style.marginTop = '8px';
+  stats.style.fontSize = '14px';
+  stats.style.color = 'var(--text-secondary)';
+  stats.textContent = `${correctCount} aciertos - ${wrongCount} errores · ${timerStr}`;
+  scoreDiv.appendChild(stats);
+
+  resultsCard.appendChild(scoreDiv);
+
+  const summaryDiv = document.createElement('div');
+  summaryDiv.style.marginTop = '20px';
+  
+  const h4 = document.createElement('h4');
+  h4.style.marginBottom = '12px';
+  h4.style.textAlign = 'left';
+  h4.className = 'text-lg font-semibold text-slate-200';
+  h4.textContent = 'Resumen de aciertos y errores';
+  summaryDiv.appendChild(h4);
+
+  examAnswers.forEach(a => {
+    const item = document.createElement('div');
+    item.className = 'result-item flex gap-3 p-3 bg-slate-800/50 rounded-lg mb-2 border border-slate-700';
+
+    const icon = document.createElement('span');
+    icon.className = `r-icon font-bold ${a.acierto ? 'text-green-500' : 'text-red-500'}`;
+    icon.textContent = a.acierto ? 'OK' : 'X';
+    item.appendChild(icon);
+
+    const qSpan = document.createElement('span');
+    qSpan.className = 'r-question text-slate-300 flex-1';
+    qSpan.textContent = (a.pregunta || '').substring(0, 70) + '...';
+    item.appendChild(qSpan);
+
+    const ansSpan = document.createElement('span');
+    ansSpan.style.fontWeight = '600';
+    ansSpan.style.color = a.acierto ? '#22c55e' : '#ef4444';
+    ansSpan.textContent = `${(a.usuario||'').substring(0,20)} / ${(a.correcta||'').substring(0,20)}`;
+    item.appendChild(ansSpan);
+
+    summaryDiv.appendChild(item);
+  });
+
+  resultsCard.appendChild(summaryDiv);
+
+  const actions = document.createElement('div');
+  actions.className = 'exam-actions mt-6 flex justify-center gap-4';
+  
+  const retryBtn = document.createElement('button');
+  retryBtn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  retryBtn.id = 'retryExam';
+  retryBtn.textContent = 'Reintentar';
+  actions.appendChild(retryBtn);
+
+  const backBtn = document.createElement('button');
+  backBtn.className = 'btn btn-secondary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  backBtn.id = 'backToExam';
+  backBtn.textContent = 'Nuevo examen';
+  actions.appendChild(backBtn);
+
+  resultsCard.appendChild(actions);
+  examContent.appendChild(resultsCard);
+
+  retryBtn.addEventListener('click', () => {
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
@@ -667,13 +808,13 @@ function renderExamResults() {
 
   saveCurrentSession();
 
-  document.getElementById('backToExam').addEventListener('click', () => {
+  backBtn.addEventListener('click', () => {
     examQuestions = [];
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
     clearExamProgressStorage();
-    examContent.innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
+    ensureExamStartButtonAfterLoad();
   });
 }
 
@@ -707,15 +848,19 @@ export async function handleStartExam() {
   }
 
   try {
-    const data = await generateExam(getCombinedContext(), window.currentSessionId);
-    examQuestions = (data.preguntas || []).map(normalizeExamQuestion).filter(Boolean).slice(0, 5);
+    const textContext = getCombinedContext();
+    const data = await generateExamInteractive(textContext, window.currentSessionId);
+    
+    let parsedQuestions = data.questions || data.preguntas || [];
+    examQuestions = parsedQuestions.filter(Boolean).slice(0, 5);
+    
     if (examQuestions.length < 5) throw new Error('Examen sin 5 preguntas de opcion multiple');
+    
     examIndex = 0;
     examAnswers = [];
     selectedExamOption = null;
     clearExamProgressStorage();
 
-    // Persistent Timer: save start time
     examStartTime = Date.now();
     localStorage.setItem(PersistenceManager.getKey('exam_start'), String(examStartTime));
     startExamTimer();
@@ -724,7 +869,7 @@ export async function handleStartExam() {
     renderExamQuestion();
   } catch (e) {
     console.error('Start exam error:', e);
-    alert('Error al generar el examen. Intenta de nuevo.');
+    alert('Error al generar el examen interactivo. Intenta de nuevo.');
     if (triggerBtn) {
       triggerBtn.disabled = false;
       triggerBtn.textContent = 'Iniciar Examen';
@@ -995,7 +1140,15 @@ export function newSession() {
   document.getElementById('exportFlashcards').style.display = 'none';
   document.getElementById('exportSummary').style.display = 'none';
   document.getElementById('exportPlan').style.display = 'none';
-  document.getElementById('examContent').innerHTML = '<button class="btn btn-primary" id="startExam">Iniciar Examen</button>';
+  const examContent = document.getElementById('examContent');
+  if (examContent) {
+    examContent.replaceChildren();
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+    btn.id = 'startExam';
+    btn.textContent = 'Iniciar Examen';
+    examContent.appendChild(btn);
+  }
   document.getElementById('dropZone').classList.remove('collapsed');
   document.getElementById('toolPanel').style.display = 'none';
   updateExportAllButton();

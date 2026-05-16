@@ -66,6 +66,13 @@ export async function generateSummary(pdfContent, sessionId = null) {
   });
 }
 
+export async function generateExamInteractive(extracted_text, sessionId = null) {
+  return request('/api/exam', {
+    method: 'POST',
+    body: JSON.stringify({ extracted_text, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
+  });
+}
+
 export async function generateExam(pdfContent, sessionId = null) {
   return request('/api/examen', {
     method: 'POST',
