@@ -1,4 +1,11 @@
-import { saveDocument, fetchDocuments, getDocument, deleteDocument as apiDeleteDocument } from './api.js';
+import {
+  saveDocument,
+  fetchDocuments,
+  getDocument,
+  deleteDocument as apiDeleteDocument,
+  saveCloudDocument,
+  fetchCloudDocuments,
+} from './api.js';
 import { showUpgradeModal, saveToStorage } from './auth.js';
 import { addChatMessage, saveCurrentSession, loadSession, newSession, loadSessions, renderHistory, syncExamPanelAfterRenderTabs } from './chat.js';
 
@@ -152,6 +159,171 @@ export function getCombinedContext() {
   return parts.join('\n\n');
 }
 
+function isProUser() {
+  const plan = String(window.userLimits?.plan || '').toLowerCase();
+  return plan === 'pro' || plan === 'premium';
+}
+
+function ensureCloudShortcutContainer() {
+  const sidebarHeader = document.querySelector('.sidebar-header');
+  if (!sidebarHeader) return null;
+
+  let container = document.getElementById('cloudDocumentShortcuts');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'cloudDocumentShortcuts';
+    container.className = 'cloud-document-shortcuts';
+    sidebarHeader.appendChild(container);
+  }
+  return container;
+}
+
+function buildCloudDocPreview(doc) {
+  const text = String(doc.extracted_text || doc.summary || '').replace(/\s+/g, ' ').trim();
+  return text ? text.slice(0, 86) + (text.length > 86 ? '...' : '') : 'Documento guardado en la nube';
+}
+
+export function restoreCloudDocument(doc) {
+  if (!doc) return;
+
+  const restored = {
+    id: `cloud-${doc.id || Date.now()}`,
+    name: doc.file_name || 'Documento Cloud',
+    content: doc.extracted_text || '',
+    pages: 0,
+    cloudId: doc.id,
+  };
+
+  window.pdfDocs = [restored];
+  window.activeDocId = restored.id;
+  window.currentSessionId = null;
+
+  if (doc.summary) {
+    window.summaryData = { text: doc.summary, pdfs: [restored.name] };
+    const summaryText = document.getElementById('summaryText');
+    if (summaryText) {
+      const title = document.createElement('h4');
+      title.textContent = 'Resumen guardado';
+      const body = document.createElement('div');
+      body.style.whiteSpace = 'pre-wrap';
+      body.textContent = doc.summary;
+      summaryText.replaceChildren(title, body);
+    }
+    document.getElementById('exportSummary')?.style.setProperty('display', 'inline-block');
+  }
+
+  const fileName = document.getElementById('fileName');
+  const fileInfo = document.getElementById('fileInfo');
+  const textPreview = document.getElementById('textPreview');
+  const pageCount = document.getElementById('pageCount');
+  const fileSize = document.getElementById('fileSize');
+  const statusBadge = document.getElementById('status-badge');
+  const statusText = document.getElementById('status-text');
+  const dropZone = document.getElementById('dropZone');
+  const toolPanel = document.getElementById('toolPanel');
+
+  if (fileName) fileName.textContent = restored.name;
+  if (fileInfo) fileInfo.classList.add('visible');
+  if (textPreview) textPreview.textContent = restored.content.slice(0, 500) + (restored.content.length > 500 ? '...' : '');
+  if (pageCount) pageCount.textContent = 'Cloud';
+  if (fileSize) fileSize.textContent = 'Nube';
+  if (statusBadge) statusBadge.className = 'status-badge online';
+  if (statusText) statusText.textContent = `${restored.name} - Restaurado desde Cloud Pro`;
+  if (dropZone) dropZone.classList.add('collapsed');
+  if (toolPanel) toolPanel.style.display = 'flex';
+
+  const wordCount = restored.content.split(/\s+/).filter(Boolean).length;
+  const statWords = document.getElementById('statWords');
+  const statPages = document.getElementById('statPages');
+  const statChars = document.getElementById('statChars');
+  const statReadTime = document.getElementById('statReadTime');
+  if (statWords) statWords.textContent = wordCount.toLocaleString('es-ES');
+  if (statPages) statPages.textContent = 'Cloud';
+  if (statChars) statChars.textContent = restored.content.length.toLocaleString('es-ES');
+  if (statReadTime) statReadTime.textContent = Math.ceil(wordCount / 200) + ' min';
+
+  renderTabs();
+  updateExportAllButton();
+  mostrarToast(`Documento Cloud restaurado: ${restored.name}`);
+}
+
+export function renderCloudDocumentShortcuts(documents = []) {
+  const container = ensureCloudShortcutContainer();
+  if (!container) return;
+
+  if (!isProUser()) {
+    container.replaceChildren();
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  const title = document.createElement('div');
+  title.className = 'cloud-shortcuts-title';
+  title.textContent = 'Cloud Pro';
+
+  if (!documents.length) {
+    const empty = document.createElement('div');
+    empty.className = 'cloud-shortcuts-empty';
+    empty.textContent = 'Tus PDFs Pro aparecerán aquí';
+    container.replaceChildren(title, empty);
+    return;
+  }
+
+  const list = document.createElement('div');
+  list.className = 'cloud-shortcuts-list';
+  documents.slice(0, 6).forEach((doc) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cloud-doc-shortcut';
+    const name = document.createElement('span');
+    name.className = 'cloud-doc-name';
+    name.textContent = doc.file_name || 'Documento Cloud';
+    const preview = document.createElement('span');
+    preview.className = 'cloud-doc-preview';
+    preview.textContent = buildCloudDocPreview(doc);
+    btn.replaceChildren(name, preview);
+    btn.addEventListener('click', () => restoreCloudDocument(doc));
+    list.appendChild(btn);
+  });
+
+  container.replaceChildren(title, list);
+}
+
+export async function loadCloudDocumentShortcuts() {
+  if (!isProUser()) {
+    renderCloudDocumentShortcuts([]);
+    return;
+  }
+
+  try {
+    const data = await fetchCloudDocuments();
+    window.cloudDocuments = data.documents || [];
+    renderCloudDocumentShortcuts(window.cloudDocuments);
+  } catch (err) {
+    if (err.status !== 403) {
+      console.error('Cloud documents error:', err);
+    }
+  }
+}
+
+async function persistCloudDocumentInBackground(doc) {
+  if (!isProUser() || !doc?.content) return;
+
+  try {
+    await saveCloudDocument({
+      file_name: doc.name,
+      extracted_text: doc.content,
+      summary: window.summaryData?.text || ''
+    });
+    loadCloudDocumentShortcuts();
+  } catch (err) {
+    if (err.status !== 403) {
+      console.error('Cloud document save error:', err);
+    }
+  }
+}
+
 // ===== DRAG & DROP / FILE HANDLING =====
 
 export async function handleFile(file) {
@@ -237,6 +409,7 @@ export async function handleFile(file) {
 
   mostrarToast(`✅ Documento cargado: ${file.name}`);
   saveCurrentSession();
+  persistCloudDocumentInBackground(window.pdfDocs.find(d => d.id === docId));
 }
 
 export function renderTabs() {

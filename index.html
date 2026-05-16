@@ -2549,7 +2549,131 @@ body:not(.sidebar-closed) .sidebar {
       background-size: 1000px 100%;
       animation: cosmicShimmer 2s infinite linear;
       border-radius: 8px;
-    }</style>
+    }
+
+    /* ===== PHASE 6C: NEXT-GEN GLASSMORPHISM OVERHAUL ===== */
+    :root {
+      --glass-bg: rgba(15, 23, 42, 0.40);
+      --glass-bg-soft: rgba(15, 23, 42, 0.22);
+      --glass-border: rgba(255, 255, 255, 0.10);
+      --neon-ring: 0 0 0 1px rgba(255,255,255,0.06), 0 18px 48px rgba(0,0,0,0.32), 0 0 34px rgba(0,229,255,0.08);
+    }
+
+    button, a, input, textarea, select,
+    .btn, .tab-btn, .session-item, .pdf-tab, .cloud-doc-shortcut,
+    .menu-item, .exam-option, .flashcard, .history-item {
+      transition: all 300ms ease-in-out;
+    }
+
+    header, .sidebar, .tool-panel, .drop-zone > div, .file-info, .tabs,
+    .chat-container, .chat-input-area, .summary-section, .study-plan-section,
+    .exam-card, .exam-results, .stat-card, .summary-text, .flashcard-face.back,
+    .user-dropdown, .history-panel, .toast {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: var(--neon-ring);
+    }
+
+    .sidebar {
+      box-shadow: 14px 0 42px rgba(0,0,0,0.32), 0 0 34px rgba(139,92,246,0.12);
+    }
+
+    .tool-panel {
+      background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(139,92,246,0.05)), var(--glass-bg-soft);
+    }
+
+    .chat-container {
+      border-radius: 18px;
+      animation: aeroPulseGlow 6s ease-in-out infinite;
+    }
+
+    .tab-btn {
+      border: 1px solid transparent;
+      border-radius: 12px;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(0,229,255,0.16), rgba(139,92,246,0.18)), rgba(15,23,42,0.42);
+      border-color: rgba(255,255,255,0.14);
+      box-shadow: 0 0 22px rgba(0,229,255,0.16), inset 0 1px 0 rgba(255,255,255,0.08);
+      color: #ffffff;
+    }
+
+    .btn-primary, .new-chat-btn, .btn-change-pdf:hover {
+      box-shadow: 0 0 24px rgba(139,92,246,0.24), 0 8px 24px rgba(0,0,0,0.24);
+    }
+
+    .btn:hover, .new-chat-btn:hover, .session-item:hover, .cloud-doc-shortcut:hover,
+    .pdf-tab:hover, .exam-option:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(0,229,255,0.28);
+      box-shadow: 0 0 24px rgba(0,229,255,0.12), 0 10px 26px rgba(0,0,0,0.22);
+    }
+
+    .cloud-document-shortcuts {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .cloud-shortcuts-title {
+      margin: 0 0 8px;
+      color: rgba(255,255,255,0.72);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .cloud-shortcuts-empty {
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 10px 8px;
+    }
+
+    .cloud-shortcuts-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .cloud-doc-shortcut {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(15,23,42,0.34);
+      color: var(--text-primary);
+      text-align: left;
+      cursor: pointer;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .cloud-doc-name {
+      display: block;
+      color: #e8e8f0;
+      font-size: 12px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cloud-doc-preview {
+      display: block;
+      margin-top: 3px;
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    @keyframes aeroPulseGlow {
+      0%, 100% { box-shadow: var(--neon-ring), 0 0 22px rgba(139,92,246,0.10); }
+      50% { box-shadow: var(--neon-ring), 0 0 36px rgba(0,229,255,0.16); }
+    }
+    </style>
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
 

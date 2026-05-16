@@ -77,6 +77,10 @@ export async function fetchUserLimits() {
     updatePlanIndicator();
     const { restoreFromStorage } = await import('./chat.js');
     restoreFromStorage();
+    if (String(window.userLimits?.plan || '').toLowerCase() === 'pro' || String(window.userLimits?.plan || '').toLowerCase() === 'premium') {
+      const { loadCloudDocumentShortcuts } = await import('./ui-components.js');
+      loadCloudDocumentShortcuts();
+    }
   } catch (e) {
     console.error('Limits error:', e);
   }

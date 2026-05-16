@@ -304,6 +304,19 @@ async function incrementSupabaseChatCount(email, currentCount) {
   return data?.chat_count ?? nextCount;
 }
 
+function isProPlan(plan) {
+  const normalized = String(plan || '').toLowerCase();
+  return normalized === 'pro' || normalized === 'premium';
+}
+
+async function getSupabaseAuthenticatedUser(req) {
+  const user = await getSupabaseUserForLimits(req.user);
+  return {
+    ...user,
+    isPro: isProPlan(user?.plan)
+  };
+}
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -623,13 +636,25 @@ app.get('/api/user/limits', ensureAuthenticated, async (req, res) => {
       [userId]
     );
     const row = result.rows[0];
-    const isPremium = row.plan === 'premium';
+    let plan = row?.plan || 'free';
+    let chatUsed = row?.chat_count || 0;
+    try {
+      const supabaseUser = await getSupabaseUserForLimits(req.user);
+      if (supabaseUser) {
+        plan = supabaseUser.plan || plan;
+        chatUsed = supabaseUser.chat_count ?? chatUsed;
+      }
+    } catch (supabaseErr) {
+      console.error('Supabase limits merge error:', supabaseErr.message);
+    }
+
+    const isPremium = isProPlan(plan);
     
     res.json({
       google_id: userId,
-      plan: row.plan,
-      chat_used: row.chat_count,
-      exam_used: row.exam_count,
+      plan,
+      chat_used: chatUsed,
+      exam_used: row?.exam_count || 0,
       chat_limit: isPremium ? null : 10,
       exam_limit: isPremium ? null : 3,
       pdf_limit: isPremium ? null : 3
@@ -706,6 +731,66 @@ app.post('/api/user/upgrade-success', ensureAuthenticated, async (req, res) => {
   } catch (err) {
     console.error('Upgrade error:', err);
     res.status(500).json({ error: 'Error al actualizar el plan' });
+  }
+});
+
+app.post('/api/documents', ensureAuthenticated, async (req, res) => {
+  const { file_name, extracted_text, summary } = req.body;
+  if (!file_name || !extracted_text) {
+    return res.status(400).json({ error: 'file_name y extracted_text requeridos' });
+  }
+
+  if (!supabase) {
+    return res.status(503).json({ error: 'Supabase no configurado' });
+  }
+
+  try {
+    const user = await getSupabaseAuthenticatedUser(req);
+    if (!user.isPro) {
+      return res.status(403).json({ error: 'Pro plan required', code: 'PRO_REQUIRED' });
+    }
+
+    const { data, error } = await supabase
+      .from('documents')
+      .insert({
+        user_email: user.email,
+        file_name,
+        extracted_text,
+        summary: summary || ''
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ document: data });
+  } catch (err) {
+    console.error('Supabase document save error:', err.message);
+    res.status(500).json({ error: 'Error al guardar documento en la nube' });
+  }
+});
+
+app.get('/api/documents', ensureAuthenticated, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({ error: 'Supabase no configurado' });
+  }
+
+  try {
+    const user = await getSupabaseAuthenticatedUser(req);
+    if (!user.isPro) {
+      return res.status(403).json({ error: 'Pro plan required', code: 'PRO_REQUIRED' });
+    }
+
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id, user_email, file_name, extracted_text, summary, created_at')
+      .eq('user_email', user.email)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json({ documents: data || [] });
+  } catch (err) {
+    console.error('Supabase documents fetch error:', err.message);
+    res.status(500).json({ error: 'Error al obtener documentos de la nube' });
   }
 });
 

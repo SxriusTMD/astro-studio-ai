@@ -117,3 +117,14 @@ export async function saveDocument(data) {
     body: JSON.stringify(data),
   });
 }
+
+export async function saveCloudDocument(data) {
+  return request('/api/documents', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function fetchCloudDocuments() {
+  return request('/api/documents');
+}
