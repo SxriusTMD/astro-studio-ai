@@ -880,8 +880,8 @@ REGLAS DE FORMATO:
     
     res.json({ text, chat_used: chatUsed });
   } catch (err) {
-    console.error('Proxy error:', err);
-    res.status(502).json({ error: 'Error al conectar con la IA.' });
+    console.error("🔥 ERROR CRÍTICO EN /api/chat:", err);
+    res.status(503).json({ error: 'Error al conectar con la IA.' });
   }
 });
 
