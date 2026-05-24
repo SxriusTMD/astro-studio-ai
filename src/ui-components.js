@@ -1328,6 +1328,11 @@ export function initEditProfileModal() {
       if (e.target === overlay) closeProfile();
     });
   }
+
+  const innerContainer = panel?.querySelector('div');
+  innerContainer?.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
   
   if (editProfilePhotoFile) {
     editProfilePhotoFile.addEventListener('change', (e) => {

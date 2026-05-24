@@ -146,7 +146,8 @@ export function renderSummaryText(container, text) {
   container.appendChild(h4);
   
   if (typeof marked !== 'undefined') {
-    const rawHtml = marked.parse(text);
+    const sanitized = text.replace(/\$\\rightarrow\$/g, '➔');
+    const rawHtml = marked.parse(sanitized);
     const textContainer = document.createElement('div');
     appendSafeHTML(textContainer, rawHtml);
     container.appendChild(textContainer);
@@ -308,7 +309,8 @@ export function formatMessageHTML(text, roleNorm, div) {
   } else {
     div.className = 'message ai';
     if (typeof marked !== 'undefined') {
-      let html = marked.parse(text);
+      const sanitized = text.replace(/\$\\rightarrow\$/g, '➔');
+      let html = marked.parse(sanitized);
       html = html.replace(/\[(Fuente \d+|Anexo [A-Z]|Documento Principal)\]/g, '<span class="citation-badge">$1</span>');
       html = html.replace(/---\s*$/gm, '');
       html = html.replace(/(📌 Leyenda Técnica:[^<]*)/g, '<div class="leyenda-tecnica">$1</div>');

@@ -895,7 +895,8 @@ REGLAS DE FORMATO Y ESTILO:
 2. (ESTRUCTURA MÓVIL Y CLARA) Usa **negritas** para resaltar conceptos y términos clave. Usa viñetas estructuradas (-) para listas o ideas puntuales.
 3. (CIERRE) Inserta una línea de separación (---) y al final de tu respuesta agrega una sección llamada "📌 Leyenda Técnica:" con una frase inspiradora o dato curioso que motive el estudio o resuma la importancia académica de lo aprendido.
 4. (TONO DE APRENDIZAJE) Actúa como un tutor experto, claro y directo. Usa explicaciones sencillas y ejemplos prácticos para explicar temas difíciles. Sé empático, profesional y alienta siempre al estudiante, sin usar metáforas confusas.
-5. (FORMATO DE PARRAFO) Deja siempre saltos de línea dobles entre secciones y viñetas para que la lectura sea sumamente fluida y touch-friendly en dispositivos móviles. NUNCA generes bloques densos o de un solo párrafo de texto continuo.`;
+5. (FORMATO DE PARRAFO) Deja siempre saltos de línea dobles entre secciones y viñetas para que la lectura sea sumamente fluida y touch-friendly en dispositivos móviles. NUNCA generes bloques densos o de un solo párrafo de texto continuo.
+6. REGLA DE FORMATO: NO utilices sintaxis LaTeX ni ecuaciones matemáticas (como $\rightarrow$). Utiliza EXCLUSIVAMENTE caracteres Unicode estándar (ejemplo: -> o ➔) para las flechas y viñetas.`;
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${getRelevantChunksForQuery(prompt, pdfContent)}\n\n${prompt}`
@@ -956,7 +957,7 @@ REGLAS DE FORMATO Y ESTILO:
     res.json({ text, chat_used: chatUsed });
   } catch (err) {
     console.error("🔥 ERROR CRÍTICO EN /api/chat:", err);
-    res.status(503).json({ error: err.message || 'Error al conectar con la IA.' });
+    res.status(500).json({ error: "Fallo en el motor de IA" });
   }
 });
 
@@ -1100,7 +1101,7 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const now = new Date();
   const hoyStr = now.toISOString().split('T')[0];
   
-  const systemPrompt = `Eres un planeador de estudio de alta precisión de AeroLex AI. REGLA CRÍTICA: NO INVENTES TEMAS GENÉRICOS (ej. 'Introducción', 'Conceptos básicos'). Extrae los nombres de los temas EXACTOS y ESPECÍFICOS directamente del documento proporcionado. Si el texto habla de 'Matrices Inversas por Gauss', ese debe ser el título del día. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.`;
+  const systemPrompt = `Eres un planeador de estudio de alta precisión de AeroLex AI. REGLA CRÍTICA: NO INVENTES TEMAS GENÉRICOS (ej. 'Introducción', 'Conceptos básicos'). Extrae los nombres de los temas EXACTOS y ESPECÍFICOS directamente del documento proporcionado. Si el texto habla de 'Matrices Inversas por Gauss', ese debe ser el título del día. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro. REGLA DE FORMATO: NO utilices sintaxis LaTeX ni ecuaciones matemáticas (como $\rightarrow$). Utiliza EXCLUSIVAMENTE caracteres Unicode estándar (ejemplo: -> o ➔) para las flechas y viñetas.`;
   
   const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} días hasta el examen (${fechaExamen}). El rango mínimo del plan es de 3 días. Asigna temas del documento a cada día de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente.\n\nDocumento:\n${getEvenlyDistributedChunks(pdfContent, 3)}`;
 
@@ -1146,7 +1147,7 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   } catch (err) {
     console.error('Plan error:', err.message, err.stack);
     console.error('Request body:', JSON.stringify(req.body).slice(0, 200));
-    res.status(502).json({ error: 'Error al generar el plan de estudio.' });
+    res.status(500).json({ error: "Fallo en el motor de IA" });
   }
 });
 

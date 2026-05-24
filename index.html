@@ -2882,6 +2882,13 @@ body:not(.sidebar-closed) .sidebar {
         transform: translate(100px, 60px) scale(1.2);
       }
     }
+    #profileOverlay {
+      z-index: 999 !important;
+    }
+    #profilePanel > div {
+      position: relative;
+      z-index: 1000;
+    }
     </style>
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
@@ -2913,7 +2920,7 @@ body:not(.sidebar-closed) .sidebar {
   <main class="login-screen" id="loginScreen">
     <div class="login-content" id="loginContent">
       <div class="login-logo flex items-center justify-center mb-6">
-        <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img" style="width: 96px !important; height: 96px !important;" alt="AeroLex AI" />
+        <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img" style="width: 120px !important; height: auto;" alt="AeroLex AI" />
       </div>
       <h1 class="hero-title" style="font-family: 'Space Grotesk', sans-serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: #f8fafc; margin-bottom: 8px; letter-spacing: -1px;">AeroLex AI</h1>
       <p class="hero-subtitle" style="margin-top: 0;">El copiloto galáctico que extrae conceptos clave, genera exámenes personalizados y planea tu ruta de aprendizaje de tus PDFs de forma inteligente.</p>
