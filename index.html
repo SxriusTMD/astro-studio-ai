@@ -130,13 +130,36 @@ header {
   position: sticky;
   top: 0;
   z-index: 101;
-  width: 100%;
+  width: 100% !important;
   background: rgba(10,10,26,0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   transition: padding 0.25s ease;
+
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 8px 16px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.header-right-nav {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+  min-width: max-content !important;
+}
+
+.user-avatar {
+  display: block !important;
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
 }
 
 header.header-compact .logo-text {
@@ -2913,6 +2936,40 @@ body:not(.sidebar-closed) .sidebar {
       }
       .header-actions-container::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
       .header-actions-container button { flex-shrink: 0; }
+
+      /* Fase 1: Liberar Espacio en Móvil */
+      .plan-indicator .plan-label {
+        display: none !important;
+      }
+      .plan-indicator {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+      }
+      .logo-text {
+        display: none !important;
+      }
+      .user-name {
+        display: none !important;
+      }
+
+      /* Fase 2 & 3 Mobile rules */
+      .header-right-nav {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        flex-shrink: 0 !important;
+        min-width: max-content !important;
+      }
+      .user-avatar {
+        display: block !important;
+        flex-shrink: 0 !important;
+        width: 36px !important;
+        height: 36px !important;
+      }
+      header {
+        padding: 8px 12px !important;
+      }
     }
     header .aerolex-logo-img, .navbar .aerolex-logo-img {
       height: 32px !important;
@@ -3089,7 +3146,7 @@ body:not(.sidebar-closed) .sidebar {
     </div>
   </div>
   <div class="flex-1 min-w-0"></div>
-  <div class="flex items-center gap-3 flex-none">
+  <div class="flex items-center gap-3 flex-none header-right-nav">
     <div class="header-tools header-actions-container flex items-center gap-2">
       <div class="plan-indicator" id="planIndicator"></div>
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg></button>

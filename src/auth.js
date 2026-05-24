@@ -123,7 +123,12 @@ export function updatePlanIndicator() {
 
   if (plan === 'premium') {
     indicator.className = 'plan-indicator premium cursor-default';
-    indicator.textContent = 'Plan Pro ✨';
+    indicator.replaceChildren();
+    const lbl = document.createElement('span');
+    lbl.className = 'plan-label';
+    lbl.textContent = 'Plan ';
+    indicator.appendChild(lbl);
+    indicator.appendChild(document.createTextNode('Pro ✨'));
     
     // Ensure inputs are enabled for Pro
     if (chatInput && chatSend) {
@@ -135,7 +140,12 @@ export function updatePlanIndicator() {
   } else {
     const remaining = Math.max(0, (chat_limit || 10) - chat_used);
     indicator.className = 'plan-indicator cursor-pointer';
-    indicator.textContent = `Mensajes: ${chat_used}/${chat_limit || 10}`;
+    indicator.replaceChildren();
+    const lbl = document.createElement('span');
+    lbl.className = 'plan-label';
+    lbl.textContent = 'Mensajes: ';
+    indicator.appendChild(lbl);
+    indicator.appendChild(document.createTextNode(`${chat_used}/${chat_limit || 10}`));
     
     // Sync chat UI
     if (chatInput && chatSend && chat_used >= (chat_limit || 10)) {
