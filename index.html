@@ -2922,6 +2922,17 @@ body:not(.sidebar-closed) .sidebar {
       margin: 0;
       filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
     }
+    #leaderboardPanel {
+      left: auto;
+      right: 0;
+      transform: translateX(100%);
+      border-left: 1px solid var(--border);
+      border-right: none;
+    }
+    #leaderboardPanel.active {
+      transform: translateX(0);
+      visibility: visible;
+    }
     </style>
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
@@ -2973,15 +2984,6 @@ body:not(.sidebar-closed) .sidebar {
       </div>
 
       <div class="auth-msg" id="verifySuccessMsg" style="display:none;margin-top:16px;"></div>
-
-      <div class="leaderboard-container" style="margin-top: 24px; padding: 20px; background: rgba(14, 14, 42, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: left;">
-        <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; color: #00e5ff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0;">
-          <span>🏆</span> Estudiantes más dedicados
-        </h3>
-        <ul id="leaderboardList" style="list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0;">
-          <!-- Usuarios cargados dinámicamente con textContent por motivos de seguridad -->
-        </ul>
-      </div>
     </div>
   </main>
 
@@ -3094,6 +3096,7 @@ body:not(.sidebar-closed) .sidebar {
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="progressDashboardBtn" title="Mi Progreso" style="margin-left: 2px;"><svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></button>
+      <button class="btn btn-secondary btn-small btn-icon" id="btnLeaderboard" title="Estudiantes más dedicados" style="margin-left: 2px;"><svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path><path d="M12 2a6 6 0 0 1 6 6v3.5a6 6 0 0 1-12 0V8a6 6 0 0 1 6-6z"></path></svg></button>
     </div>
     <div class="user-profile" id="userProfile">
       <div class="user-avatar-container" id="userAvatarContainer">
@@ -3421,6 +3424,27 @@ body:not(.sidebar-closed) .sidebar {
 <div class="history-empty">Aún no hay documentos guardados.</div>
 </div>
 </div>
+
+    <!-- ===== LEADERBOARD PANEL ===== -->
+    <div class="history-overlay" id="leaderboardOverlay"></div>
+    <div class="history-panel" id="leaderboardPanel">
+      <div class="history-panel-header">
+        <h3>
+          <svg class="w-5 h-5 mr-2 inline-block text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path>
+            <path d="M12 2a6 6 0 0 1 6 6v3.5a6 6 0 0 1-12 0V8a6 6 0 0 1 6-6z"></path>
+          </svg>
+          Estudiantes más dedicados
+        </h3>
+        <button id="closeLeaderboard">✕</button>
+      </div>
+      <div class="history-list" id="leaderboardList">
+        <!-- Usuarios cargados dinámicamente -->
+      </div>
+    </div>
 
     <!-- ===== PROFILE PANEL (Fullscreen Immersive) ===== -->
     <div class="history-overlay" id="profileOverlay"></div>

@@ -174,6 +174,7 @@ await pool.query(`
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS username VARCHAR(255) UNIQUE`);
       await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS auth_method VARCHAR(50) DEFAULT 'google'`);
+      await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS active_minutes INTEGER DEFAULT 0`);
 
     } catch (err) {
       console.error('?? Migración email auth:', err.message);
@@ -646,6 +647,120 @@ app.post('/api/auth/update-email', ensureAuthenticated, async (req, res) => {
     console.error('Error actualizando email:', err.message);
     res.status(500).json({ error: err.message || 'Error al actualizar email en Supabase' });
   }
+});
+
+
+// POST /api/supabase/update - Sync active_minutes to Supabase users table and local usuarios table
+app.post('/api/supabase/update', ensureAuthenticated, async (req, res) => {
+  const { table, data, matchField, matchValue } = req.body;
+  if (!table || !data || !matchField || !matchValue) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos' });
+  }
+
+  // Permite sincronizar minutos activos para el usuario logueado
+  if (table === 'users' && matchField === 'id') {
+    // Seguridad extra: verificar que el usuario que actualiza es el mismo autenticado
+    const userId = req.user.google_id || req.user.id;
+    if (String(matchValue) !== String(userId)) {
+      return res.status(403).json({ error: 'No autorizado a actualizar datos de otro usuario' });
+    }
+
+    try {
+      const activeMinutes = data.active_minutes;
+      
+      // 1. Actualizar en Supabase real si está configurado
+      let supabaseResult = null;
+      if (supabase) {
+        const { data: sData, error: sError } = await supabase
+          .from('users')
+          .update({ active_minutes: activeMinutes })
+          .eq('id', userId)
+          .select();
+        
+        if (sError) {
+          console.warn('Supabase active_minutes sync warning:', sError.message);
+        } else {
+          supabaseResult = sData;
+        }
+      }
+
+      // 2. Actualizar en la BD PostgreSQL local
+      await pool.query(
+        `UPDATE usuarios SET active_minutes = $1 WHERE google_id = $2 OR email = $3`,
+        [activeMinutes, userId, req.user.email]
+      );
+
+      return res.json({ ok: true, data: supabaseResult });
+    } catch (err) {
+      console.error('Error in /api/supabase/update:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  return res.status(400).json({ error: 'Operación no permitida' });
+});
+
+// POST /api/supabase/select - Query real top users from Supabase or local PostgreSQL as fallback
+app.post('/api/supabase/select', ensureAuthenticated, async (req, res) => {
+  const { table, select, order, ascending, limit } = req.body;
+  if (!table || !select || !order) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos' });
+  }
+
+  if (table === 'users') {
+    try {
+      let topUsers = [];
+      let loadedFromSupabase = false;
+
+      // 1. Intentar consultar Supabase si está disponible
+      if (supabase) {
+        try {
+          const { data: sData, error: sError } = await supabase
+            .from('users')
+            .select('id, email, name, active_minutes')
+            .order('active_minutes', { ascending: false })
+            .limit(limit || 5);
+          
+          if (!sError && sData) {
+            topUsers = sData;
+            loadedFromSupabase = true;
+          } else if (sError) {
+            console.warn('Supabase select error, falling back to local DB:', sError.message);
+          }
+        } catch (sErr) {
+          console.warn('Supabase exception, falling back to local DB:', sErr.message);
+        }
+      }
+
+      // 2. Si Supabase no está configurado o falló, usar la BD local de PostgreSQL como fallback
+      if (!loadedFromSupabase) {
+        const localResult = await pool.query(
+          `SELECT google_id as id, email, nombre as name, active_minutes 
+           FROM usuarios 
+           ORDER BY COALESCE(active_minutes, 0) DESC 
+           LIMIT $1`,
+          [limit || 5]
+        );
+        topUsers = localResult.rows;
+      }
+
+      // Mapear los campos para que sean compatibles con el frontend (name, full_name, etc.)
+      const formattedUsers = topUsers.map(u => ({
+        id: u.id,
+        email: u.email,
+        full_name: u.name, // Soportar ambos full_name y name
+        name: u.name,
+        active_minutes: u.active_minutes || 0
+      }));
+
+      return res.json({ data: formattedUsers });
+    } catch (err) {
+      console.error('Error in /api/supabase/select:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  return res.status(400).json({ error: 'Operación no permitida' });
 });
 
 

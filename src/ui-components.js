@@ -9,7 +9,7 @@ import {
 import { showUpgradeModal, saveToStorage } from './auth.js';
 import { addChatMessage, saveCurrentSession, loadSession, newSession, loadSessions, renderHistory, syncExamPanelAfterRenderTabs } from './chat.js';
 // ===== SUPABASE FRONTEND MOCK CLIENT =====
-const supabase = {
+export const supabase = {
   auth: {
     updateUser: async ({ email }) => {
       try {
@@ -25,8 +25,53 @@ const supabase = {
         return { data: null, error: { message: err.message || 'Error de conexión' } };
       }
     }
+  },
+  from: (tableName) => {
+    return {
+      update: (updateData) => {
+        return {
+          eq: async (fieldName, fieldValue) => {
+            try {
+              const res = await fetch('/api/supabase/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ table: tableName, data: updateData, matchField: fieldName, matchValue: fieldValue })
+              });
+              const result = await res.json();
+              if (!res.ok) return { data: null, error: { message: result.error || 'Error al actualizar Supabase' } };
+              return { data: result.data, error: null };
+            } catch (err) {
+              return { data: null, error: { message: err.message || 'Error de conexión' } };
+            }
+          }
+        };
+      },
+      select: (selectFields) => {
+        return {
+          order: (orderField, { ascending } = { ascending: true }) => {
+            return {
+              limit: async (limitCount) => {
+                try {
+                  const res = await fetch('/api/supabase/select', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ table: tableName, select: selectFields, order: orderField, ascending, limit: limitCount })
+                  });
+                  const result = await res.json();
+                  if (!res.ok) return { data: null, error: { message: result.error || 'Error al consultar Supabase' } };
+                  return { data: result.data, error: null };
+                } catch (err) {
+                  return { data: null, error: { message: err.message || 'Error de conexión' } };
+                }
+              }
+            };
+          }
+        };
+      }
+    };
   }
 };
+export const supabaseClientMock = supabase;
 
 // ===== STARS CANVAS =====
 
@@ -1542,38 +1587,111 @@ export function initEditProfileModal() {
 }
 
 export function initLeaderboard() {
+  const btn = document.getElementById('btnLeaderboard');
+  const panel = document.getElementById('leaderboardPanel');
+  const overlay = document.getElementById('leaderboardOverlay');
+  const closeBtn = document.getElementById('closeLeaderboard');
+
+  if (btn && panel && overlay) {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willBeOpen = !panel.classList.contains('active');
+      if (willBeOpen) {
+        panel.classList.add('active');
+        overlay.classList.add('active');
+        fetchAndRenderLeaderboard();
+      } else {
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+      }
+    });
+  }
+
+  const closeLeaderboard = () => {
+    panel?.classList.remove('active');
+    overlay?.classList.remove('active');
+  };
+
+  closeBtn?.addEventListener('click', closeLeaderboard);
+  overlay?.addEventListener('click', closeLeaderboard);
+}
+
+export async function fetchAndRenderLeaderboard() {
   const leaderboardList = document.getElementById('leaderboardList');
   if (!leaderboardList) return;
 
-  const examples = [
-    { name: 'Sofía R.', minutes: 240 },
-    { name: 'Mateo G.', minutes: 180 },
-    { name: 'Valentina P.', minutes: 120 }
-  ];
-
+  // Render temporary secure loader
   leaderboardList.replaceChildren();
-  examples.forEach((ex, idx) => {
-    const li = document.createElement('li');
-    li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; font-size: 13px; color: #e8e8f0; border: 1px solid rgba(255,255,255,0.04); transition: background-color 0.2s ease;';
-    li.addEventListener('mouseenter', () => {
-      li.style.backgroundColor = 'rgba(255,255,255,0.05)';
+  const loader = document.createElement('div');
+  loader.style.cssText = 'text-align:center;padding:28px 16px;color:var(--text-muted);font-size:13px;';
+  loader.textContent = '⏳ Cargando mejores estudiantes...';
+  leaderboardList.appendChild(loader);
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, full_name, name, active_minutes')
+      .order('active_minutes', { ascending: false })
+      .limit(5);
+
+    if (error) throw new Error(error.message);
+
+    leaderboardList.replaceChildren();
+
+    if (!data || data.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'history-empty';
+      empty.textContent = 'Aún no hay registros de estudio.';
+      leaderboardList.appendChild(empty);
+      return;
+    }
+
+    const session = window._supabaseSession || window.currentSession;
+    const currentUserId = session?.user?.id || window.userLimits?.google_id || '';
+    const currentUserEmail = session?.user?.email || window.userLimits?.email || '';
+
+    data.forEach((user, idx) => {
+      const li = document.createElement('li');
+      li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; font-size: 13px; color: #e8e8f0; border: 1px solid rgba(255,255,255,0.04); transition: background-color 0.2s ease; margin-bottom: 8px;';
+      
+      const isCurrent = (user.id && String(user.id) === String(currentUserId)) || 
+                        (user.email && String(user.email).toLowerCase() === String(currentUserEmail).toLowerCase());
+
+      if (isCurrent) {
+        li.style.borderColor = 'rgba(0, 229, 255, 0.4)';
+        li.style.backgroundColor = 'rgba(0, 229, 255, 0.08)';
+        li.style.boxShadow = '0 0 10px rgba(0, 229, 255, 0.15)';
+      }
+
+      li.addEventListener('mouseenter', () => {
+        li.style.backgroundColor = 'rgba(255,255,255,0.05)';
+      });
+      li.addEventListener('mouseleave', () => {
+        li.style.backgroundColor = isCurrent ? 'rgba(0, 229, 255, 0.08)' : 'rgba(255,255,255,0.02)';
+      });
+
+      const userSpan = document.createElement('span');
+      userSpan.style.cssText = 'font-weight: 500; display: flex; align-items: center; gap: 6px;';
+      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉' : '✨';
+      
+      const displayName = user.full_name || user.name || 'Estudiante';
+      userSpan.textContent = `${medal} ${displayName}`;
+
+      const minSpan = document.createElement('span');
+      minSpan.style.cssText = 'color: #00e5ff; font-weight: 600;';
+      minSpan.textContent = `${user.active_minutes || 0} min`;
+
+      li.appendChild(userSpan);
+      li.appendChild(minSpan);
+      leaderboardList.appendChild(li);
     });
-    li.addEventListener('mouseleave', () => {
-      li.style.backgroundColor = 'rgba(255,255,255,0.02)';
-    });
-
-    const userSpan = document.createElement('span');
-    userSpan.style.cssText = 'font-weight: 500; display: flex; align-items: center; gap: 6px;';
-    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-    userSpan.textContent = `${medal} ${ex.name}`;
-
-    const minSpan = document.createElement('span');
-    minSpan.style.cssText = 'color: #00e5ff; font-weight: 600;';
-    minSpan.textContent = `${ex.minutes} min`;
-
-    li.appendChild(userSpan);
-    li.appendChild(minSpan);
-    leaderboardList.appendChild(li);
-  });
+  } catch (err) {
+    console.error('Error fetching leaderboard:', err);
+    leaderboardList.replaceChildren();
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = 'text-align:center;padding:28px 16px;color:#ef4444;font-size:13px;';
+    errorDiv.textContent = '⚠️ Error al cargar el Leaderboard';
+    leaderboardList.appendChild(errorDiv);
+  }
 }
 

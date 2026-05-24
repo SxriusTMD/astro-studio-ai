@@ -131,6 +131,26 @@ export class EngagementTracker {
 
     // Active Minutes Tracker (Page Visibility API)
     let activeMinutesInterval = null;
+    let minuteCounter = 0;
+
+    const syncActiveMinutes = async () => {
+      const session = window._supabaseSession || window.currentSession;
+      const userId = session?.user?.id || window.userLimits?.google_id || '';
+      if (!userId) return;
+
+      const key = 'userActiveMinutes_' + userId;
+      const totalMinutosLocales = parseInt(localStorage.getItem(key) || '0', 10);
+      if (totalMinutosLocales <= 0) return;
+
+      try {
+        const supabaseMod = await import('./ui-components.js').then(m => m.supabaseClientMock || m.supabase || window.supabase);
+        if (supabaseMod && typeof supabaseMod.from === 'function') {
+          await supabaseMod.from('users').update({ active_minutes: totalMinutosLocales }).eq('id', userId);
+        }
+      } catch (err) {
+        console.error('Error syncing active minutes to Supabase:', err);
+      }
+    };
 
     const startTracker = () => {
       if (activeMinutesInterval) return;
@@ -141,6 +161,12 @@ export class EngagementTracker {
           const key = 'userActiveMinutes_' + userId;
           const currentMinutes = parseInt(localStorage.getItem(key) || '0', 10);
           localStorage.setItem(key, String(currentMinutes + 1));
+
+          minuteCounter++;
+          if (minuteCounter >= 5) {
+            minuteCounter = 0;
+            syncActiveMinutes();
+          }
         }
       }, 60000);
     };
@@ -160,9 +186,17 @@ export class EngagementTracker {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopTracker();
+        syncActiveMinutes();
       } else {
         startTracker();
       }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      syncActiveMinutes();
+    });
+    window.addEventListener('pagehide', () => {
+      syncActiveMinutes();
     });
   }
 
