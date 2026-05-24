@@ -45,6 +45,13 @@ export async function sendChat(prompt, pdfContent, sessionId = null) {
   });
 }
 
+export async function generateFlashcardsInteractive(extracted_text, sessionId = null) {
+  return request('/api/flashcards', {
+    method: 'POST',
+    body: JSON.stringify({ extracted_text, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
+  });
+}
+
 export async function generateFlashcards(pdfContent, sessionId = null) {
   return request('/api/flashcards', {
     method: 'POST',

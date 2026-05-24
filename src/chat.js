@@ -70,43 +70,7 @@ export function normalizeChatRole(role) {
   return 'ai';
 }
 
-/**
- * Mensajes persistidos (sesión / historial): burbujas con createElement + textContent solamente.
- */
-export function appendStoredChatMessage(roleRaw, text) {
-  const chatMessages = document.getElementById('chatMessages');
-  if (!chatMessages) return;
-  const body = String(text ?? '').trim();
-  if (!body) return;
-
-  const empty = chatMessages.querySelector('.empty-chat');
-  if (empty) empty.remove();
-
-  const roleNorm = normalizeChatRole(roleRaw);
-  const div = document.createElement('div');
-  if (roleNorm === 'system') {
-    div.className = 'message system self-center bg-transparent border-none text-[#606088] text-xs px-3 py-1.5 text-center';
-    div.textContent = body;
-  } else if (roleNorm === 'user') {
-    div.className = 'message user self-end bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white rounded-br-md max-w-[70%] md:max-w-[60%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
-    div.textContent = body;
-  } else {
-    div.className = 'message ai self-start bg-[#12123a] text-[#e8e8f0] border border-[#1e1e4a] rounded-bl-md max-w-[85%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
-    div.textContent = body;
-  }
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-export function addChatMessage(role, text) {
-  const chatMessages = document.getElementById('chatMessages');
-  if (!chatMessages) return;
-
-  const empty = chatMessages.querySelector('.empty-chat');
-  if (empty) empty.remove();
-
-  const roleNorm = normalizeChatRole(role);
-  const div = document.createElement('div');
+export function formatMessageHTML(text, roleNorm, div) {
   if (roleNorm === 'system') {
     div.className = 'message system self-center bg-transparent border-none text-[#606088] text-xs px-3 py-1.5 text-center';
     div.textContent = text;
@@ -125,6 +89,39 @@ export function addChatMessage(role, text) {
       div.textContent = text;
     }
   }
+}
+
+/**
+ * Mensajes persistidos (sesión / historial): burbujas con formato y Markdown unificado.
+ */
+export function appendStoredChatMessage(roleRaw, text) {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return;
+  const body = String(text ?? '').trim();
+  if (!body) return;
+
+  const empty = chatMessages.querySelector('.empty-chat');
+  if (empty) empty.remove();
+
+  const roleNorm = normalizeChatRole(roleRaw);
+  const div = document.createElement('div');
+  formatMessageHTML(body, roleNorm, div);
+
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+export function addChatMessage(role, text) {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return;
+
+  const empty = chatMessages.querySelector('.empty-chat');
+  if (empty) empty.remove();
+
+  const roleNorm = normalizeChatRole(role);
+  const div = document.createElement('div');
+  formatMessageHTML(text, roleNorm, div);
+
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -783,11 +780,18 @@ function renderExamResults() {
   const actions = document.createElement('div');
   actions.className = 'exam-actions mt-6 flex justify-center gap-4';
   
-  const retryBtn = document.createElement('button');
-  retryBtn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
-  retryBtn.id = 'retryExam';
-  retryBtn.textContent = 'Reintentar';
-  actions.appendChild(retryBtn);
+  const explainBtn = document.createElement('button');
+  explainBtn.className = 'btn btn-primary backdrop-blur-xl bg-purple-900/40 border border-purple-700/50 shadow-[0_0_15px_rgba(139,92,246,0.2)] text-purple-200 hover:bg-purple-800/60';
+  explainBtn.id = 'explainExamErrors';
+  const errors = examAnswers.filter(a => !a.acierto);
+  if (errors.length === 0) {
+    explainBtn.textContent = '✨ ¡Felicidades! 100% aciertos';
+    explainBtn.disabled = true;
+    explainBtn.style.opacity = '0.7';
+  } else {
+    explainBtn.textContent = '✨ Explicar errores con IA';
+  }
+  actions.appendChild(explainBtn);
 
   const backBtn = document.createElement('button');
   backBtn.className = 'btn btn-secondary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
@@ -798,12 +802,29 @@ function renderExamResults() {
   resultsCard.appendChild(actions);
   examContent.appendChild(resultsCard);
 
-  retryBtn.addEventListener('click', () => {
-    examIndex = 0;
-    examAnswers = [];
-    selectedExamOption = null;
-    persistExamProgress();
-    renderExamQuestion();
+  explainBtn.addEventListener('click', () => {
+    const errors = examAnswers.filter(a => !a.acierto);
+    if (errors.length === 0) return;
+
+    let promptText = `Hola, acabo de terminar mi examen de AeroLex AI y tuve algunos errores. Me gustaría que me explicaras de forma didáctica por qué mis respuestas son incorrectas y cuál es la lógica de la respuesta correcta.\n\n`;
+    promptText += `Aquí están las preguntas que fallé:\n\n`;
+    errors.forEach((err, idx) => {
+      promptText += `❌ **Pregunta ${idx + 1}:** ${err.pregunta}\n`;
+      promptText += `   * Mi respuesta fue: "${err.usuario}"\n`;
+      promptText += `   * La respuesta correcta es: "${err.correcta}"\n\n`;
+    });
+    promptText += `Por favor, ayúdame a entender estos conceptos paso a paso de manera amigable (como un tutor espacial experto).`;
+
+    const chatTabBtn = document.querySelector('.tab-btn[data-tab="chat"]');
+    if (chatTabBtn) {
+      chatTabBtn.click();
+    }
+
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+      chatInput.value = promptText;
+      void handleChat();
+    }
   });
 
   saveCurrentSession();

@@ -1138,11 +1138,15 @@ body:not(.sidebar-closed) .sidebar {
 
     .message.ai {
       align-self: flex-start;
-      background: transparent;
-      border: none;
-      padding-left: 0;
-      padding-right: 0;
-      max-width: 95%;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(139, 92, 246, 0.15);
+      border-radius: var(--radius);
+      border-bottom-left-radius: 4px;
+      padding: 16px 20px;
+      max-width: 85%;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     }
 
     .message.ai.loading {
@@ -1326,8 +1330,8 @@ body:not(.sidebar-closed) .sidebar {
 
 .flashcard-container {
       perspective: 1000px;
-      width: 320px;
-      height: 240px;
+      width: 480px;
+      height: 280px;
       cursor: pointer;
       margin: 0 auto;
     }
@@ -1370,8 +1374,10 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .flashcard-face.front {
-      background: var(--gradient-primary);
+      background: linear-gradient(135deg, #4c1d95 0%, #1e1b4b 50%, #312e81 100%);
       color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
     }
 
     .flashcard-face.front .card-number {
@@ -1407,11 +1413,14 @@ body:not(.sidebar-closed) .sidebar {
       flex: 1;
     }
 
-    .flashcard-face.back {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
+     .flashcard-face.back {
+      background: rgba(15, 15, 35, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(139, 92, 246, 0.25);
       transform: rotateY(180deg);
       color: var(--text-primary);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
     }
 
     .flashcard-face.back .card-hint {
@@ -2673,9 +2682,68 @@ body:not(.sidebar-closed) .sidebar {
       0%, 100% { box-shadow: var(--neon-ring), 0 0 22px rgba(139,92,246,0.10); }
       50% { box-shadow: var(--neon-ring), 0 0 36px rgba(0,229,255,0.16); }
     }
+
+    /* ===== COSMIC NEBULA GLOW EFFECTS ===== */
+    .cosmic-nebula-container {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, #0c072b 0%, #040212 100%);
+    }
+    .nebula-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(140px);
+      opacity: 0.08;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      animation: floatOrb 35s infinite ease-in-out alternate;
+    }
+    .orb-cyan {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, #00e5ff 0%, transparent 70%);
+      top: -10%;
+      left: -10%;
+      animation-duration: 25s;
+    }
+    .orb-purple {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+      bottom: -15%;
+      right: -10%;
+      animation-duration: 35s;
+    }
+    .orb-indigo {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, #4f46e5 0%, transparent 70%);
+      top: 40%;
+      left: 60%;
+      animation-duration: 40s;
+    }
+
+    @keyframes floatOrb {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        transform: translate(100px, 60px) scale(1.2);
+      }
+    }
     </style>
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
+
+  <!-- Cosmic Background Nebulas -->
+  <div class="cosmic-nebula-container">
+    <div class="nebula-orb orb-cyan"></div>
+    <div class="nebula-orb orb-purple"></div>
+    <div class="nebula-orb orb-indigo"></div>
+  </div>
 
   <!-- Loading Screen (visible during auth check, fades out when resolved) -->
   <div id="loadingScreen">
