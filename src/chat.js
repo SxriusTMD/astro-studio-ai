@@ -295,6 +295,7 @@ export function showFlashcardsSkeleton() {
 }
 
 export function formatMessageHTML(text, roleNorm, div) {
+  div.dataset.rawContent = text; // Save raw markdown for persistence
   if (roleNorm === 'system') {
     div.className = 'message system';
     div.textContent = text;
@@ -407,10 +408,7 @@ export async function handleChat() {
 
   addTypingIndicator();
 
-  const docsInfo = window.pdfDocs.map(d => d.name).join(', ');
-  const systemBlock = `El usuario ha cargado ${window.pdfDocs.length} documento(s): ${docsInfo}. Cuando respondas, indica entre corchetes de qué documento viene cada información. Ejemplo: [nombre.pdf]`;
-  const contextPrompt = `${systemBlock}\n\nContexto del PDF:\n${pdfCtx.slice(0, 4000)}\n\nPregunta: ${text}`;
-  const response = await window.askAI(contextPrompt);
+  const response = await window.askAI(text);
 
   removeTypingIndicator();
   addChatMessage('ai', response);
@@ -1028,7 +1026,7 @@ function renderExamResults() {
   const backBtn = document.createElement('button');
   backBtn.className = 'btn btn-secondary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
   backBtn.id = 'backToExam';
-  backBtn.textContent = 'Nuevo examen';
+  backBtn.textContent = 'Volver a intentarlo';
   actions.appendChild(backBtn);
 
   resultsCard.appendChild(actions);
@@ -1387,7 +1385,6 @@ export async function loadSession(id) {
     window.isLoadingSession = false;
   }
 }
-}
 
 export function newSession() {
   window.currentSessionId = null;
@@ -1470,27 +1467,36 @@ export async function saveCurrentSession() {
   const messages = [];
   chatMessages.querySelectorAll('.message:not(.system):not(.loading)').forEach(el => {
     const role = el.classList.contains('user') ? 'user' : 'ai';
-    const text = el.textContent || '';
+    const text = el.dataset.rawContent || el.textContent || '';
     if (text.trim()) messages.push({ role, content: text.trim() });
   });
   if (messages.length === 0) return;
 
   clearTimeout(saveDebounceTimer);
+  
+  // Capture state synchronously to avoid race conditions if the user switches sessions
+  const targetSessionId = window.currentSessionId;
+  const targetDocs = window.pdfDocs ? [...window.pdfDocs] : [];
+  const targetFlashcards = window.flashcardsData ? [...window.flashcardsData] : [];
+  const targetSummary = window.summaryData ? { ...window.summaryData } : null;
+  const targetPlan = window.planData ? { ...window.planData } : null;
+  const targetExam = examQuestions ? [...examQuestions] : [];
+  const firstPdfName = targetDocs?.[0]?.name || 'Documento';
+
   saveDebounceTimer = setTimeout(async () => {
-    const firstPdfName = window.pdfDocs?.[0]?.name || 'Documento';
     const payload = {
       title: firstPdfName,
       messages,
-      pdfs: window.pdfDocs || [],
-      flashcards: window.flashcardsData || [],
-      summary: window.summaryData || null,
-      exam: examQuestions || [],
-      study_plan: window.planData || null,
+      pdfs: targetDocs,
+      flashcards: targetFlashcards,
+      summary: targetSummary,
+      exam: targetExam,
+      study_plan: targetPlan,
     };
 
     try {
-      if (window.currentSessionId) {
-        await updateSession(window.currentSessionId, payload);
+      if (targetSessionId) {
+        await updateSession(targetSessionId, payload);
       } else {
         const data = await createSession(payload);
         window.currentSessionId = normalizeChatSessionId(data.id);

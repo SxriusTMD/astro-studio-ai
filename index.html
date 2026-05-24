@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AeroLex AI</title>
+  <link rel="icon" type="image/png" href="/assets/AeroLexAI_Ship_Trans.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1328,11 +1329,11 @@ body:not(.sidebar-closed) .sidebar {
       margin-bottom: 20px;
     }
 
-.flashcard-container {
+    .flashcard-container {
       perspective: 1000px;
       width: 100%;
-      max-width: 500px;
-      height: 280px;
+      max-width: 600px;
+      min-height: 280px;
       cursor: pointer;
       margin: 0 auto;
     }
@@ -2337,13 +2338,6 @@ body:not(.sidebar-closed) .sidebar {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  /* Flashcards más pequeñas */
-  .flashcard-container {
-    width: 100%;
-    max-width: 440px;
-    height: 240px;
-  }
-  
   .flashcard-face .card-question {
     font-size: 14px;
   }
@@ -2383,7 +2377,7 @@ body:not(.sidebar-closed) .sidebar {
 
       .message { max-width: 92%; }
 
-      .flashcard-container { max-width: 280px; height: 200px; }
+
 
       .flashcard-face .card-question { font-size: 16px; }
 
@@ -2420,7 +2414,7 @@ body:not(.sidebar-closed) .sidebar {
       .drop-zone p { font-size: 10px; margin-bottom: 4px; }
       .btn-change-pdf { font-size: 10px; padding: 2px 6px; }
 
-      .flashcard-container { width: 100%; max-width: 320px; height: 220px; }
+
 
       .stat-card .stat-value { font-size: 18px; }
 
@@ -2564,10 +2558,10 @@ body:not(.sidebar-closed) .sidebar {
 
     /* ===== PHASE 6C: NEXT-GEN GLASSMORPHISM OVERHAUL ===== */
     :root {
-      --glass-bg: #0d0d1e;
-      --glass-bg-soft: #080814;
+      --glass-bg: rgba(13, 13, 30, 0.75);
+      --glass-bg-soft: rgba(8, 8, 20, 0.65);
       --glass-border: rgba(255, 255, 255, 0.08);
-      --neon-ring: 0 4px 16px rgba(0, 0, 0, 0.45);
+      --neon-ring: 0 4px 20px rgba(108, 59, 210, 0.15);
     }
 
     button, a, input, textarea, select,
@@ -2582,8 +2576,8 @@ body:not(.sidebar-closed) .sidebar {
     .user-dropdown, .history-panel, .toast {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       box-shadow: var(--neon-ring);
     }
 

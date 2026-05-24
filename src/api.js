@@ -55,7 +55,7 @@ export async function generateFlashcardsInteractive(extracted_text, sessionId = 
 export async function generateFlashcards(pdfContent, sessionId = null) {
   return request('/api/flashcards', {
     method: 'POST',
-    body: JSON.stringify({ pdfContent, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
+    body: JSON.stringify({ extracted_text: pdfContent, sessionId: sessionId != null && sessionId !== '' ? sessionId : null }),
   });
 }
 
