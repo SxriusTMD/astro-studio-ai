@@ -1037,6 +1037,42 @@ function renderExamResults() {
   resultsCard.appendChild(actions);
   examContent.appendChild(resultsCard);
 
+  // Fase 4: Nueva Interfaz de Historial de Exámenes
+  const session = window._supabaseSession || window.currentSession;
+  const userId = session?.user?.id || window.userLimits?.google_id || '';
+  if (userId) {
+    const accuracy = Math.round((correctCount / examQuestions.length) * 100);
+    localStorage.setItem('examAccuracy_' + userId, String(accuracy));
+    
+    // Save to history
+    const historyKey = 'examHistory_' + userId;
+    let history = [];
+    try {
+      const savedHistory = localStorage.getItem(historyKey);
+      if (savedHistory) history = JSON.parse(savedHistory);
+    } catch (e) {
+      console.error('Error loading history:', e);
+    }
+    
+    const activeDoc = window.pdfDocs?.find(d => String(d.id) === String(window.activeDocId)) || window.pdfDocs?.[0];
+    const tema = activeDoc?.name || 'Estudio general';
+    const fecha = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const scoreText = `${correctCount}/${examQuestions.length} (${accuracy}%)`;
+    
+    history.unshift({ fecha, tema, calificacion: scoreText });
+    localStorage.setItem(historyKey, JSON.stringify(history));
+    
+    // Update progress dashboard if available
+    import('./ui-components.js').then(({ hydrateProgressDashboard }) => {
+      if (typeof hydrateProgressDashboard === 'function') {
+        hydrateProgressDashboard();
+      }
+    }).catch(err => console.error('Error importing ui-components:', err));
+  }
+
+  // Render the history table
+  renderExamHistory();
+
   explainBtn.addEventListener('click', () => {
     const errors = examAnswers.filter(a => !a.acierto);
     if (errors.length === 0) return;
@@ -1909,7 +1945,12 @@ export function initSummaryGenerator() {
 
 export function initExamMode() {
   const root = document.getElementById('examContent');
-  if (!root || examStartDelegationBound) return;
+  if (!root) return;
+
+  // Render history table immediately on load
+  renderExamHistory();
+
+  if (examStartDelegationBound) return;
   examStartDelegationBound = true;
   root.addEventListener('click', (e) => {
     const btn = e.target.closest('#startExam');
@@ -1917,4 +1958,109 @@ export function initExamMode() {
     e.preventDefault();
     handleStartExam();
   });
+}
+
+export function renderExamHistory() {
+  const container = document.getElementById('examHistoryContainer');
+  if (!container) return;
+
+  // Clear previous table or empty messages, but keep the title!
+  const title = container.querySelector('h3');
+  container.replaceChildren();
+  if (title) {
+    container.appendChild(title);
+  } else {
+    const h3 = document.createElement('h3');
+    h3.style.cssText = "font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: #f8fafc; margin-bottom: 16px;";
+    h3.textContent = 'Historial de Exámenes';
+    container.appendChild(h3);
+  }
+
+  const session = window._supabaseSession || window.currentSession;
+  const userId = session?.user?.id || window.userLimits?.google_id || '';
+  if (!userId) {
+    const emptyMsg = document.createElement('p');
+    emptyMsg.style.cssText = 'color: var(--text-muted); font-size: 14px; text-align: center; margin-top: 12px;';
+    emptyMsg.textContent = 'Inicia sesión para ver tu historial de exámenes.';
+    container.appendChild(emptyMsg);
+    return;
+  }
+
+  const historyKey = 'examHistory_' + userId;
+  let history = [];
+  try {
+    const saved = localStorage.getItem(historyKey);
+    if (saved) history = JSON.parse(saved);
+  } catch (e) {
+    console.error('Error loading exam history:', e);
+  }
+
+  if (!history || history.length === 0) {
+    const emptyMsg = document.createElement('p');
+    emptyMsg.style.cssText = 'color: var(--text-muted); font-size: 14px; text-align: center; margin-top: 12px;';
+    emptyMsg.textContent = 'Aún no has tomado ningún examen';
+    container.appendChild(emptyMsg);
+    return;
+  }
+
+  // Create table dynamically
+  const table = document.createElement('table');
+  table.style.width = '100%';
+  table.style.borderCollapse = 'collapse';
+  table.style.marginTop = '12px';
+  table.style.fontSize = '14px';
+
+  const thead = document.createElement('thead');
+  thead.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+  thead.style.textAlign = 'left';
+
+  const trHead = document.createElement('tr');
+  ['Fecha', 'Tema', 'Calificación'].forEach(text => {
+    const th = document.createElement('th');
+    th.style.padding = '8px 12px';
+    th.style.color = 'var(--text-secondary)';
+    th.style.fontWeight = '600';
+    th.textContent = text;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  history.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+    tr.style.transition = 'background-color 0.2s ease';
+    tr.addEventListener('mouseenter', () => {
+      tr.style.backgroundColor = 'rgba(255, 255, 255, 0.02)';
+    });
+    tr.addEventListener('mouseleave', () => {
+      tr.style.backgroundColor = 'transparent';
+    });
+
+    const tdFecha = document.createElement('td');
+    tdFecha.style.padding = '12px';
+    tdFecha.style.color = 'var(--text-secondary)';
+    tdFecha.textContent = item.fecha || '';
+    tr.appendChild(tdFecha);
+
+    const tdTema = document.createElement('td');
+    tdTema.style.padding = '12px';
+    tdTema.style.color = '#f8fafc';
+    tdTema.style.fontWeight = '500';
+    tdTema.textContent = item.tema || '';
+    tr.appendChild(tdTema);
+
+    const tdCalificacion = document.createElement('td');
+    tdCalificacion.style.padding = '12px';
+    tdCalificacion.style.color = 'var(--accent-cyan)';
+    tdCalificacion.style.fontWeight = '600';
+    tdCalificacion.textContent = item.calificacion || '';
+    tr.appendChild(tdCalificacion);
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  container.appendChild(table);
 }

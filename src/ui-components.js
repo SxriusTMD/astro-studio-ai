@@ -1141,12 +1141,18 @@ export function initSessionClickDelegation() {
 // ===== PROGRESS DASHBOARD =====
 
 export function hydrateProgressDashboard() {
-  if (!window.userProgress) {
-    const savedCards = parseInt(localStorage.getItem('userProgress_cardsReviewed') || '0', 10);
-    const savedStreak = parseInt(localStorage.getItem('userProgress_streak') || '1', 10);
-    const savedAccuracy = parseInt(localStorage.getItem('userProgress_examAccuracy') || '85', 10);
-    window.userProgress = { cardsReviewed: savedCards, streak: savedStreak, examAccuracy: savedAccuracy };
-  }
+  const session = window._supabaseSession || window.currentSession;
+  const userId = session?.user?.id || window.userLimits?.google_id || '';
+
+  const savedCards = userId ? (localStorage.getItem('cardsReviewed_' + userId) || localStorage.getItem('userProgress_cardsReviewed_' + userId) || '0') : '0';
+  const savedStreak = userId ? (localStorage.getItem('streak_' + userId) || localStorage.getItem('userProgress_streak_' + userId) || '0') : '0';
+  const savedAccuracy = userId ? (localStorage.getItem('examAccuracy_' + userId) || localStorage.getItem('userProgress_examAccuracy_' + userId) || '0') : '0';
+
+  window.userProgress = {
+    cardsReviewed: parseInt(savedCards, 10) || 0,
+    streak: parseInt(savedStreak, 10) || 0,
+    examAccuracy: parseInt(savedAccuracy, 10) || 0
+  };
   
   const statCardsReviewed = document.getElementById('statCardsReviewed');
   if (statCardsReviewed) {
@@ -1169,6 +1175,12 @@ export function incrementCardsReviewed() {
     hydrateProgressDashboard();
   }
   window.userProgress.cardsReviewed++;
+  
+  const session = window._supabaseSession || window.currentSession;
+  const userId = session?.user?.id || window.userLimits?.google_id || '';
+  if (userId) {
+    localStorage.setItem('cardsReviewed_' + userId, window.userProgress.cardsReviewed);
+  }
   localStorage.setItem('userProgress_cardsReviewed', window.userProgress.cardsReviewed);
   
   const statCardsReviewed = document.getElementById('statCardsReviewed');
@@ -1302,16 +1314,12 @@ export function initEditProfileModal() {
       }
     }
 
-    // Toggle password current field visibility based on provider
-    const passContainer = document.getElementById('editProfilePasswordContainer');
+    // Toggle password current field visibility based on provider / changes
+    const securityConfirmGroup = document.getElementById('securityConfirmGroup');
     const editProfilePassword = document.getElementById('editProfilePassword');
     if (editProfilePassword) editProfilePassword.value = '';
-    if (passContainer) {
-      if (provider === 'google') {
-        passContainer.style.display = 'none';
-      } else {
-        passContainer.style.display = 'flex';
-      }
+    if (securityConfirmGroup) {
+      securityConfirmGroup.style.display = 'none';
     }
     
     // Hydrate avatar preview
@@ -1363,6 +1371,20 @@ export function initEditProfileModal() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       openProfile();
+    });
+  }
+
+  if (editProfileEmail) {
+    editProfileEmail.addEventListener('input', () => {
+      const securityConfirmGroup = document.getElementById('securityConfirmGroup');
+      if (securityConfirmGroup) {
+        const currentEmail = window.userLimits?.email || '';
+        if (editProfileEmail.value.trim() !== currentEmail) {
+          securityConfirmGroup.style.display = 'block';
+        } else {
+          securityConfirmGroup.style.display = 'none';
+        }
+      }
     });
   }
   
