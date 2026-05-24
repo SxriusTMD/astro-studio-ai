@@ -8,6 +8,25 @@ import {
 } from './api.js';
 import { showUpgradeModal, saveToStorage } from './auth.js';
 import { addChatMessage, saveCurrentSession, loadSession, newSession, loadSessions, renderHistory, syncExamPanelAfterRenderTabs } from './chat.js';
+// ===== SUPABASE FRONTEND MOCK CLIENT =====
+const supabase = {
+  auth: {
+    updateUser: async ({ email }) => {
+      try {
+        const res = await fetch('/api/auth/update-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok) return { data: null, error: { message: data.error || 'Error al actualizar correo' } };
+        return { data, error: null };
+      } catch (err) {
+        return { data: null, error: { message: err.message || 'Error de conexión' } };
+      }
+    }
+  }
+};
 
 // ===== STARS CANVAS =====
 
@@ -1282,6 +1301,18 @@ export function initEditProfileModal() {
         editProfileEmail.style.color = '#f8fafc';
       }
     }
+
+    // Toggle password current field visibility based on provider
+    const passContainer = document.getElementById('editProfilePasswordContainer');
+    const editProfilePassword = document.getElementById('editProfilePassword');
+    if (editProfilePassword) editProfilePassword.value = '';
+    if (passContainer) {
+      if (provider === 'google') {
+        passContainer.style.display = 'none';
+      } else {
+        passContainer.style.display = 'flex';
+      }
+    }
     
     // Hydrate avatar preview
     if (profileAvatarPreview) {
@@ -1382,8 +1413,33 @@ export function initEditProfileModal() {
     });
   }
   
-  saveBtn?.addEventListener('click', () => {
+  saveBtn?.addEventListener('click', async () => {
     if (window.userLimits) {
+      const nuevoCorreo = editProfileEmail?.value || '';
+      const correoOriginal = window.userLimits?.email || '';
+      
+      let provider = 'correo';
+      try {
+        const session = window._supabaseSession || window.currentSession;
+        if (session?.user?.app_metadata?.provider === 'google') provider = 'google';
+      } catch (_) {}
+      
+      if (provider !== 'google' && nuevoCorreo && nuevoCorreo !== correoOriginal) {
+        const passVal = document.getElementById('editProfilePassword')?.value || '';
+        if (!passVal) {
+          mostrarToast('❌ Contraseña actual requerida para cambiar tu correo.');
+          return;
+        }
+        
+        mostrarToast('⏳ Solicitando actualización de correo...');
+        const { data, error } = await supabase.auth.updateUser({ email: nuevoCorreo });
+        if (error) {
+          mostrarToast('❌ Error: ' + error.message);
+          return;
+        } else {
+          mostrarToast('📧 Confirmación enviada a ambos correos (antiguo y nuevo).');
+        }
+      }
       window.userLimits.displayName = editProfileName?.value || '';
       
       if (window.profileCropper) {

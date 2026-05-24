@@ -227,6 +227,9 @@
     <form class="auth-form" id="loginForm">
       <input type="email" class="auth-input" id="loginEmail" placeholder="Correo electrónico" autocomplete="email" required>
       <input type="password" class="auth-input" id="loginPass" placeholder="Contraseña" autocomplete="current-password" required>
+      <div style="text-align: right; margin-top: -6px;">
+        <button type="button" id="forgotPasswordBtn" style="background: none; border: none; color: var(--accent-cyan); font-size: 12px; cursor: pointer; text-decoration: underline; font-family: 'Inter', sans-serif;">¿Olvidaste tu contraseña?</button>
+      </div>
       <div class="auth-msg" id="loginMsg"></div>
       <button type="submit" class="auth-btn" id="loginBtn">Iniciar sesión</button>
     </form>
@@ -448,6 +451,44 @@ document.getElementById('usernameInput').addEventListener('input', async (e) => 
     msg.className = data.available ? 'auth-msg success' : 'auth-msg error';
     msg.textContent = data.available ? '✅ Disponible' : '❌ No disponible';
   } catch { /* ignore */ }
+// SUPABASE FRONTEND MOCK CLIENT
+const supabase = {
+  auth: {
+    resetPasswordForEmail: async (email) => {
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok) return { error: new Error(data.error || 'Error al enviar recuperación') };
+        return { data, error: null };
+      } catch (err) {
+        return { error: err };
+      }
+    }
+  }
+};
+
+document.getElementById('forgotPasswordBtn')?.addEventListener('click', async () => {
+  const correoIngresado = document.getElementById('loginEmail').value.trim();
+  const msg = document.getElementById('loginMsg');
+  if (!correoIngresado) {
+    msg.className = 'auth-msg error';
+    msg.textContent = 'Por favor ingresa tu correo electrónico.';
+    return;
+  }
+  msg.className = 'auth-msg info';
+  msg.textContent = 'Enviando solicitud...';
+  const { error } = await supabase.auth.resetPasswordForEmail(correoIngresado);
+  if (error) {
+    msg.className = 'auth-msg error';
+    msg.textContent = error.message;
+  } else {
+    msg.className = 'auth-msg success';
+    msg.textContent = 'Te hemos enviado un enlace de recuperación.';
+  }
 });
 </script>
 </body>

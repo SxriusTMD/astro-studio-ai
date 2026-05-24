@@ -562,6 +562,48 @@ app.post('/api/auth/set-username', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// POST /api/auth/reset-password - Recuperación de contraseña con Supabase
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  if (!supabase) return res.status(503).json({ error: 'Supabase no configurado' });
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `https://${req.get('host')}/complete-profile`
+    });
+    if (error) throw error;
+    res.json({ ok: true, message: 'Te hemos enviado un enlace de recuperación' });
+  } catch (err) {
+    console.error('Error en resetPasswordForEmail:', err.message);
+    res.status(500).json({ error: err.message || 'Error al enviar correo de recuperación' });
+  }
+});
+
+// POST /api/auth/update-email - Actualizar email del usuario autenticado en Supabase y local
+app.post('/api/auth/update-email', ensureAuthenticated, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  if (!supabase) return res.status(503).json({ error: 'Supabase no configurado' });
+
+  try {
+    const userId = req.user.google_id || req.user.id;
+    
+    // Ejecutar Supabase updateUserById
+    const { data, error } = await supabase.auth.admin.updateUserById(userId, { email });
+    if (error) throw error;
+    
+    // También actualizamos en la BD local
+    await pool.query(`UPDATE usuarios SET email = $1 WHERE google_id = $2`, [email, userId]);
+    
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error actualizando email:', err.message);
+    res.status(500).json({ error: err.message || 'Error al actualizar email en Supabase' });
+  }
+});
+
+
 // Helper: text chunking & RAG-lite context selections
 function chunkText(text, chunkSize = 4000) {
   if (!text) return [];
