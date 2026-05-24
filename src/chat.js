@@ -53,7 +53,6 @@ window.askAI = async function (prompt) {
       window.userLimits.chat_used = data.chat_used;
       updatePlanIndicator();
     }
-    saveCurrentSession();
     return data.text;
   } catch (err) {
     console.error('askAI error:', err);
@@ -70,21 +69,246 @@ export function normalizeChatRole(role) {
   return 'ai';
 }
 
+export function appendSafeHTML(parent, htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  parent.replaceChildren();
+  
+  function sanitizeAndAppend(srcNode, destParent) {
+    srcNode.childNodes.forEach(child => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        destParent.appendChild(document.createTextNode(child.textContent));
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        const tag = child.tagName.toLowerCase();
+        const safeTags = ['p', 'span', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div'];
+        if (safeTags.includes(tag)) {
+          const newEl = document.createElement(tag);
+          if (child.className) {
+            newEl.className = child.className;
+          }
+          sanitizeAndAppend(child, newEl);
+          destParent.appendChild(newEl);
+        } else {
+          destParent.appendChild(document.createTextNode(child.textContent));
+        }
+      }
+    });
+  }
+  
+  sanitizeAndAppend(doc.body, parent);
+}
+
+export function normalizeFlashcards(cards) {
+  if (!Array.isArray(cards)) return [];
+  return cards.map(c => {
+    const q = c.pregunta || c.front || c.q || '';
+    const a = c.respuesta || c.back || c.a || '';
+    return { pregunta: q, respuesta: a };
+  });
+}
+
+export function renderSummaryText(container, text) {
+  if (!container) return;
+  container.replaceChildren();
+  
+  const h4 = document.createElement('h4');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'w-5 h-5 mr-2 inline-block text-green-400');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+  const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  polyline.setAttribute('points', '14 2 14 8 20 8');
+  const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line1.setAttribute('x1', '16'); line1.setAttribute('y1', '13'); line1.setAttribute('x2', '8'); line1.setAttribute('y2', '13');
+  const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line2.setAttribute('x1', '16'); line2.setAttribute('y1', '17'); line2.setAttribute('x2', '8'); line2.setAttribute('y2', '17');
+  const polyline2 = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  polyline2.setAttribute('points', '10 9 9 9 8 9');
+  
+  svg.appendChild(path);
+  svg.appendChild(polyline);
+  svg.appendChild(line1);
+  svg.appendChild(line2);
+  svg.appendChild(polyline2);
+  
+  h4.appendChild(svg);
+  h4.appendChild(document.createTextNode('Resumen de tus apuntes'));
+  container.appendChild(h4);
+  
+  if (typeof marked !== 'undefined') {
+    const rawHtml = marked.parse(text);
+    const textContainer = document.createElement('div');
+    appendSafeHTML(textContainer, rawHtml);
+    container.appendChild(textContainer);
+  } else {
+    const p = document.createElement('p');
+    p.textContent = text;
+    container.appendChild(p);
+  }
+}
+
+export function renderPlanTable(tbody, items) {
+  if (!tbody) return;
+  tbody.replaceChildren();
+  
+  if (!items || items.length === 0) return;
+  
+  items.forEach((item, i) => {
+    const d = new Date(item.fecha);
+    const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+    const tagClass = i < items.length - 1 ? 'tag-cyan' : 'tag-purple';
+    
+    const tr = document.createElement('tr');
+    
+    const tdDia = document.createElement('td');
+    tdDia.textContent = `Día ${item.dia}`;
+    
+    const tdFecha = document.createElement('td');
+    tdFecha.textContent = dateStr;
+    
+    const tdTema = document.createElement('td');
+    tdTema.textContent = item.tema || '';
+    
+    const tdTiempo = document.createElement('td');
+    tdTiempo.textContent = item.tiempo || '';
+    
+    const tdTag = document.createElement('td');
+    const spanTag = document.createElement('span');
+    spanTag.className = `tag ${tagClass}`;
+    
+    if (i < items.length - 1) {
+      spanTag.textContent = 'Por hacer';
+    } else {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'w-4 h-4 mr-1 inline-block text-white');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      
+      const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path1.setAttribute('d', 'M22 10v6M2 10l10-5 10 5-10 5z');
+      const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path2.setAttribute('d', 'M6 12v5c3 3 9 3 12 0v-5');
+      
+      svg.appendChild(path1);
+      svg.appendChild(path2);
+      spanTag.appendChild(svg);
+      spanTag.appendChild(document.createTextNode(' Examen'));
+    }
+    
+    tdTag.appendChild(spanTag);
+    tr.appendChild(tdDia);
+    tr.appendChild(tdFecha);
+    tr.appendChild(tdTema);
+    tr.appendChild(tdTiempo);
+    tr.appendChild(tdTag);
+    
+    tbody.appendChild(tr);
+  });
+}
+
+export function showSummarySkeleton(container) {
+  if (!container) return;
+  container.replaceChildren();
+  
+  const h4 = document.createElement('h4');
+  h4.textContent = '⏳ Analizando y sintetizando apuntes...';
+  container.appendChild(h4);
+  
+  const skeletonBox = document.createElement('div');
+  skeletonBox.style.display = 'flex';
+  skeletonBox.style.flexDirection = 'column';
+  skeletonBox.style.gap = '12px';
+  skeletonBox.style.padding = '12px';
+  
+  for (let i = 0; i < 4; i++) {
+    const line = document.createElement('div');
+    line.className = 'skeleton skeleton-text';
+    if (i === 0) line.style.height = '18px';
+    if (i === 0) line.style.width = '60%';
+    else if (i === 3) line.style.width = '80%';
+    skeletonBox.appendChild(line);
+  }
+  container.appendChild(skeletonBox);
+}
+
+export function showPlanSkeleton(tbody) {
+  if (!tbody) return;
+  tbody.replaceChildren();
+  
+  const tr = document.createElement('tr');
+  const td = document.createElement('td');
+  td.colSpan = 5;
+  
+  const skeletonBox = document.createElement('div');
+  skeletonBox.style.display = 'flex';
+  skeletonBox.style.flexDirection = 'column';
+  skeletonBox.style.gap = '10px';
+  skeletonBox.style.padding = '16px';
+  
+  for (let i = 0; i < 3; i++) {
+    const line = document.createElement('div');
+    line.className = 'skeleton skeleton-text';
+    if (i === 2) line.style.width = '70%';
+    skeletonBox.appendChild(line);
+  }
+  
+  td.appendChild(skeletonBox);
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+}
+
+export function showFlashcardsSkeleton() {
+  const cardQuestion = document.getElementById('cardQuestion');
+  const cardAnswer = document.getElementById('cardAnswer');
+  const cardIndex = document.getElementById('cardIndex');
+  
+  if (cardQuestion) {
+    cardQuestion.replaceChildren();
+    const skel = document.createElement('div');
+    skel.className = 'skeleton skeleton-text';
+    skel.style.width = '85%';
+    skel.style.height = '20px';
+    cardQuestion.appendChild(skel);
+  }
+  if (cardAnswer) {
+    cardAnswer.replaceChildren();
+    const skel = document.createElement('div');
+    skel.className = 'skeleton skeleton-text';
+    skel.style.width = '90%';
+    skel.style.height = '20px';
+    cardAnswer.appendChild(skel);
+  }
+  if (cardIndex) {
+    cardIndex.textContent = '⏳ Generando...';
+  }
+}
+
 export function formatMessageHTML(text, roleNorm, div) {
   if (roleNorm === 'system') {
-    div.className = 'message system self-center bg-transparent border-none text-[#606088] text-xs px-3 py-1.5 text-center';
+    div.className = 'message system';
     div.textContent = text;
   } else if (roleNorm === 'user') {
-    div.className = 'message user self-end bg-gradient-to-br from-[#6c3bd2] to-[#4f46e5] text-white rounded-br-md max-w-[70%] md:max-w-[60%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
+    div.className = 'message user';
     div.textContent = text;
   } else {
-    div.className = 'message ai self-start bg-[#12123a] text-[#e8e8f0] border border-[#1e1e4a] rounded-bl-md max-w-[85%] px-3 py-3 rounded-2xl text-sm leading-relaxed animate-[messageIn_0.3s_ease] whitespace-pre-wrap';
+    div.className = 'message ai';
     if (typeof marked !== 'undefined') {
       let html = marked.parse(text);
       html = html.replace(/\[(Fuente \d+|Anexo [A-Z]|Documento Principal)\]/g, '<span class="citation-badge">$1</span>');
       html = html.replace(/---\s*$/gm, '');
       html = html.replace(/(📌 Leyenda Técnica:[^<]*)/g, '<div class="leyenda-tecnica">$1</div>');
-      div.innerHTML = html;
+      appendSafeHTML(div, html);
     } else {
       div.textContent = text;
     }
@@ -131,9 +355,14 @@ export function addTypingIndicator() {
   if (!chatMessages) return;
 
   const div = document.createElement('div');
-  div.className = 'message ai loading self-start bg-transparent border-none rounded-2xl text-sm leading-relaxed whitespace-pre-wrap px-3 py-3';
+  div.className = 'message ai loading';
   div.id = 'typingIndicator';
-  div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  const indicator = document.createElement('div');
+  indicator.className = 'typing-indicator';
+  for (let i = 0; i < 3; i++) {
+    indicator.appendChild(document.createElement('span'));
+  }
+  div.appendChild(indicator);
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -186,6 +415,8 @@ export async function handleChat() {
   removeTypingIndicator();
   addChatMessage('ai', response);
 
+  await saveCurrentSession();
+
   chatInput.disabled = false;
   chatSend.disabled = false;
   chatInput.focus();
@@ -208,10 +439,11 @@ export function updateCard(i) {
 }
 
 export function renderFlashcards(cards) {
-  if (!cards || cards.length === 0) return;
+  const normalized = normalizeFlashcards(cards);
+  if (!normalized || normalized.length === 0) return;
   document.querySelectorAll('#cardDots .dot').forEach(d => d.remove());
   flashcardData.length = 0;
-  cards.forEach(c => flashcardData.push({ q: c.pregunta, a: c.respuesta }));
+  normalized.forEach(c => flashcardData.push({ q: c.pregunta, a: c.respuesta }));
   const dotsContainer = document.getElementById('cardDots');
   if (dotsContainer) {
     flashcardData.forEach((_, i) => {
@@ -971,7 +1203,35 @@ export function renderSessionList(sessions) {
     if (s.pdfs?.length) {
       const pdfs = document.createElement('div');
       pdfs.className = 'session-pdfs';
-      pdfs.innerHTML = `<svg class="w-4 h-4 mr-1 inline-block text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>${s.pdfs.length} PDF(s)`;
+      
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'w-4 h-4 mr-1 inline-block text-gray-400');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      
+      const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path1.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+      const polyline1 = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline1.setAttribute('points', '14 2 14 8 20 8');
+      const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line1.setAttribute('x1', '16'); line1.setAttribute('y1', '13'); line1.setAttribute('x2', '8'); line1.setAttribute('y2', '13');
+      const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line2.setAttribute('x1', '16'); line2.setAttribute('y1', '17'); line2.setAttribute('x2', '8'); line2.setAttribute('y2', '17');
+      const polyline2 = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline2.setAttribute('points', '10 9 9 9 8 9');
+      
+      svg.appendChild(path1);
+      svg.appendChild(polyline1);
+      svg.appendChild(line1);
+      svg.appendChild(line2);
+      svg.appendChild(polyline2);
+      
+      pdfs.appendChild(svg);
+      pdfs.appendChild(document.createTextNode(`${s.pdfs.length} PDF(s)`));
       div.appendChild(pdfs);
     }
     
@@ -988,9 +1248,14 @@ export function renderSessionList(sessions) {
 }
 
 export async function loadSession(id) {
+  if (window.isLoadingSession) return;
+  window.isLoadingSession = true;
   try {
     const data = await getSession(id);
-    if (!data.session) return;
+    if (!data.session) {
+      window.isLoadingSession = false;
+      return;
+    }
     const session = data.session;
 
     const loadedSessionId = normalizeChatSessionId(session.id);
@@ -1038,7 +1303,13 @@ export async function loadSession(id) {
         empty.className = 'empty-chat';
         const icon = document.createElement('div');
         icon.className = 'icon';
-        icon.innerHTML = '<img src="assets/AeroLexAI_Ship_Trans.png" class="h-16 w-auto mx-auto opacity-80 object-contain" alt="AeroLex AI">';
+        
+        const img = document.createElement('img');
+        img.src = 'assets/AeroLexAI_Ship_Trans.png';
+        img.className = 'h-16 w-auto mx-auto opacity-80 object-contain';
+        img.alt = 'AeroLex AI';
+        icon.appendChild(img);
+        
         const p = document.createElement('p');
         p.textContent = 'Chat cargado de sesión';
         empty.appendChild(icon);
@@ -1064,29 +1335,12 @@ export async function loadSession(id) {
     }
     if (window.summaryData) {
       const summaryText = document.getElementById('summaryText');
-      if (summaryText) {
-        summaryText.innerHTML = `<h4><svg class="w-5 h-5 mr-2 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>Resumen de tus apuntes</h4>${window.summaryData.text.replace(/\n/g, '<br>')}`;
-      }
+      renderSummaryText(summaryText, window.summaryData.text);
       document.getElementById('exportSummary').style.display = 'inline-block';
     }
     if (window.planData) {
       const planBody = document.getElementById('planBody');
-      if (planBody && window.planData.items) {
-        planBody.innerHTML = '';
-        window.planData.items.forEach((item, i) => {
-          const d = new Date(item.fecha);
-          const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-          const tagClass = i < window.planData.items.length - 1 ? 'tag-cyan' : 'tag-purple';
-          const label = i < window.planData.items.length - 1 ? 'Por hacer' : '<svg class="w-4 h-4 mr-1 inline-block text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Examen';
-          planBody.innerHTML += `<tr>
-            <td>Día ${item.dia}</td>
-            <td>${dateStr}</td>
-            <td>${item.tema}</td>
-            <td>${item.tiempo}</td>
-            <td><span class="tag ${tagClass}">${label}</span></td>
-          </tr>`;
-        });
-      }
+      renderPlanTable(planBody, window.planData.items);
       document.getElementById('exportPlan').style.display = 'inline-block';
     }
 
@@ -1129,7 +1383,10 @@ export async function loadSession(id) {
     }
   } catch (e) {
     console.error('Load session error:', e);
+  } finally {
+    window.isLoadingSession = false;
   }
+}
 }
 
 export function newSession() {
@@ -1150,10 +1407,27 @@ export function newSession() {
 
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
-    chatMessages.innerHTML = '<div class="empty-chat"><div class="icon"><img src="assets/AeroLexAI_Ship_Trans.png" class="h-20 w-auto mx-auto opacity-70 object-contain" alt="AeroLex AI"></div><p>Carga un PDF para comenzar</p></div>';
+    chatMessages.replaceChildren();
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-chat';
+    
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'icon';
+    const img = document.createElement('img');
+    img.src = 'assets/AeroLexAI_Ship_Trans.png';
+    img.className = 'h-20 w-auto mx-auto opacity-70 object-contain';
+    img.alt = 'AeroLex AI';
+    iconDiv.appendChild(img);
+    
+    const p = document.createElement('p');
+    p.textContent = 'Carga un PDF para comenzar';
+    
+    emptyDiv.appendChild(iconDiv);
+    emptyDiv.appendChild(p);
+    chatMessages.appendChild(emptyDiv);
   }
-  document.getElementById('summaryText').innerHTML = '';
-  document.getElementById('planBody').innerHTML = '';
+  document.getElementById('summaryText')?.replaceChildren();
+  document.getElementById('planBody')?.replaceChildren();
   document.getElementById('planSubject').value = '';
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 7);
@@ -1335,7 +1609,13 @@ export function restoreSession(id) {
       empty.className = 'empty-chat';
       const icon = document.createElement('div');
       icon.className = 'icon';
-      icon.innerHTML = '<img src="assets/AeroLexAI_Ship_Trans.png" class="h-16 w-auto mx-auto opacity-80 object-contain" alt="AeroLex AI">';
+      
+      const img = document.createElement('img');
+      img.src = 'assets/AeroLexAI_Ship_Trans.png';
+      img.className = 'h-16 w-auto mx-auto opacity-80 object-contain';
+      img.alt = 'AeroLex AI';
+      icon.appendChild(img);
+      
       const p = document.createElement('p');
       p.textContent = 'Historial cargado';
       empty.appendChild(icon);
@@ -1354,6 +1634,11 @@ export function closeHistoryPanel() {
 // ===== STORAGE RESTORE =====
 
 export function restoreFromStorage() {
+  // If user is authenticated, skip legacy localStorage restoration to prevent race conditions and duplicate messages
+  if (window.userLimits?.google_id || document.body.classList.contains('authenticated')) {
+    return;
+  }
+
   let restored = false;
 
   const chatData = loadFromStorage('chat');
@@ -1386,8 +1671,14 @@ export function restoreFromStorage() {
   const plan = loadFromStorage('plan');
   if (plan && plan.items && plan.items.length > 0) {
     window.planData = plan;
-    document.getElementById('planSubject').value = plan.subject || '';
-    document.getElementById('planDate').value = plan.examDate || '';
+    const planSubject = document.getElementById('planSubject');
+    if (planSubject) planSubject.value = plan.subject || '';
+    const planDate = document.getElementById('planDate');
+    if (planDate) planDate.value = plan.examDate || '';
+
+    const planBody = document.getElementById('planBody');
+    if (planBody) renderPlanTable(planBody, plan.items);
+
     document.getElementById('exportPlan').style.display = 'inline-block';
     updateExportAllButton();
     restored = true;
@@ -1398,7 +1689,7 @@ export function restoreFromStorage() {
     window.summaryData = summary;
     const summaryText = document.getElementById('summaryText');
     if (summaryText) {
-      summaryText.innerHTML = `<h4><svg class="w-5 h-5 mr-2 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>Resumen de tus apuntes</h4>${summary.text.replace(/\n/g, '<br>')}`;
+      renderSummaryText(summaryText, summary.text);
     }
     document.getElementById('exportSummary').style.display = 'inline-block';
     updateExportAllButton();
@@ -1438,11 +1729,13 @@ export function initFlashcardGenerator() {
     }
     genFlashcards.disabled = true;
     genFlashcards.textContent = '⏳ Generando...';
+    showFlashcardsSkeleton();
     try {
       const data = await apiFlashcards(getCombinedContext(), window.currentSessionId);
-      if (data.cards && data.cards.length > 0) {
-        renderFlashcards(data.cards);
-        window.flashcardsData = data.cards.map(c => ({ pregunta: c.pregunta, respuesta: c.respuesta }));
+      const normalized = normalizeFlashcards(data.cards);
+      if (normalized && normalized.length > 0) {
+        renderFlashcards(normalized);
+        window.flashcardsData = normalized;
         saveToStorage('flashcards', window.flashcardsData);
         document.getElementById('exportFlashcards').style.display = 'inline-block';
         updateExportAllButton();
@@ -1476,6 +1769,9 @@ export function initPlanGenerator() {
     const examDate = planDate?.value;
     if (!examDate) { alert('Por favor selecciona una fecha para el examen.'); return; }
 
+    const tbody = document.getElementById('planBody');
+    if (tbody) showPlanSkeleton(tbody);
+
     createPlanBtn.disabled = true;
     createPlanBtn.textContent = '⏳ Generando...';
 
@@ -1483,38 +1779,28 @@ export function initPlanGenerator() {
       const data = await createStudyPlan(getCombinedContext(), subject, examDate, window.currentSessionId);
       if (data.error) {
         alert(data.error);
+        if (tbody) tbody.replaceChildren();
         createPlanBtn.disabled = false;
         createPlanBtn.textContent = 'Crear Plan';
         return;
       }
 
-      const tbody = document.getElementById('planBody');
-      if (tbody) tbody.innerHTML = '';
+      if (tbody) tbody.replaceChildren();
 
       if (data.fallback && data.planTexto) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="5" style="white-space:pre-wrap;color:var(--text-secondary);font-size:13px;line-height:1.7;padding:16px;">${data.planTexto.replace(/\n/g, '<br>')}</td>`;
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.style.cssText = 'white-space:pre-wrap;color:var(--text-secondary);font-size:13px;line-height:1.7;padding:16px;';
+        td.textContent = data.planTexto;
+        tr.appendChild(td);
         tbody?.appendChild(tr);
         window.planData = { items: [], subject, examDate, fallback: true, text: data.planTexto };
         saveToStorage('plan', window.planData);
       } else if (data.plan && data.plan.length) {
         window.planData = { items: data.plan, subject, examDate };
         saveToStorage('plan', window.planData);
-        data.plan.forEach((item, i) => {
-          const d = new Date(item.fecha);
-          const dateStr = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-          const tagClass = i < data.plan.length - 1 ? 'tag-cyan' : 'tag-purple';
-          const label = i < data.plan.length - 1 ? 'Por hacer' : '<svg class="w-4 h-4 mr-1 inline-block text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Examen';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>Día ${item.dia}</td>
-            <td>${dateStr}</td>
-            <td>${item.tema}</td>
-            <td>${item.tiempo}</td>
-            <td><span class="tag ${tagClass}">${label}</span></td>
-          `;
-          tbody?.appendChild(tr);
-        });
+        renderPlanTable(tbody, data.plan);
       }
 
       if (window.planData?.items?.length > 0) {
@@ -1526,6 +1812,7 @@ export function initPlanGenerator() {
       if (planMsg) planMsg.textContent = `✅ Plan de estudio para "${subject}" — ${data.diasRestantes} días hasta el examen.`;
     } catch (e) {
       console.error('Plan error:', e);
+      if (tbody) tbody.replaceChildren();
       alert('⚠️ Error al generar el plan de estudio. Intenta de nuevo.');
     }
 
@@ -1547,11 +1834,11 @@ export function initSummaryGenerator() {
 
     genSummary.disabled = true;
     genSummary.textContent = '⏳ Resumiendo...';
-    summaryText.innerHTML = '<p style="color:var(--text-muted);">⏳ Generando resumen inteligente...</p>';
+    showSummarySkeleton(summaryText);
 
     try {
       const data = await generateSummary(getCombinedContext(), window.currentSessionId);
-      summaryText.innerHTML = `<h4><svg class="w-5 h-5 mr-2 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>Resumen de tus apuntes</h4>${data.text.replace(/\n/g, '<br>')}`;
+      renderSummaryText(summaryText, data.text);
       window.summaryData = { text: data.text, pdfs: window.pdfDocs.map(d => d.name) };
       saveToStorage('summary', window.summaryData);
       document.getElementById('exportSummary').style.display = 'inline-block';
@@ -1559,7 +1846,11 @@ export function initSummaryGenerator() {
       saveCurrentSession();
     } catch (e) {
       console.error('Summary error:', e);
-      summaryText.innerHTML = '<p style="color:var(--text-muted);">⚠️ Error al generar el resumen. Intenta de nuevo.</p>';
+      summaryText.replaceChildren();
+      const p = document.createElement('p');
+      p.style.color = 'var(--text-muted)';
+      p.textContent = '⚠️ Error al generar el resumen. Intenta de nuevo.';
+      summaryText.appendChild(p);
     }
 
     genSummary.disabled = false;

@@ -1330,7 +1330,8 @@ body:not(.sidebar-closed) .sidebar {
 
 .flashcard-container {
       perspective: 1000px;
-      width: 480px;
+      width: 100%;
+      max-width: 500px;
       height: 280px;
       cursor: pointer;
       margin: 0 auto;
@@ -2338,8 +2339,9 @@ body:not(.sidebar-closed) .sidebar {
   
   /* Flashcards más pequeñas */
   .flashcard-container {
-    max-width: 100%;
-    min-height: 200px;
+    width: 100%;
+    max-width: 440px;
+    height: 240px;
   }
   
   .flashcard-face .card-question {
@@ -2418,7 +2420,7 @@ body:not(.sidebar-closed) .sidebar {
       .drop-zone p { font-size: 10px; margin-bottom: 4px; }
       .btn-change-pdf { font-size: 10px; padding: 2px 6px; }
 
-      .flashcard-container { max-width: 240px; min-height: 240px; }
+      .flashcard-container { width: 100%; max-width: 320px; height: 220px; }
 
       .stat-card .stat-value { font-size: 18px; }
 
@@ -2562,16 +2564,16 @@ body:not(.sidebar-closed) .sidebar {
 
     /* ===== PHASE 6C: NEXT-GEN GLASSMORPHISM OVERHAUL ===== */
     :root {
-      --glass-bg: rgba(15, 23, 42, 0.40);
-      --glass-bg-soft: rgba(15, 23, 42, 0.22);
-      --glass-border: rgba(255, 255, 255, 0.10);
-      --neon-ring: 0 0 0 1px rgba(255,255,255,0.06), 0 18px 48px rgba(0,0,0,0.32), 0 0 34px rgba(0,229,255,0.08);
+      --glass-bg: #0d0d1e;
+      --glass-bg-soft: #080814;
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --neon-ring: 0 4px 16px rgba(0, 0, 0, 0.45);
     }
 
     button, a, input, textarea, select,
     .btn, .tab-btn, .session-item, .pdf-tab, .cloud-doc-shortcut,
     .menu-item, .exam-option, .flashcard, .history-item {
-      transition: all 300ms ease-in-out;
+      transition: all 200ms ease-in-out;
     }
 
     header, .sidebar, .tool-panel, .drop-zone > div, .file-info, .tabs,
@@ -2580,22 +2582,21 @@ body:not(.sidebar-closed) .sidebar {
     .user-dropdown, .history-panel, .toast {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
       box-shadow: var(--neon-ring);
     }
 
     .sidebar {
-      box-shadow: 14px 0 42px rgba(0,0,0,0.32), 0 0 34px rgba(139,92,246,0.12);
+      box-shadow: 4px 0 16px rgba(0,0,0,0.4);
     }
 
     .tool-panel {
-      background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(139,92,246,0.05)), var(--glass-bg-soft);
+      background: var(--glass-bg-soft);
     }
 
     .chat-container {
       border-radius: 18px;
-      animation: aeroPulseGlow 6s ease-in-out infinite;
     }
 
     .tab-btn {
@@ -2604,21 +2605,21 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .tab-btn.active {
-      background: linear-gradient(135deg, rgba(0,229,255,0.16), rgba(139,92,246,0.18)), rgba(15,23,42,0.42);
-      border-color: rgba(255,255,255,0.14);
-      box-shadow: 0 0 22px rgba(0,229,255,0.16), inset 0 1px 0 rgba(255,255,255,0.08);
+      background: rgba(108, 59, 210, 0.2);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       color: #ffffff;
     }
 
     .btn-primary, .new-chat-btn, .btn-change-pdf:hover {
-      box-shadow: 0 0 24px rgba(139,92,246,0.24), 0 8px 24px rgba(0,0,0,0.24);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .btn:hover, .new-chat-btn:hover, .session-item:hover, .cloud-doc-shortcut:hover,
     .pdf-tab:hover, .exam-option:hover:not(:disabled) {
       transform: translateY(-1px);
-      border-color: rgba(0,229,255,0.28);
-      box-shadow: 0 0 24px rgba(0,229,255,0.12), 0 10px 26px rgba(0,0,0,0.22);
+      border-color: rgba(0,229,255,0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
 
     .cloud-document-shortcuts {

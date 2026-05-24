@@ -416,19 +416,34 @@ export function renderTabs() {
   const pdfTabs = document.getElementById('pdf-tabs');
   if (!pdfTabs) return;
 
-  pdfTabs.innerHTML = '';
+  pdfTabs.replaceChildren();
   window.pdfDocs.forEach((doc, i) => {
     const tab = document.createElement('span');
     tab.className = 'pdf-tab' + (doc.id === window.activeDocId ? ' active' : '');
     tab.dataset.id = doc.id;
-    tab.innerHTML = `📄 <span class="tab-name">${doc.name}</span> <span class="pdf-tab-close" data-id="${doc.id}">✕</span>`;
+    
+    const iconText = document.createTextNode('📄 ');
+    const spanName = document.createElement('span');
+    spanName.className = 'tab-name';
+    spanName.textContent = doc.name;
+    
+    const spanClose = document.createElement('span');
+    spanClose.className = 'pdf-tab-close';
+    spanClose.dataset.id = doc.id;
+    spanClose.textContent = '✕';
+    
+    tab.appendChild(iconText);
+    tab.appendChild(spanName);
+    tab.appendChild(spanClose);
+
     tab.addEventListener('click', (e) => {
       if (e.target.classList.contains('pdf-tab-close')) return;
       window.activeDocId = doc.id;
       localStorage.setItem('aerolex_active_doc', doc.id);
       renderTabs();
     });
-    tab.querySelector('.pdf-tab-close').addEventListener('click', (e) => {
+    
+    spanClose.addEventListener('click', (e) => {
       e.stopPropagation();
       removeDoc(doc.id);
     });
@@ -481,31 +496,63 @@ export async function loadLibrary() {
     const data = await fetchDocuments();
     const list = document.getElementById('libraryList');
     if (!list) return;
+
+    list.replaceChildren();
+
     if (!data.documentos?.length) {
-      list.innerHTML = '<div class="history-empty">No hay documentos guardados</div>';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'history-empty';
+      emptyDiv.textContent = 'No hay documentos guardados';
+      list.appendChild(emptyDiv);
       return;
     }
-    list.innerHTML = data.documentos.map(d => `
-      <div class="history-item" style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div class="h-name">📄 ${d.nombre}</div>
-          <div class="h-date">${new Date(d.created_at).toLocaleDateString('es-ES')} · ${d.paginas} pág</div>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-small btn-primary" data-id="${d.id}">Cargar</button>
-          <button class="btn btn-small btn-secondary" data-id="${d.id}" style="color:#f87171;">✕</button>
-        </div>
-      </div>
-    `).join('');
 
-    list.querySelectorAll('.btn-primary[data-id]').forEach(btn => {
-      btn.addEventListener('click', () => loadDocument(btn.dataset.id));
-    });
-    list.querySelectorAll('.btn-secondary[data-id]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        await apiDeleteDocument(btn.dataset.id);
-        loadLibrary();
+    data.documentos.forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.style.display = 'flex';
+      item.style.justifyContent = 'space-between';
+      item.style.alignItems = 'center';
+
+      const leftDiv = document.createElement('div');
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'h-name';
+      nameDiv.textContent = `📄 ${d.nombre || 'Documento'}`;
+      
+      const dateDiv = document.createElement('div');
+      dateDiv.className = 'h-date';
+      const formattedDate = new Date(d.created_at).toLocaleDateString('es-ES');
+      dateDiv.textContent = `${formattedDate} · ${d.paginas || 0} pág`;
+      
+      leftDiv.appendChild(nameDiv);
+      leftDiv.appendChild(dateDiv);
+
+      const rightDiv = document.createElement('div');
+      rightDiv.style.display = 'flex';
+      rightDiv.style.gap = '6px';
+
+      const btnLoad = document.createElement('button');
+      btnLoad.className = 'btn btn-small btn-primary';
+      btnLoad.textContent = 'Cargar';
+      btnLoad.addEventListener('click', () => loadDocument(d.id));
+
+      const btnDel = document.createElement('button');
+      btnDel.className = 'btn btn-small btn-secondary';
+      btnDel.style.color = '#f87171';
+      btnDel.textContent = '✕';
+      btnDel.addEventListener('click', async () => {
+        if (confirm(`¿Estás seguro de eliminar '${d.nombre}'?`)) {
+          await apiDeleteDocument(d.id);
+          loadLibrary();
+        }
       });
+
+      rightDiv.appendChild(btnLoad);
+      rightDiv.appendChild(btnDel);
+
+      item.appendChild(leftDiv);
+      item.appendChild(rightDiv);
+      list.appendChild(item);
     });
   } catch (e) {
     console.error('Library error:', e);
@@ -893,7 +940,7 @@ export function initLegalModal() {
   title.textContent = 'Soberanía del Usuario y Privacidad';
   const closeBtn = document.createElement('button');
   closeBtn.className = 'text-[#606088] hover:text-white transition-colors text-2xl leading-none';
-  closeBtn.innerHTML = '&times;'; // Safe as it's a fixed string
+  closeBtn.textContent = '×';
   
   header.replaceChildren(title, closeBtn);
   

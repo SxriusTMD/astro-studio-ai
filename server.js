@@ -562,6 +562,76 @@ app.post('/api/auth/set-username', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// Helper: text chunking & RAG-lite context selections
+function chunkText(text, chunkSize = 4000) {
+  if (!text) return [];
+  const paragraphs = text.split(/\n+/);
+  const chunks = [];
+  let currentChunk = '';
+  
+  for (const p of paragraphs) {
+    if ((currentChunk.length + p.length) > chunkSize) {
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+      }
+      currentChunk = p;
+    } else {
+      currentChunk += '\n' + p;
+    }
+  }
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+  return chunks;
+}
+
+function getRelevantChunksForQuery(query, fullText, maxChunks = 3, chunkSize = 4000) {
+  if (!fullText) return '';
+  const chunks = chunkText(fullText, chunkSize);
+  if (chunks.length <= maxChunks) return fullText;
+  
+  const queryWords = String(query || '').toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 3);
+    
+  if (queryWords.length === 0) {
+    return getEvenlyDistributedChunks(fullText, maxChunks, chunkSize);
+  }
+  
+  const scoredChunks = chunks.map((chunk, index) => {
+    const chunkTextLower = chunk.toLowerCase();
+    let score = 0;
+    queryWords.forEach(word => {
+      const occurrences = (chunkTextLower.match(new RegExp(word, 'g')) || []).length;
+      score += occurrences;
+    });
+    return { chunk, score, index };
+  });
+  
+  scoredChunks.sort((a, b) => b.score - a.score || a.index - b.index);
+  
+  const selected = scoredChunks.slice(0, maxChunks);
+  selected.sort((a, b) => a.index - b.index);
+  
+  return selected.map(s => s.chunk).join('\n\n[...]\n\n');
+}
+
+function getEvenlyDistributedChunks(fullText, maxChunks = 3, chunkSize = 4000) {
+  if (!fullText) return '';
+  const chunks = chunkText(fullText, chunkSize);
+  if (chunks.length <= maxChunks) return fullText;
+  
+  const selectedChunks = [];
+  const total = chunks.length;
+  for (let i = 0; i < maxChunks; i++) {
+    const targetIdx = Math.floor((i * (total - 1)) / (maxChunks - 1));
+    selectedChunks.push(chunks[targetIdx]);
+  }
+  
+  return selectedChunks.join('\n\n[...]\n\n');
+}
+
 // Helper: call NVIDIA NIM API
 async function callNVIDIA(messages) {
   const maxRetries = 2;
@@ -823,7 +893,7 @@ REGLAS DE FORMATO Y ESTILO:
 5. (FORMATO DE PARRAFO) Deja siempre saltos de línea dobles entre secciones y viñetas para que la lectura sea sumamente fluida y touch-friendly en dispositivos móviles. NUNCA generes bloques densos o de un solo párrafo de texto continuo.`;
 
   const contextPrompt = pdfContent
-    ? `Contexto del PDF:\n${pdfContent.slice(0, 6000)}\n\n${prompt}`
+    ? `Contexto del PDF:\n${getRelevantChunksForQuery(prompt, pdfContent)}\n\n${prompt}`
     : prompt;
 
   try {
@@ -889,7 +959,7 @@ app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
   const { extracted_text, sessionId } = req.body;
   if (!extracted_text) return res.status(400).json({ error: 'extracted_text requerido' });
 
-  const prompt = 'Genera de 5 a 10 flashcards de estudio (conceptos clave) basadas en este documento. Responde ÚNICAMENTE con un array JSON puro (sin markdown) con este formato exacto: [{"front":"Concepto o pregunta corta","back":"Definición o respuesta detallada"}].\n\nDocumento:\n' + extracted_text.slice(0, 6000);
+  const prompt = 'Genera de 5 a 10 flashcards de estudio (conceptos clave) basadas en este documento. Responde ÚNICAMENTE con un array JSON puro (sin markdown) con este formato exacto: [{"front":"Concepto o pregunta corta","back":"Definición o respuesta detallada"}].\n\nDocumento:\n' + getEvenlyDistributedChunks(extracted_text, 3);
 
   try {
     const text = await callNVIDIA([
@@ -921,7 +991,7 @@ app.post('/api/resumen', ensureAuthenticated, async (req, res) => {
   const { pdfContent, sessionId } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
-  const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en español: INTRODUCCIÓN, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÓN. Formato limpio y claro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
+  const prompt = 'Genera un resumen estructurado de este documento con estas secciones exactas en español: INTRODUCCIÓN, PUNTOS CLAVE (lista de 5 bullets), y CONCLUSIÓN. Formato limpio y claro.\n\nDocumento:\n' + getEvenlyDistributedChunks(pdfContent, 3);
 
   try {
     const text = await callNVIDIA([
@@ -950,7 +1020,7 @@ app.post('/api/examen', ensureAuthenticated, async (req, res) => {
   const { pdfContent, sessionId } = req.body;
   if (!pdfContent) return res.status(400).json({ error: 'pdfContent requerido' });
 
-  const prompt = 'Genera exactamente 5 preguntas de opcion multiple basadas en este documento. Cada pregunta debe tener 4 opciones identificadas como A), B), C) y D). Responde UNICAMENTE con un array JSON valido con este formato exacto: [{"pregunta":"...","opciones":["A) ...","B) ...","C) ...","D) ..."],"respuesta_correcta":"A"}]. En respuesta_correcta usa solo una letra: "A", "B", "C" o "D". Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + pdfContent.slice(0, 6000);
+  const prompt = 'Genera exactamente 5 preguntas de opcion multiple basadas en este documento. Cada pregunta debe tener 4 opciones identificadas como A), B), C) y D). Responde UNICAMENTE con un array JSON valido con este formato exacto: [{"pregunta":"...","opciones":["A) ...","B) ...","C) ...","D) ..."],"respuesta_correcta":"A"}]. En respuesta_correcta usa solo una letra: "A", "B", "C" o "D". Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n' + getEvenlyDistributedChunks(pdfContent, 3);
 
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
@@ -980,7 +1050,7 @@ app.post('/api/exam', ensureAuthenticated, async (req, res) => {
   const { extracted_text, sessionId } = req.body;
   if (!extracted_text) return res.status(400).json({ error: 'extracted_text requerido' });
 
-  const prompt = 'Genera exactamente 5 preguntas de opcion multiple basadas en este documento. Responde UNICAMENTE con un array JSON puro (sin markdown, sin bloques de código) con este formato exacto: [{"question": "...", "options": ["A", "B", "C", "D"], "correctAnswer": "A"}]. En correctAnswer usa solo el texto exacto de la opción correcta. Documento:\n' + extracted_text.slice(0, 6000);
+  const prompt = 'Genera exactamente 5 preguntas de opcion multiple basadas en este documento. Responde UNICAMENTE con un array JSON puro (sin markdown, sin bloques de código) con este formato exacto: [{"question": "...", "options": ["A", "B", "C", "D"], "correctAnswer": "A"}]. En correctAnswer usa solo el texto exacto de la opción correcta. Documento:\n' + getEvenlyDistributedChunks(extracted_text, 3);
 
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
@@ -1024,7 +1094,7 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
 
   const now = new Date();
   const hoyStr = now.toISOString().split('T')[0];
-  const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} días hasta el examen (${fechaExamen}). El rango mínimo del plan es de 3 días. Asigna temas del documento a cada día de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${pdfContent.slice(0, 6000)}`;
+  const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} días hasta el examen (${fechaExamen}). El rango mínimo del plan es de 3 días. Asigna temas del documento a cada día de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${getEvenlyDistributedChunks(pdfContent, 3)}`;
 
   try {
     const text = await callNVIDIA([{ role: 'user', content: prompt }]);
