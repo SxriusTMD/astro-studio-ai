@@ -1099,10 +1099,16 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
 
   const now = new Date();
   const hoyStr = now.toISOString().split('T')[0];
-  const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} días hasta el examen (${fechaExamen}). El rango mínimo del plan es de 3 días. Asigna temas del documento a cada día de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${getEvenlyDistributedChunks(pdfContent, 3)}`;
+  
+  const systemPrompt = `Eres un planeador de estudio de alta precisión de AeroLex AI. REGLA CRÍTICA: NO INVENTES TEMAS GENÉRICOS (ej. 'Introducción', 'Conceptos básicos'). Extrae los nombres de los temas EXACTOS y ESPECÍFICOS directamente del documento proporcionado. Si el texto habla de 'Matrices Inversas por Gauss', ese debe ser el título del día. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.`;
+  
+  const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} días hasta el examen (${fechaExamen}). El rango mínimo del plan es de 3 días. Asigna temas del documento a cada día de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente.\n\nDocumento:\n${getEvenlyDistributedChunks(pdfContent, 3)}`;
 
   try {
-    const text = await callNVIDIA([{ role: 'user', content: prompt }], { model: 'meta/llama-3.1-8b-instruct', temperature: 0.2 });
+    const text = await callNVIDIA([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt }
+    ], { model: 'google/gemma-2-9b-it', temperature: 0.2 });
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     let planDataToSave = null;
     let responseData = { diasRestantes: diffDays };

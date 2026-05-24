@@ -1237,10 +1237,73 @@ export function initEditProfileModal() {
   const editProfilePhotoFile = document.getElementById('editProfilePhotoFile');
   const cropperContainer = document.getElementById('cropperContainer');
   const cropperImage = document.getElementById('cropperImage');
+  const profileAvatarPreview = document.getElementById('profileAvatarPreview');
+  const profileProviderInfo = document.getElementById('profileProviderInfo');
+  
+  const openProfile = () => {
+    // Close dropdown
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    
+    // Hydrate fields strictly with .value
+    const currentName = window.userLimits?.displayName || localStorage.getItem('user_custom_name') || 'Usuario';
+    const currentEmail = window.userLimits?.email || 'correo@ejemplo.com';
+    if (editProfileName) editProfileName.value = currentName;
+    if (editProfileEmail) editProfileEmail.value = currentEmail;
+    
+    // Hydrate provider info
+    if (profileProviderInfo) {
+      let provider = 'correo';
+      try {
+        const session = window._supabaseSession || window.currentSession;
+        if (session?.user?.app_metadata?.provider === 'google') {
+          provider = 'google';
+        }
+      } catch (_) {}
+      if (provider === 'correo' && window.userLimits?.photo && window.userLimits.photo.startsWith('http')) {
+        provider = 'google';
+      }
+      profileProviderInfo.textContent = provider === 'google'
+        ? 'Cuenta vinculada con Google'
+        : 'Cuenta vinculada por Correo';
+    }
+    
+    // Hydrate avatar preview
+    if (profileAvatarPreview) {
+      const customPhoto = localStorage.getItem('user_custom_photo');
+      profileAvatarPreview.src = customPhoto || window.userLimits?.photo || 'https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=150';
+    }
+    
+    // Reset cropper state
+    if (cropperContainer) cropperContainer.style.display = 'none';
+    if (cropperImage) cropperImage.src = '';
+    if (editProfilePhotoFile) editProfilePhotoFile.value = '';
+    if (window.profileCropper) {
+      window.profileCropper.destroy();
+      window.profileCropper = null;
+    }
+    
+    // Show fullscreen panel with fade-in
+    if (panel) {
+      panel.style.display = 'flex';
+      panel.offsetHeight; // force reflow
+      panel.style.opacity = '1';
+    }
+    if (overlay) {
+      overlay.classList.add('active');
+    }
+  };
   
   const closeProfile = () => {
-    panel?.classList.remove('active');
-    overlay?.classList.remove('active');
+    if (panel) {
+      panel.style.opacity = '0';
+      setTimeout(() => {
+        panel.style.display = 'none';
+      }, 300);
+    }
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
     if (window.profileCropper) {
       window.profileCropper.destroy();
       window.profileCropper = null;
@@ -1253,24 +1316,7 @@ export function initEditProfileModal() {
   if (btn) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const dropdown = document.getElementById('userDropdown');
-      if (dropdown) dropdown.style.display = 'none';
-      
-      if (window.userLimits) {
-        if (editProfileName) editProfileName.value = window.userLimits.displayName || '';
-        if (editProfileEmail) editProfileEmail.value = window.userLimits.email || '';
-      }
-      
-      if (cropperContainer) cropperContainer.style.display = 'none';
-      if (cropperImage) cropperImage.src = '';
-      if (editProfilePhotoFile) editProfilePhotoFile.value = '';
-      if (window.profileCropper) {
-        window.profileCropper.destroy();
-        window.profileCropper = null;
-      }
-      
-      panel?.classList.add('active');
-      overlay?.classList.add('active');
+      openProfile();
     });
   }
   
@@ -1357,6 +1403,10 @@ export function initEditProfileModal() {
         menuAvatar.src = window.userLimits.photo || 'https://ui-avatars.com/api/?name=User&background=6366f1&color=fff';
       }
       
+      if (profileAvatarPreview && window.userLimits.photo) {
+        profileAvatarPreview.src = window.userLimits.photo;
+      }
+      
       localStorage.setItem('user_custom_name', window.userLimits.displayName);
       
       mostrarToast('✅ Perfil actualizado exitosamente');
@@ -1365,3 +1415,4 @@ export function initEditProfileModal() {
     closeProfile();
   });
 }
+

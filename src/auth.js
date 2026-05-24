@@ -60,7 +60,20 @@ export async function initAuth() {
     }
 
     window.userLimits = window.userLimits || {};
-    if (data.user?.id) window.userLimits.google_id = data.user.id;
+    if (data.user) {
+      window.userLimits.google_id = data.user.id;
+      window.userLimits.email = data.user.email || '';
+      window.userLimits.displayName = data.user.displayName || '';
+      window.userLimits.photo = data.user.photo || '';
+      window.currentSession = {
+        user: {
+          ...data.user,
+          app_metadata: {
+            provider: data.user.authMethod === 'email' ? 'email' : 'google'
+          }
+        }
+      };
+    }
 
     const { loadSessions } = await import('./chat.js');
     loadSessions();
