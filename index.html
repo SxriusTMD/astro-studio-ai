@@ -2973,6 +2973,15 @@ body:not(.sidebar-closed) .sidebar {
       </div>
 
       <div class="auth-msg" id="verifySuccessMsg" style="display:none;margin-top:16px;"></div>
+
+      <div class="leaderboard-container" style="margin-top: 24px; padding: 20px; background: rgba(14, 14, 42, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: left;">
+        <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; color: #00e5ff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0;">
+          <span>🏆</span> Estudiantes más dedicados
+        </h3>
+        <ul id="leaderboardList" style="list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0;">
+          <!-- Usuarios cargados dinámicamente con textContent por motivos de seguridad -->
+        </ul>
+      </div>
     </div>
   </main>
 
@@ -3445,7 +3454,13 @@ body:not(.sidebar-closed) .sidebar {
           </div>
           <div id="securityConfirmGroup" style="display: none; flex-direction: column; gap: 6px;">
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Contraseña actual</label>
-            <input type="password" id="editProfilePassword" placeholder="Contraseña actual (requerida para cambios)" style="width: 100%; box-sizing: border-box; padding: 12px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #f8fafc; font-size: 15px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s ease;" onfocus="this.style.borderColor='rgba(6,182,212,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+            <div style="position: relative; width: 100%;">
+              <input type="password" id="editProfilePassword" placeholder="Contraseña actual (requerida para cambios)" style="width: 100%; box-sizing: border-box; padding: 12px 48px 12px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #f8fafc; font-size: 15px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s ease;" onfocus="this.style.borderColor='rgba(6,182,212,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <button type="button" class="toggle-password-btn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 4px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; outline: none;">
+                <svg class="eye-open w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg class="eye-closed w-5 h-5" style="display: none;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+              </button>
+            </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px;">
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Cambiar foto de perfil</label>

@@ -1031,7 +1031,7 @@ function renderExamResults() {
   const backBtn = document.createElement('button');
   backBtn.className = 'btn btn-secondary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
   backBtn.id = 'backToExam';
-  backBtn.textContent = 'Volver a intentarlo';
+  backBtn.textContent = 'Crear nuevo examen';
   actions.appendChild(backBtn);
 
   resultsCard.appendChild(actions);
@@ -1106,6 +1106,10 @@ function renderExamResults() {
     examAnswers = [];
     selectedExamOption = null;
     clearExamProgressStorage();
+    const eCont = document.getElementById('examContent');
+    if (eCont) {
+      eCont.replaceChildren();
+    }
     ensureExamStartButtonAfterLoad();
   });
 }

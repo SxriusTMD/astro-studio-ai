@@ -1270,6 +1270,7 @@ export function initEditProfileModal() {
   const cropperImage = document.getElementById('cropperImage');
   const profileAvatarPreview = document.getElementById('profileAvatarPreview');
   const profileProviderInfo = document.getElementById('profileProviderInfo');
+  const editProfilePassword = document.getElementById('editProfilePassword');
   
   const openProfile = () => {
     // Close dropdown
@@ -1316,7 +1317,6 @@ export function initEditProfileModal() {
 
     // Toggle password current field visibility based on provider / changes
     const securityConfirmGroup = document.getElementById('securityConfirmGroup');
-    const editProfilePassword = document.getElementById('editProfilePassword');
     if (editProfilePassword) editProfilePassword.value = '';
     if (securityConfirmGroup) {
       securityConfirmGroup.style.display = 'none';
@@ -1384,6 +1384,21 @@ export function initEditProfileModal() {
         } else {
           securityConfirmGroup.style.display = 'none';
         }
+      }
+    });
+  }
+
+  const securityConfirmGroup = document.getElementById('securityConfirmGroup');
+  const togglePassBtn = securityConfirmGroup?.querySelector('.toggle-password-btn');
+  if (togglePassBtn && editProfilePassword) {
+    togglePassBtn.addEventListener('click', () => {
+      const isPass = editProfilePassword.type === 'password';
+      editProfilePassword.type = isPass ? 'text' : 'password';
+      const eyeOpen = togglePassBtn.querySelector('.eye-open');
+      const eyeClosed = togglePassBtn.querySelector('.eye-closed');
+      if (eyeOpen && eyeClosed) {
+        eyeOpen.style.display = isPass ? 'none' : 'block';
+        eyeClosed.style.display = isPass ? 'block' : 'none';
       }
     });
   }
@@ -1523,6 +1538,42 @@ export function initEditProfileModal() {
     }
     
     closeProfile();
+  });
+}
+
+export function initLeaderboard() {
+  const leaderboardList = document.getElementById('leaderboardList');
+  if (!leaderboardList) return;
+
+  const examples = [
+    { name: 'Sofía R.', minutes: 240 },
+    { name: 'Mateo G.', minutes: 180 },
+    { name: 'Valentina P.', minutes: 120 }
+  ];
+
+  leaderboardList.replaceChildren();
+  examples.forEach((ex, idx) => {
+    const li = document.createElement('li');
+    li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; font-size: 13px; color: #e8e8f0; border: 1px solid rgba(255,255,255,0.04); transition: background-color 0.2s ease;';
+    li.addEventListener('mouseenter', () => {
+      li.style.backgroundColor = 'rgba(255,255,255,0.05)';
+    });
+    li.addEventListener('mouseleave', () => {
+      li.style.backgroundColor = 'rgba(255,255,255,0.02)';
+    });
+
+    const userSpan = document.createElement('span');
+    userSpan.style.cssText = 'font-weight: 500; display: flex; align-items: center; gap: 6px;';
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+    userSpan.textContent = `${medal} ${ex.name}`;
+
+    const minSpan = document.createElement('span');
+    minSpan.style.cssText = 'color: #00e5ff; font-weight: 600;';
+    minSpan.textContent = `${ex.minutes} min`;
+
+    li.appendChild(userSpan);
+    li.appendChild(minSpan);
+    leaderboardList.appendChild(li);
   });
 }
 

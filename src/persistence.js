@@ -128,6 +128,42 @@ export class EngagementTracker {
         this.checkProactiveChat();
       });
     }
+
+    // Active Minutes Tracker (Page Visibility API)
+    let activeMinutesInterval = null;
+
+    const startTracker = () => {
+      if (activeMinutesInterval) return;
+      activeMinutesInterval = setInterval(() => {
+        const session = window._supabaseSession || window.currentSession;
+        const userId = session?.user?.id || window.userLimits?.google_id || '';
+        if (userId) {
+          const key = 'userActiveMinutes_' + userId;
+          const currentMinutes = parseInt(localStorage.getItem(key) || '0', 10);
+          localStorage.setItem(key, String(currentMinutes + 1));
+        }
+      }, 60000);
+    };
+
+    const stopTracker = () => {
+      if (activeMinutesInterval) {
+        clearInterval(activeMinutesInterval);
+        activeMinutesInterval = null;
+      }
+    };
+
+    // Initial start if not hidden
+    if (!document.hidden) {
+      startTracker();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopTracker();
+      } else {
+        startTracker();
+      }
+    });
   }
 
   static recordTime() {

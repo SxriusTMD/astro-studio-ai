@@ -10,7 +10,7 @@ import {
   initTabs, initDragDrop, initLibraryPanel, initUpgradeModal,
   initUserDropdownClose, initSidebarEvents, initHeaderScroll,
   initSessionClickDelegation, initLegalModal, initProgressDashboard,
-  initEditProfileModal
+  initEditProfileModal, initLeaderboard
 } from './ui-components.js';
 
 function init() {
@@ -52,6 +52,7 @@ function init() {
   initLegalModal();
   initProgressDashboard();
   initEditProfileModal();
+  initLeaderboard();
 
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     clearStorage();

@@ -1197,13 +1197,21 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: prompt }
     ], { model: 'google/gemma-2-9b-it', temperature: 0.2 });
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+
+    let cleanText = text || '';
+    // Quitar backticks de Markdown
+    cleanText = cleanText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    const startIdx = cleanText.indexOf('[');
+    const endIdx = cleanText.lastIndexOf(']');
+
     let planDataToSave = null;
     let responseData = { diasRestantes: diffDays };
 
-    if (jsonMatch) {
+    if (startIdx !== -1 && endIdx !== -1 && startIdx < endIdx) {
+      const jsonString = cleanText.substring(startIdx, endIdx + 1).trim();
       try {
-        const plan = JSON.parse(jsonMatch[0]);
+        const plan = JSON.parse(jsonString);
         planDataToSave = { items: plan, subject: materia, examDate: fechaExamen };
         responseData.plan = plan;
       } catch (parseErr) {
