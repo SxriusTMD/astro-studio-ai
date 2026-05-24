@@ -130,10 +130,11 @@ header {
   top: 0;
   z-index: 101;
   width: 100% !important;
-  background: rgba(10,10,26,0.85);
+  background-color: var(--bg-deep) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   transition: padding 0.25s ease;
 
@@ -339,6 +340,19 @@ header.header-compact .logo-icon {
       font-size: 16px;
     }
 
+    .header-tools .btn-icon {
+      background-color: transparent !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text-muted) !important;
+      border-radius: 8px !important;
+      transition: all 0.2s ease !important;
+    }
+    .header-tools .btn-icon:hover {
+      border-color: var(--accent-gold) !important;
+      color: var(--accent-gold) !important;
+      background-color: transparent !important;
+    }
+
     .logo-section {
       display: flex;
       align-items: center;
@@ -470,10 +484,11 @@ header.header-compact .logo-icon {
 .plan-indicator {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
   padding: 4px 10px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.05);
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
   white-space: nowrap;
 }
 
@@ -1123,9 +1138,10 @@ body:not(.sidebar-closed) .sidebar {
     .tab-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
 
     .tab-btn.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      background-color: transparent !important;
+      border-color: var(--accent-gold) !important;
+      box-shadow: none !important;
+      color: var(--accent-gold) !important;
     }
 
 .tab-content {
@@ -2920,10 +2936,10 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .tab-btn.active {
-      background: rgba(197, 168, 128, 0.12);
-      border-color: rgba(197, 168, 128, 0.25);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      color: #f4f4f5;
+      background-color: transparent !important;
+      border-color: var(--accent-gold) !important;
+      box-shadow: none !important;
+      color: var(--accent-gold) !important;
     }
 
     .btn-primary, .new-chat-btn, .btn-change-pdf:hover {
@@ -3234,7 +3250,7 @@ body:not(.sidebar-closed) .sidebar {
 
 
 <!-- ===== HEADER ===== -->
-<header class="flex-none h-14 md:h-16 bg-[rgba(10,10,26,0.85)] backdrop-blur-md border-b border-[#1e1e4a] z-[101] flex-shrink-0">
+<header class="flex-none h-14 md:h-16 bg-[var(--bg-deep)] backdrop-blur-md border-b border-[var(--border)] z-[101] flex-shrink-0">
 <div class="flex items-center justify-between px-4 md:px-6 h-full max-w-[1400px] mx-auto">
   <div class="flex items-center gap-3 flex-none">
     <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></button>
@@ -3252,8 +3268,8 @@ body:not(.sidebar-closed) .sidebar {
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
-      <button class="btn btn-secondary btn-small btn-icon" id="progressDashboardBtn" title="Mi Progreso" style="margin-left: 2px;"><svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></button>
-      <button class="btn btn-secondary btn-small btn-icon" id="btnLeaderboard" title="Estudiantes más dedicados" style="margin-left: 2px;"><svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path><path d="M12 2a6 6 0 0 1 6 6v3.5a6 6 0 0 1-12 0V8a6 6 0 0 1 6-6z"></path></svg></button>
+      <button class="btn btn-secondary btn-small btn-icon" id="progressDashboardBtn" title="Mi Progreso" style="margin-left: 2px;"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></button>
+      <button class="btn btn-secondary btn-small btn-icon" id="btnLeaderboard" title="Estudiantes más dedicados" style="margin-left: 2px;"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path><path d="M12 2a6 6 0 0 1 6 6v3.5a6 6 0 0 1-12 0V8a6 6 0 0 1 6-6z"></path></svg></button>
     </div>
     <div class="user-profile" id="userProfile">
       <div class="user-avatar-container" id="userAvatarContainer">
