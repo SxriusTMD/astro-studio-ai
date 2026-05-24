@@ -633,9 +633,13 @@ function getEvenlyDistributedChunks(fullText, maxChunks = 3, chunkSize = 4000) {
 }
 
 // Helper: call NVIDIA NIM API
-async function callNVIDIA(messages) {
+async function callNVIDIA(messages, options = {}) {
   const maxRetries = 2;
   let lastError;
+  
+  const model = options.model || 'google/gemma-4-31b-it';
+  const temperature = options.temperature !== undefined ? options.temperature : 0.7;
+  const max_tokens = options.max_tokens || 4096;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -649,9 +653,10 @@ async function callNVIDIA(messages) {
           'Authorization': `Bearer ${process.env.NVIDIA_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'google/gemma-4-31b-it',
+          model,
           messages,
-          max_tokens: 4096
+          temperature,
+          max_tokens
         }),
         signal: controller.signal
       });
@@ -964,7 +969,7 @@ app.post('/api/flashcards', ensureAuthenticated, async (req, res) => {
   try {
     const text = await callNVIDIA([
       { role: 'user', content: prompt }
-    ]);
+    ], { model: 'meta/llama-3.1-8b-instruct', temperature: 0.2 });
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
     const cards = JSON.parse(jsonMatch[0]);
@@ -1097,7 +1102,7 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento. La fecha de HOY es ${hoyStr}. Hay ${diffDays} días hasta el examen (${fechaExamen}). El rango mínimo del plan es de 3 días. Asigna temas del documento a cada día de forma progresiva, comenzando desde HOY (${hoyStr}) y distribuyendo equitativamente. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro.\n\nDocumento:\n${getEvenlyDistributedChunks(pdfContent, 3)}`;
 
   try {
-    const text = await callNVIDIA([{ role: 'user', content: prompt }]);
+    const text = await callNVIDIA([{ role: 'user', content: prompt }], { model: 'meta/llama-3.1-8b-instruct', temperature: 0.2 });
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     let planDataToSave = null;
     let responseData = { diasRestantes: diffDays };
