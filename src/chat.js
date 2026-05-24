@@ -1562,7 +1562,19 @@ export function renderHistory() {
     
     const title = document.createElement('div');
     title.className = 'h-name';
-    title.innerHTML = `<svg class="w-4 h-4 mr-1 inline-block text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>`;
+    
+    const svg1 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg1.setAttribute("class", "w-4 h-4 mr-1 inline-block text-blue-400");
+    svg1.setAttribute("viewBox", "0 0 24 24");
+    svg1.setAttribute("fill", "none");
+    svg1.setAttribute("stroke", "currentColor");
+    svg1.setAttribute("stroke-width", "2");
+    svg1.setAttribute("stroke-linecap", "round");
+    svg1.setAttribute("stroke-linejoin", "round");
+    const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path1.setAttribute("d", "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20");
+    svg1.appendChild(path1);
+    title.appendChild(svg1);
     title.appendChild(document.createTextNode(s.pdfName));
     
     const dateDiv = document.createElement('div');
@@ -1575,7 +1587,19 @@ export function renderHistory() {
     if (preview) {
       const prevDiv = document.createElement('div');
       prevDiv.className = 'h-preview';
-      prevDiv.innerHTML = `<svg class="w-3 h-3 mr-1 inline-block text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
+      
+      const svg2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg2.setAttribute("class", "w-3 h-3 mr-1 inline-block text-gray-500");
+      svg2.setAttribute("viewBox", "0 0 24 24");
+      svg2.setAttribute("fill", "none");
+      svg2.setAttribute("stroke", "currentColor");
+      svg2.setAttribute("stroke-width", "2");
+      svg2.setAttribute("stroke-linecap", "round");
+      svg2.setAttribute("stroke-linejoin", "round");
+      const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path2.setAttribute("d", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z");
+      svg2.appendChild(path2);
+      prevDiv.appendChild(svg2);
       prevDiv.appendChild(document.createTextNode(`"${preview}..."`));
       div.appendChild(prevDiv);
     }

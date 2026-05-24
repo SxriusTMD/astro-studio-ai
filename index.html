@@ -1915,7 +1915,7 @@ body:not(.sidebar-closed) .sidebar {
   transition: opacity 0.3s ease;
 }
 
-    .history-overlay.open { opacity: 1; pointer-events: auto; }
+    .history-overlay.open, .history-overlay.active { opacity: 1; pointer-events: auto; }
 
 .history-panel {
   position: fixed;
@@ -1933,7 +1933,7 @@ body:not(.sidebar-closed) .sidebar {
   padding: 0;
 }
 
-    .history-panel.open { transform: translateX(0); }
+    .history-panel.open, .history-panel.active { transform: translateX(0); }
 
     .history-panel-header {
       display: flex;
