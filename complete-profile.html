@@ -58,36 +58,90 @@
   </form>
 </div>
 <script>
-const canvas=document.getElementById('stars'),ctx=canvas.getContext('2d');let stars=[];
-function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
-resize();window.addEventListener('resize',resize);
-for(let i=0;i<180;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.3,a:Math.random()*6.28});
-function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{s.a+=0.004;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fillStyle=`rgba(255,255,255,${0.25+Math.sin(s.a)*0.25})`;ctx.fill()});requestAnimationFrame(draw)}
-draw();
+// Stars background
+const canvas = document.getElementById('stars');
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    let stars = [];
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 180; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, a: Math.random() * 6.28 });
+    }
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        s.a += 0.004;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, 7);
+        ctx.fillStyle = `rgba(255,255,255,${0.25 + Math.sin(s.a) * 0.25})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    };
+    draw();
+  }
+}
 
-document.getElementById('usernameForm').addEventListener('submit',async e=>{
-  e.preventDefault();const u=document.getElementById('usernameInput').value.trim(),m=document.getElementById('usernameMsg'),b=document.getElementById('usernameBtn');
-  if(u.length<3){m.className='auth-msg error';m.textContent='Mínimo 3 caracteres';return}
-  if(!/^[a-zA-Z0-9_]+$/.test(u)){m.className='auth-msg error';m.textContent='Solo letras, números y _';return}
-  b.disabled=true;b.textContent='Guardando...';m.className='auth-msg';m.textContent='';
-  try{
-    const r=await fetch('/api/auth/set-username',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error||'Error');
-    window.location.href='/';
-  }catch(e){m.className='auth-msg error';m.textContent=e.message}
-  finally{b.disabled=false;b.textContent='Finalizar'}
-});
-document.getElementById('usernameInput').addEventListener('input',async e=>{
-  const v=e.target.value.trim(),m=document.getElementById('usernameMsg');
-  if(v.length<3){m.className='auth-msg';m.textContent='';return}
-  try{
-    const r=await fetch(`/api/auth/check-username?username=${encodeURIComponent(v)}`);
-    const d=await r.json();
-    m.className=d.available?'auth-msg success':'auth-msg error';
-    m.textContent=d.available?'✅ Disponible':'❌ No disponible';
-  }catch{}
-});
+// Form event listeners
+const usernameForm = document.getElementById('usernameForm');
+const usernameInput = document.getElementById('usernameInput');
+const usernameMsg = document.getElementById('usernameMsg');
+const usernameBtn = document.getElementById('usernameBtn');
+
+if (usernameForm) {
+  usernameForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!usernameInput || !usernameMsg || !usernameBtn) return;
+    const u = usernameInput.value.trim();
+    if (u.length < 3) {
+      usernameMsg.className = 'auth-msg error';
+      usernameMsg.textContent = 'Mínimo 3 caracteres';
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(u)) {
+      usernameMsg.className = 'auth-msg error';
+      usernameMsg.textContent = 'Solo letras, números y _';
+      return;
+    }
+    usernameBtn.disabled = true;
+    usernameBtn.textContent = 'Guardando...';
+    usernameMsg.className = 'auth-msg';
+    usernameMsg.textContent = '';
+    try {
+      const r = await fetch('/api/auth/set-username', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Error');
+      window.location.href = '/';
+    } catch (e) {
+      usernameMsg.className = 'auth-msg error';
+      usernameMsg.textContent = e.message;
+    } finally {
+      usernameBtn.disabled = false;
+      usernameBtn.textContent = 'Finalizar';
+    }
+  });
+}
+
+if (usernameInput) {
+  usernameInput.addEventListener('input', async e => {
+    if (!usernameMsg) return;
+    const v = e.target.value.trim();
+    if (v.length < 3) {
+      usernameMsg.className = 'auth-msg';
+      usernameMsg.textContent = '';
+      return;
+    }
+    try {
+      const r = await fetch(`/api/auth/check-username?username=${encodeURIComponent(v)}`);
+      const d = await r.json();
+      usernameMsg.className = d.available ? 'auth-msg success' : 'auth-msg error';
+      usernameMsg.textContent = d.available ? '✅ Disponible' : '❌ No disponible';
+    } catch {}
+  });
+}
 </script>
 </body>
 </html>

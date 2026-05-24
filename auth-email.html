@@ -275,24 +275,29 @@
 <script>
 // Stars background
 const canvas = document.getElementById('stars-canvas');
-const ctx = canvas.getContext('2d');
-let stars = [];
-function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-resizeCanvas(); window.addEventListener('resize', resizeCanvas);
-for (let i = 0; i < 200; i++) {
-  stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, a: Math.random() });
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    let stars = [];
+    const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    for (let i = 0; i < 200; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, a: Math.random() });
+    }
+    const drawStars = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        s.a += 0.003;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(s.a) * 0.3})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(drawStars);
+    };
+    drawStars();
+  }
 }
-function drawStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  stars.forEach(s => {
-    s.a += 0.003;
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(s.a) * 0.3})`;
-    ctx.fill();
-  });
-  requestAnimationFrame(drawStars);
-}
-drawStars();
 
 // DOM refs
 const step1 = document.getElementById('step1');
@@ -304,153 +309,202 @@ const dot3 = document.getElementById('dot3');
 const stepTitle = document.getElementById('stepTitle');
 
 function goToStep(n) {
-  [step1, step2, step3].forEach((el, i) => el.classList.toggle('active', i === n - 1));
+  [step1, step2, step3].forEach((el, i) => {
+    if (el) el.classList.toggle('active', i === n - 1);
+  });
   [dot1, dot2, dot3].forEach((el, i) => {
-    el.classList.toggle('active', i === n - 1);
-    el.classList.toggle('done', i < n - 1);
+    if (el) {
+      el.classList.toggle('active', i === n - 1);
+      el.classList.toggle('done', i < n - 1);
+    }
   });
   const titles = ['Accede con tu correo', 'Verifica tu correo', 'Elige tu username'];
-  stepTitle.textContent = titles[n - 1];
+  if (stepTitle) {
+    stepTitle.textContent = titles[n - 1] || '';
+  }
 }
 
 let pendingEmail = '';
 let pendingId = '';
 
 // Tab switching
-document.getElementById('tabLogin').addEventListener('click', () => {
-  document.getElementById('tabLogin').classList.add('active');
-  document.getElementById('tabRegister').classList.remove('active');
-  document.getElementById('loginForm').style.display = 'flex';
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('loginMsg').textContent = '';
-  document.getElementById('regMsg').textContent = '';
-});
-document.getElementById('tabRegister').addEventListener('click', () => {
-  document.getElementById('tabRegister').classList.add('active');
-  document.getElementById('tabLogin').classList.remove('active');
-  document.getElementById('registerForm').style.display = 'flex';
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('loginMsg').textContent = '';
-  document.getElementById('regMsg').textContent = '';
-});
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const loginMsg = document.getElementById('loginMsg');
+const regMsg = document.getElementById('regMsg');
+
+if (tabLogin) {
+  tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('active');
+    if (tabRegister) tabRegister.classList.remove('active');
+    if (loginForm) loginForm.style.display = 'flex';
+    if (registerForm) registerForm.style.display = 'none';
+    if (loginMsg) loginMsg.textContent = '';
+    if (regMsg) regMsg.textContent = '';
+  });
+}
+
+if (tabRegister) {
+  tabRegister.addEventListener('click', () => {
+    tabRegister.classList.add('active');
+    if (tabLogin) tabLogin.classList.remove('active');
+    if (registerForm) registerForm.style.display = 'flex';
+    if (loginForm) loginForm.style.display = 'none';
+    if (loginMsg) loginMsg.textContent = '';
+    if (regMsg) regMsg.textContent = '';
+  });
+}
 
 // Register
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('regEmail').value.trim();
-  const password = document.getElementById('regPass').value;
-  const confirm = document.getElementById('regPassConfirm').value;
-  const msg = document.getElementById('regMsg');
-  const btn = document.getElementById('regBtn');
-  if (password !== confirm) { msg.className='auth-msg error'; msg.textContent='Las contraseñas no coinciden'; return; }
-  btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Creando cuenta...';
-  msg.className = 'auth-msg'; msg.textContent = '';
-  try {
-    const res = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al registrar');
-    pendingEmail = email;
-    document.getElementById('verifyEmailDisplay').textContent = email;
-    goToStep(2);
-  } catch (err) {
-    msg.className='auth-msg error'; msg.textContent=err.message;
-  } finally { btn.disabled=false; btn.textContent='Crear cuenta'; }
-});
+const regEmail = document.getElementById('regEmail');
+const regPass = document.getElementById('regPass');
+const regPassConfirm = document.getElementById('regPassConfirm');
+const regBtn = document.getElementById('regBtn');
+
+if (registerForm) {
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!regEmail || !regPass || !regPassConfirm || !regMsg || !regBtn) return;
+    const email = regEmail.value.trim();
+    const password = regPass.value;
+    const confirm = regPassConfirm.value;
+    if (password !== confirm) { regMsg.className='auth-msg error'; regMsg.textContent='Las contraseñas no coinciden'; return; }
+    regBtn.disabled = true; regBtn.innerHTML = '<span class="loading-spinner"></span> Creando cuenta...';
+    regMsg.className = 'auth-msg'; regMsg.textContent = '';
+    try {
+      const res = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al registrar');
+      pendingEmail = email;
+      const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
+      if (verifyEmailDisplay) verifyEmailDisplay.textContent = email;
+      goToStep(2);
+    } catch (err) {
+      regMsg.className='auth-msg error'; regMsg.textContent=err.message;
+    } finally { regBtn.disabled=false; regBtn.textContent='Crear cuenta'; }
+  });
+}
 
 // Login
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPass').value;
-  const msg = document.getElementById('loginMsg');
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Iniciando sesión...';
-  msg.className = 'auth-msg'; msg.textContent = '';
-  try {
-    const res = await fetch('/api/auth/login', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
-    const data = await res.json();
-    if (!res.ok) {
-      if (data.needsVerification) {
-        pendingEmail = email;
-        document.getElementById('verifyEmailDisplay').textContent = email;
-        goToStep(2);
+const loginEmail = document.getElementById('loginEmail');
+const loginPass = document.getElementById('loginPass');
+const loginBtn = document.getElementById('loginBtn');
+
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!loginEmail || !loginPass || !loginMsg || !loginBtn) return;
+    const email = loginEmail.value.trim();
+    const password = loginPass.value;
+    loginBtn.disabled = true; loginBtn.innerHTML = '<span class="loading-spinner"></span> Iniciando sesión...';
+    loginMsg.className = 'auth-msg'; loginMsg.textContent = '';
+    try {
+      const res = await fetch('/api/auth/login', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.needsVerification) {
+          pendingEmail = email;
+          const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
+          if (verifyEmailDisplay) verifyEmailDisplay.textContent = email;
+          goToStep(2);
+          return;
+        }
+        throw new Error(data.error || 'Error al iniciar sesión');
+      }
+      if (data.needsUsername) {
+        pendingId = email;
+        goToStep(3);
         return;
       }
-      throw new Error(data.error || 'Error al iniciar sesión');
-    }
-    if (data.needsUsername) {
-      pendingId = email;
-      goToStep(3);
-      return;
-    }
-    window.location.href = '/';
-  } catch (err) {
-    msg.className='auth-msg error'; msg.textContent=err.message;
-  } finally { btn.disabled=false; btn.textContent='Iniciar sesión'; }
-});
+      window.location.href = '/';
+    } catch (err) {
+      loginMsg.className='auth-msg error'; loginMsg.textContent=err.message;
+    } finally { loginBtn.disabled=false; loginBtn.textContent='Iniciar sesión'; }
+  });
+}
 
 // Back to login from step 2
-document.getElementById('backToLoginBtn').addEventListener('click', () => goToStep(1));
+const backToLoginBtn = document.getElementById('backToLoginBtn');
+if (backToLoginBtn) {
+  backToLoginBtn.addEventListener('click', () => goToStep(1));
+}
 
 // Check verified and continue to login
-document.getElementById('checkVerifiedBtn').addEventListener('click', async () => {
-  if (!pendingEmail) { goToStep(1); return; }
-  const btn = document.getElementById('checkVerifiedBtn');
-  const msg = document.getElementById('step2').querySelector('.auth-msg') || (() => {
-    const el = document.createElement('div');
-    el.className = 'auth-msg';
-    document.getElementById('step2').querySelector('p:last-of-type').after(el);
-    return el;
-  })();
-  btn.disabled = true; btn.textContent = 'Verificando...';
-  msg.className = 'auth-msg'; msg.textContent = '';
-  try {
-    const res = await fetch(`/api/auth/check-status?email=${encodeURIComponent(pendingEmail)}`);
-    const data = await res.json();
-    if (!data.exists) { msg.className='auth-msg error'; msg.textContent='❌ No encontramos esta cuenta. ¿Usaste otro email?'; btn.disabled=false; btn.textContent='Ya verifiqué, iniciar sesión'; return; }
-    if (data.isVerified) {
-      msg.className='auth-msg success'; msg.textContent='✅ Correo verificado. Ahora inicia sesión.';
-      setTimeout(() => goToStep(1), 1200);
-    } else {
-      msg.className='auth-msg error'; msg.textContent='❌ Aún no detectamos la verificación. Revisa tu bandeja de entrada o spam.';
+const checkVerifiedBtn = document.getElementById('checkVerifiedBtn');
+if (checkVerifiedBtn) {
+  checkVerifiedBtn.addEventListener('click', async () => {
+    if (!pendingEmail) { goToStep(1); return; }
+    const step2El = document.getElementById('step2');
+    if (!step2El) return;
+    const msg = step2El.querySelector('.auth-msg') || (() => {
+      const el = document.createElement('div');
+      el.className = 'auth-msg';
+      const lastP = step2El.querySelector('p:last-of-type');
+      if (lastP) lastP.after(el);
+      return el;
+    })();
+    checkVerifiedBtn.disabled = true; checkVerifiedBtn.textContent = 'Verificando...';
+    msg.className = 'auth-msg'; msg.textContent = '';
+    try {
+      const res = await fetch(`/api/auth/check-status?email=${encodeURIComponent(pendingEmail)}`);
+      const data = await res.json();
+      if (!data.exists) { msg.className='auth-msg error'; msg.textContent='❌ No encontramos esta cuenta. ¿Usaste otro email?'; checkVerifiedBtn.disabled=false; checkVerifiedBtn.textContent='Ya verifiqué, iniciar sesión'; return; }
+      if (data.isVerified) {
+        msg.className='auth-msg success'; msg.textContent='✅ Correo verificado. Ahora inicia sesión.';
+        setTimeout(() => goToStep(1), 1200);
+      } else {
+        msg.className='auth-msg error'; msg.textContent='❌ Aún no detectamos la verificación. Revisa tu bandeja de entrada o spam.';
+      }
+    } catch (err) {
+      msg.className='auth-msg error'; msg.textContent='Error al verificar. Intenta de nuevo.';
     }
-  } catch (err) {
-    msg.className='auth-msg error'; msg.textContent='Error al verificar. Intenta de nuevo.';
-  }
-  btn.disabled=false; btn.textContent='Ya verifiqué, iniciar sesión';
-});
+    checkVerifiedBtn.disabled=false; checkVerifiedBtn.textContent='Ya verifiqué, iniciar sesión';
+  });
+}
 
 // Username
-document.getElementById('usernameForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('usernameInput').value.trim();
-  const msg = document.getElementById('usernameMsg');
-  const btn = document.getElementById('usernameBtn');
-  if (username.length < 3) { msg.className='auth-msg error'; msg.textContent='Mínimo 3 caracteres'; return; }
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) { msg.className='auth-msg error'; msg.textContent='Solo letras, números y _'; return; }
-  btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Guardando...';
-  msg.className = 'auth-msg'; msg.textContent = '';
-  try {
-    const res = await fetch('/api/auth/set-username', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username}) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    window.location.href = '/';
-  } catch (err) {
-    msg.className='auth-msg error'; msg.textContent=err.message;
-  } finally { btn.disabled=false; btn.textContent='Finalizar'; }
-});
+const usernameForm = document.getElementById('usernameForm');
+const usernameInput = document.getElementById('usernameInput');
+const usernameMsg = document.getElementById('usernameMsg');
+const usernameBtn = document.getElementById('usernameBtn');
+
+if (usernameForm) {
+  usernameForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!usernameInput || !usernameMsg || !usernameBtn) return;
+    const username = usernameInput.value.trim();
+    if (username.length < 3) { usernameMsg.className='auth-msg error'; usernameMsg.textContent='Mínimo 3 caracteres'; return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) { usernameMsg.className='auth-msg error'; usernameMsg.textContent='Solo letras, números y _'; return; }
+    usernameBtn.disabled = true; usernameBtn.innerHTML = '<span class="loading-spinner"></span> Guardando...';
+    usernameMsg.className = 'auth-msg'; usernameMsg.textContent = '';
+    try {
+      const res = await fetch('/api/auth/set-username', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username}) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error');
+      window.location.href = '/';
+    } catch (err) {
+      usernameMsg.className='auth-msg error'; usernameMsg.textContent=err.message;
+    } finally { usernameBtn.disabled=false; usernameBtn.textContent='Finalizar'; }
+  });
+}
 
 // Real-time username availability
-document.getElementById('usernameInput').addEventListener('input', async (e) => {
-  const val = e.target.value.trim();
-  const msg = document.getElementById('usernameMsg');
-  if (val.length < 3) { msg.className='auth-msg'; msg.textContent=''; return; }
-  try {
-    const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(val)}`);
-    const data = await res.json();
-    msg.className = data.available ? 'auth-msg success' : 'auth-msg error';
-    msg.textContent = data.available ? '✅ Disponible' : '❌ No disponible';
-  } catch { /* ignore */ }
+if (usernameInput) {
+  usernameInput.addEventListener('input', async (e) => {
+    if (!usernameMsg) return;
+    const val = e.target.value.trim();
+    if (val.length < 3) { usernameMsg.className='auth-msg'; usernameMsg.textContent=''; return; }
+    try {
+      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(val)}`);
+      const data = await res.json();
+      usernameMsg.className = data.available ? 'auth-msg success' : 'auth-msg error';
+      usernameMsg.textContent = data.available ? '✅ Disponible' : '❌ No disponible';
+    } catch { /* ignore */ }
+  });
+}
+
 // SUPABASE FRONTEND MOCK CLIENT
 const supabase = {
   auth: {
@@ -471,25 +525,29 @@ const supabase = {
   }
 };
 
-document.getElementById('forgotPasswordBtn')?.addEventListener('click', async () => {
-  const correoIngresado = document.getElementById('loginEmail').value.trim();
-  const msg = document.getElementById('loginMsg');
-  if (!correoIngresado) {
-    msg.className = 'auth-msg error';
-    msg.textContent = 'Por favor ingresa tu correo electrónico.';
-    return;
-  }
-  msg.className = 'auth-msg info';
-  msg.textContent = 'Enviando solicitud...';
-  const { error } = await supabase.auth.resetPasswordForEmail(correoIngresado);
-  if (error) {
-    msg.className = 'auth-msg error';
-    msg.textContent = error.message;
-  } else {
-    msg.className = 'auth-msg success';
-    msg.textContent = 'Te hemos enviado un enlace de recuperación.';
-  }
-});
+const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+if (forgotPasswordBtn) {
+  forgotPasswordBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (!loginEmail || !loginMsg) return;
+    const correoIngresado = loginEmail.value.trim();
+    if (!correoIngresado) {
+      loginMsg.className = 'auth-msg error';
+      loginMsg.textContent = 'Por favor ingresa tu correo electrónico.';
+      return;
+    }
+    loginMsg.className = 'auth-msg info';
+    loginMsg.textContent = 'Enviando solicitud...';
+    const { error } = await supabase.auth.resetPasswordForEmail(correoIngresado);
+    if (error) {
+      loginMsg.className = 'auth-msg error';
+      loginMsg.textContent = error.message;
+    } else {
+      loginMsg.className = 'auth-msg success';
+      loginMsg.textContent = 'Te hemos enviado un enlace de recuperación.';
+    }
+  });
+}
 </script>
 </body>
 </html>
