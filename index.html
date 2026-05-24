@@ -2933,17 +2933,14 @@ body:not(.sidebar-closed) .sidebar {
         -ms-overflow-style: none; /* IE */
         flex-wrap: nowrap;
         padding-bottom: 4px;
+        gap: 4px !important;
       }
       .header-actions-container::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
       .header-actions-container button { flex-shrink: 0; }
 
       /* Fase 1: Liberar Espacio en Móvil */
-      .plan-indicator .plan-label {
-        display: none !important;
-      }
       .plan-indicator {
-        padding: 4px 8px !important;
-        font-size: 11px !important;
+        display: none !important;
       }
       .logo-text {
         display: none !important;
@@ -2957,7 +2954,7 @@ body:not(.sidebar-closed) .sidebar {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
-        gap: 6px !important;
+        gap: 4px !important;
         flex-shrink: 0 !important;
         min-width: max-content !important;
       }

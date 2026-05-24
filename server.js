@@ -717,7 +717,7 @@ app.post('/api/supabase/select', ensureAuthenticated, async (req, res) => {
         try {
           const { data: sData, error: sError } = await supabase
             .from('users')
-            .select('id, email, name, active_minutes')
+            .select('id, email, name, active_minutes, avatar_url, foto')
             .order('active_minutes', { ascending: false })
             .limit(limit || 5);
           
@@ -735,7 +735,7 @@ app.post('/api/supabase/select', ensureAuthenticated, async (req, res) => {
       // 2. Si Supabase no está configurado o falló, usar la BD local de PostgreSQL como fallback
       if (!loadedFromSupabase) {
         const localResult = await pool.query(
-          `SELECT google_id as id, email, nombre as name, active_minutes 
+          `SELECT google_id as id, email, nombre as name, active_minutes, foto 
            FROM usuarios 
            ORDER BY COALESCE(active_minutes, 0) DESC 
            LIMIT $1`,
@@ -750,7 +750,8 @@ app.post('/api/supabase/select', ensureAuthenticated, async (req, res) => {
         email: u.email,
         full_name: u.name, // Soportar ambos full_name y name
         name: u.name,
-        active_minutes: u.active_minutes || 0
+        active_minutes: u.active_minutes || 0,
+        avatar_url: u.avatar_url || u.foto || ''
       }));
 
       return res.json({ data: formattedUsers });

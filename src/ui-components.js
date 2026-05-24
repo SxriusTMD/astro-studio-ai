@@ -1620,6 +1620,42 @@ export async function fetchAndRenderLeaderboard() {
   const leaderboardList = document.getElementById('leaderboardList');
   if (!leaderboardList) return;
 
+  function createRankSvg(idx) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'w-5 h-5');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.style.cssText = 'width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0;';
+
+    if (idx === 0 || idx === 1 || idx === 2) {
+      const strokeColor = idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : '#b45309';
+      svg.setAttribute('stroke', strokeColor);
+
+      const paths = [
+        'M6 9H4.5a2.5 2.5 0 0 1 0-5H6',
+        'M18 9h1.5a2.5 2.5 0 0 0 0-5H18',
+        'M4 22h16',
+        'M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34',
+        'M12 2a6 6 0 0 1 6 6v3.5a6 6 0 0 1-12 0V8a6 6 0 0 1 6-6z'
+      ];
+      paths.forEach(p => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', p);
+        svg.appendChild(path);
+      });
+    } else {
+      svg.setAttribute('stroke', '#00e5ff');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'm12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z');
+      svg.appendChild(path);
+    }
+
+    return svg;
+  }
+
   // Render temporary secure loader
   leaderboardList.replaceChildren();
   const loader = document.createElement('div');
@@ -1630,7 +1666,7 @@ export async function fetchAndRenderLeaderboard() {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('id, email, full_name, name, active_minutes')
+      .select('id, email, full_name, name, active_minutes, avatar_url')
       .order('active_minutes', { ascending: false })
       .limit(5);
 
@@ -1652,7 +1688,7 @@ export async function fetchAndRenderLeaderboard() {
 
     data.forEach((user, idx) => {
       const li = document.createElement('li');
-      li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; font-size: 13px; color: #e8e8f0; border: 1px solid rgba(255,255,255,0.04); transition: background-color 0.2s ease; margin-bottom: 8px;';
+      li.style.cssText = 'display: flex; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; font-size: 13px; color: #e8e8f0; border: 1px solid rgba(255,255,255,0.04); transition: background-color 0.2s ease; margin-bottom: 8px;';
       
       const isCurrent = (user.id && String(user.id) === String(currentUserId)) || 
                         (user.email && String(user.email).toLowerCase() === String(currentUserEmail).toLowerCase());
@@ -1670,19 +1706,36 @@ export async function fetchAndRenderLeaderboard() {
         li.style.backgroundColor = isCurrent ? 'rgba(0, 229, 255, 0.08)' : 'rgba(255,255,255,0.02)';
       });
 
-      const userSpan = document.createElement('span');
-      userSpan.style.cssText = 'font-weight: 500; display: flex; align-items: center; gap: 6px;';
-      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '✨';
-      
-      const displayName = user.full_name || user.name || 'Estudiante';
-      userSpan.textContent = `${medal} ${displayName}`;
+      // 1. [SVG Rango]
+      const rankSvg = createRankSvg(idx);
 
+      // 2. [Avatar]
+      const displayName = user.full_name || user.name || 'Estudiante';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) + '&background=6366f1&color=fff&size=100';
+      avatarImg.style.cssText = 'width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 8px; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,0.08);';
+
+      // 3. [Nombre]
+      const nameSpan = document.createElement('span');
+      nameSpan.style.cssText = 'font-weight: 500; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;';
+      nameSpan.textContent = displayName;
+
+      // 4. [Espacio flexible]
+      const spacer = document.createElement('div');
+      spacer.style.flex = '1';
+
+      // 5. [Minutos]
       const minSpan = document.createElement('span');
-      minSpan.style.cssText = 'color: #00e5ff; font-weight: 600;';
+      minSpan.style.cssText = 'color: #00e5ff; font-weight: 600; flex-shrink: 0; margin-left: 8px;';
       minSpan.textContent = `${user.active_minutes || 0} min`;
 
-      li.appendChild(userSpan);
+      // Ensamblar en el orden estricto: [SVG Rango] -> [Avatar] -> [Nombre] -> [Espacio flexible] -> [Minutos]
+      li.appendChild(rankSvg);
+      li.appendChild(avatarImg);
+      li.appendChild(nameSpan);
+      li.appendChild(spacer);
       li.appendChild(minSpan);
+
       leaderboardList.appendChild(li);
     });
   } catch (err) {
