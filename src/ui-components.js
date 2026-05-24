@@ -1668,7 +1668,7 @@ export async function fetchAndRenderLeaderboard() {
       .from('users')
       .select('id, email, full_name, name, active_minutes, avatar_url')
       .order('active_minutes', { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (error) throw new Error(error.message);
 
