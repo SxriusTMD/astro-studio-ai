@@ -715,9 +715,14 @@ body:not(.sidebar-closed) .sidebar {
       font-size: 14px;
     }
 
-    .menu-email {
+    .menu-email, .user-email-text {
       color: #888;
       font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+      display: block;
     }
 
     .menu-plan-badge {
@@ -2889,6 +2894,26 @@ body:not(.sidebar-closed) .sidebar {
       position: relative;
       z-index: 1000;
     }
+    .hero-logo-img {
+      width: 120px !important;
+      height: auto !important;
+      margin: 0 auto;
+      display: block;
+      filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.8));
+    }
+    @media (max-width: 768px) {
+      .header-actions-container {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE */
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+      }
+      .header-actions-container::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+      .header-actions-container button { flex-shrink: 0; }
+    }
     </style>
 </head>
 <body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
@@ -2920,7 +2945,7 @@ body:not(.sidebar-closed) .sidebar {
   <main class="login-screen" id="loginScreen">
     <div class="login-content" id="loginContent">
       <div class="login-logo flex items-center justify-center mb-6">
-        <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img" style="width: 120px !important; height: auto;" alt="AeroLex AI" />
+        <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img hero-logo-img" alt="AeroLex AI" />
       </div>
       <h1 class="hero-title" style="font-family: 'Space Grotesk', sans-serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: #f8fafc; margin-bottom: 8px; letter-spacing: -1px;">AeroLex AI</h1>
       <p class="hero-subtitle" style="margin-top: 0;">El copiloto galáctico que extrae conceptos clave, genera exámenes personalizados y planea tu ruta de aprendizaje de tus PDFs de forma inteligente.</p>
@@ -3046,7 +3071,7 @@ body:not(.sidebar-closed) .sidebar {
   </div>
   <div class="flex-1 min-w-0"></div>
   <div class="flex items-center gap-3 flex-none">
-    <div class="header-tools flex items-center gap-2">
+    <div class="header-tools header-actions-container flex items-center gap-2">
       <div class="plan-indicator" id="planIndicator"></div>
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>

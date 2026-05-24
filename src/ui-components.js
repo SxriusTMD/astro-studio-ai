@@ -1245,15 +1245,17 @@ export function initEditProfileModal() {
     const dropdown = document.getElementById('userDropdown');
     if (dropdown) dropdown.style.display = 'none';
     
+    const userId = window.userLimits?.google_id || '';
+    
     // Hydrate fields strictly with .value
-    const currentName = window.userLimits?.displayName || localStorage.getItem('user_custom_name') || 'Usuario';
+    const currentName = window.userLimits?.displayName || (userId ? (localStorage.getItem('userName_' + userId) || localStorage.getItem('user_custom_name_' + userId)) : null) || localStorage.getItem('user_custom_name') || 'Usuario';
     const currentEmail = window.userLimits?.email || 'correo@ejemplo.com';
     if (editProfileName) editProfileName.value = currentName;
     if (editProfileEmail) editProfileEmail.value = currentEmail;
     
     // Hydrate provider info
+    let provider = 'correo';
     if (profileProviderInfo) {
-      let provider = 'correo';
       try {
         const session = window._supabaseSession || window.currentSession;
         if (session?.user?.app_metadata?.provider === 'google') {
@@ -1268,9 +1270,22 @@ export function initEditProfileModal() {
         : 'Cuenta vinculada por Correo';
     }
     
+    // Disable/Enable email input dynamically based on provider
+    if (editProfileEmail) {
+      if (provider === 'google') {
+        editProfileEmail.disabled = true;
+        editProfileEmail.style.cursor = 'not-allowed';
+        editProfileEmail.style.color = 'rgba(255,255,255,0.5)';
+      } else {
+        editProfileEmail.disabled = false;
+        editProfileEmail.style.cursor = 'text';
+        editProfileEmail.style.color = '#f8fafc';
+      }
+    }
+    
     // Hydrate avatar preview
     if (profileAvatarPreview) {
-      const customPhoto = localStorage.getItem('user_custom_photo');
+      const customPhoto = userId ? (localStorage.getItem('userAvatar_' + userId) || localStorage.getItem('user_custom_photo_' + userId)) : localStorage.getItem('user_custom_photo');
       profileAvatarPreview.src = customPhoto || window.userLimits?.photo || 'https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=150';
     }
     
@@ -1378,8 +1393,11 @@ export function initEditProfileModal() {
             height: 150
           });
           if (canvas) {
-            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-            window.userLimits.photo = croppedDataUrl;
+            const userId = window.userLimits?.google_id || '';
+            if (userId) {
+              localStorage.setItem('userAvatar_' + userId, croppedDataUrl);
+              localStorage.setItem('user_custom_photo_' + userId, croppedDataUrl);
+            }
             localStorage.setItem('user_custom_photo', croppedDataUrl);
           }
         } catch (cropErr) {
@@ -1412,6 +1430,11 @@ export function initEditProfileModal() {
         profileAvatarPreview.src = window.userLimits.photo;
       }
       
+      const userId = window.userLimits?.google_id || '';
+      if (userId) {
+        localStorage.setItem('userName_' + userId, window.userLimits.displayName);
+        localStorage.setItem('user_custom_name_' + userId, window.userLimits.displayName);
+      }
       localStorage.setItem('user_custom_name', window.userLimits.displayName);
       
       mostrarToast('✅ Perfil actualizado exitosamente');

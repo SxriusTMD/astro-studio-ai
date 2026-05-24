@@ -23,8 +23,9 @@ export async function initAuth() {
       return;
     }
 
-    const savedCustomName = localStorage.getItem('user_custom_name');
-    const savedCustomPhoto = localStorage.getItem('user_custom_photo');
+    const userId = data.user?.id || '';
+    const savedCustomName = userId ? (localStorage.getItem('userName_' + userId) || localStorage.getItem('user_custom_name_' + userId)) : localStorage.getItem('user_custom_name');
+    const savedCustomPhoto = userId ? (localStorage.getItem('userAvatar_' + userId) || localStorage.getItem('user_custom_photo_' + userId)) : localStorage.getItem('user_custom_photo');
     
     if (savedCustomName && data.user) data.user.displayName = savedCustomName;
     if (savedCustomPhoto && data.user) data.user.photo = savedCustomPhoto;
@@ -93,8 +94,9 @@ export async function fetchUserLimits() {
   try {
     const data = await apiFetchUserLimits();
     
-    const savedCustomName = localStorage.getItem('user_custom_name');
-    const savedCustomPhoto = localStorage.getItem('user_custom_photo');
+    const userId = window.userLimits?.google_id || '';
+    const savedCustomName = userId ? (localStorage.getItem('userName_' + userId) || localStorage.getItem('user_custom_name_' + userId)) : localStorage.getItem('user_custom_name');
+    const savedCustomPhoto = userId ? (localStorage.getItem('userAvatar_' + userId) || localStorage.getItem('user_custom_photo_' + userId)) : localStorage.getItem('user_custom_photo');
     if (savedCustomName && data) data.displayName = savedCustomName;
     if (savedCustomPhoto && data) data.photo = savedCustomPhoto;
 
