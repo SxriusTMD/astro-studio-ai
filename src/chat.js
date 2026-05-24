@@ -44,6 +44,7 @@ const flashcardData = [
   { q: '¿Qué es una red neuronal?', a: 'Modelo computacional inspirado en el cerebro, compuesto por capas de neuronas interconectadas.' },
   { q: '¿Qué es el overfitting?', a: 'Cuando el modelo aprende demasiado bien los datos de entrenamiento y falla en datos nuevos.' },
 ];
+const cardDifficulties = {};
 
 window.askAI = async function (prompt) {
   try {
@@ -438,7 +439,15 @@ export function updateCard(i) {
   if (flashcard) flashcard.classList.remove('flipped');
   document.querySelectorAll('#cardDots .dot').forEach((dot, idx) => {
     dot.classList.toggle('active', idx === i);
+    // Restore difficulty color if already rated
+    dot.classList.remove('diff-easy', 'diff-medium', 'diff-hard');
+    const diff = cardDifficulties[idx];
+    if (diff) dot.classList.add('diff-' + diff);
   });
+
+  // Hide spaced-rep buttons when navigating (they reappear on flip)
+  const srControls = document.getElementById('spacedRepControls');
+  if (srControls) srControls.classList.remove('visible');
 }
 
 export function renderFlashcards(cards) {
@@ -1781,10 +1790,135 @@ export function restoreFromStorage() {
   }
 }
 
+function getUserId() {
+  const session = window._supabaseSession || window.currentSession;
+  return session?.user?.id || 'anonymous';
+}
+
+function saveCardDifficulty(cardIndex, difficultyLevel) {
+  const uid = getUserId();
+  const storageKey = 'spacedRep_' + uid;
+  let userDecks = {};
+  try {
+    userDecks = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  } catch (_) { /* ignore parse errors */ }
+
+  if (!userDecks.cards) userDecks.cards = {};
+  userDecks.cards[String(cardIndex)] = {
+    difficulty: difficultyLevel,
+    lastReviewed: new Date().toISOString()
+  };
+  userDecks.lastUpdated = new Date().toISOString();
+  localStorage.setItem(storageKey, JSON.stringify(userDecks));
+
+  // Track in cardDifficulties for dot coloring
+  cardDifficulties[cardIndex] = difficultyLevel;
+}
+
+function showDeckCompleteMessage() {
+  const carouselWrap = document.querySelector('[style*="margin-top:24px"]');
+  if (!carouselWrap) return;
+
+  // Hide carousel and dots
+  const carousel = carouselWrap.querySelector('.flashcard-carousel');
+  const srControls = document.getElementById('spacedRepControls');
+  const dots = document.getElementById('cardDots');
+  if (carousel) carousel.style.display = 'none';
+  if (srControls) srControls.style.display = 'none';
+  if (dots) dots.style.display = 'none';
+
+  // Build completion message
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'deck-complete-msg';
+  msgDiv.id = 'deckCompleteMsg';
+
+  const starIcon = document.createElement('span');
+  starIcon.textContent = '\u{1F31F}';
+  starIcon.style.fontSize = '48px';
+  msgDiv.appendChild(starIcon);
+
+  const title = document.createElement('div');
+  title.className = 'complete-title';
+  title.textContent = '\u00a1Mazo completado por hoy!';
+  msgDiv.appendChild(title);
+
+  // Count difficulties
+  const counts = { easy: 0, medium: 0, hard: 0 };
+  Object.values(cardDifficulties).forEach(d => { if (counts[d] !== undefined) counts[d]++; });
+  const sub = document.createElement('div');
+  sub.className = 'complete-sub';
+  sub.textContent = `F\u00e1cil: ${counts.easy} \u2022 Medio: ${counts.medium} \u2022 Dif\u00edcil: ${counts.hard}`;
+  msgDiv.appendChild(sub);
+
+  const restartBtn = document.createElement('button');
+  restartBtn.className = 'btn-restart-deck';
+  restartBtn.textContent = 'Reiniciar Mazo';
+  restartBtn.addEventListener('click', () => {
+    // Remove completion message
+    const existing = document.getElementById('deckCompleteMsg');
+    if (existing) existing.remove();
+    // Show carousel and dots again
+    if (carousel) carousel.style.display = '';
+    if (srControls) { srControls.style.display = ''; srControls.classList.remove('visible'); }
+    if (dots) dots.style.display = '';
+    // Reset difficulties
+    Object.keys(cardDifficulties).forEach(k => delete cardDifficulties[k]);
+    updateCard(0);
+  });
+  msgDiv.appendChild(restartBtn);
+
+  carouselWrap.appendChild(msgDiv);
+}
+
+function buildSpacedRepButtons() {
+  const container = document.getElementById('spacedRepControls');
+  if (!container || container.children.length > 0) return;
+
+  const buttons = [
+    { label: 'F\u00e1cil', level: 'easy', cls: 'sr-easy' },
+    { label: 'Medio', level: 'medium', cls: 'sr-medium' },
+    { label: 'Dif\u00edcil', level: 'hard', cls: 'sr-hard' }
+  ];
+
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'spaced-rep-btn ' + b.cls;
+    btn.textContent = b.label;
+    btn.addEventListener('click', () => {
+      // Save difficulty
+      saveCardDifficulty(currentCard, b.level);
+
+      // Color the current dot
+      const dots = document.querySelectorAll('#cardDots .dot');
+      const currentDot = dots[currentCard];
+      if (currentDot) {
+        currentDot.classList.remove('diff-easy', 'diff-medium', 'diff-hard');
+        currentDot.classList.add('diff-' + b.level);
+      }
+
+      // Hide buttons
+      container.classList.remove('visible');
+
+      // Auto-advance after 700ms
+      setTimeout(() => {
+        if (currentCard < flashcardData.length - 1) {
+          updateCard(currentCard + 1);
+        } else {
+          showDeckCompleteMessage();
+        }
+      }, 700);
+    });
+    container.appendChild(btn);
+  });
+}
+
 export function initCardClickHandlers() {
   const flashcard = document.getElementById('flashcard');
   const prevCardBtn = document.getElementById('prevCard');
   const nextCardBtn = document.getElementById('nextCard');
+
+  // Build spaced-rep buttons once
+  buildSpacedRepButtons();
 
   if (flashcard) {
     flashcard.addEventListener('click', () => {
@@ -1792,6 +1926,13 @@ export function initCardClickHandlers() {
       flashcard.classList.toggle('flipped');
       if (willBeFlipped) {
         import('./ui-components.js').then(m => m.incrementCardsReviewed());
+        // Show spaced-rep controls
+        const srControls = document.getElementById('spacedRepControls');
+        if (srControls) srControls.classList.add('visible');
+      } else {
+        // Hide spaced-rep controls when flipping back to front
+        const srControls = document.getElementById('spacedRepControls');
+        if (srControls) srControls.classList.remove('visible');
       }
     });
   }
