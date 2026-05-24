@@ -854,15 +854,15 @@ export function initHistoryPanel() {
     e.stopPropagation();
     const panel = document.getElementById('historyPanel');
     const overlay = document.getElementById('historyOverlay');
-    const willBeOpen = panel && !panel.classList.contains('active');
     
-    if (willBeOpen) {
-      renderHistory();
-      panel?.classList.add('active');
-      overlay?.classList.add('active');
-    } else {
-      panel?.classList.remove('active');
-      overlay?.classList.remove('active');
+    if (panel) {
+      const willBeOpen = !panel.classList.contains('show');
+      if (willBeOpen) {
+        renderHistory();
+      }
+      panel.classList.toggle('show');
+      panel.classList.toggle('active');
+      overlay?.classList.toggle('active');
     }
   });
 
@@ -1285,7 +1285,7 @@ export function initEditProfileModal() {
     
     // Hydrate avatar preview
     if (profileAvatarPreview) {
-      const customPhoto = userId ? (localStorage.getItem('userAvatar_' + userId) || localStorage.getItem('user_custom_photo_' + userId)) : localStorage.getItem('user_custom_photo');
+      const customPhoto = userId ? localStorage.getItem('userAvatar_' + userId) : null;
       profileAvatarPreview.src = customPhoto || window.userLimits?.photo || 'https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=150';
     }
     
@@ -1393,7 +1393,11 @@ export function initEditProfileModal() {
             height: 150
           });
           if (canvas) {
-            const userId = window.userLimits?.google_id || '';
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            window.userLimits.photo = croppedDataUrl;
+            
+            const session = window._supabaseSession || window.currentSession;
+            const userId = session?.user?.id || window.userLimits?.google_id || '';
             if (userId) {
               localStorage.setItem('userAvatar_' + userId, croppedDataUrl);
               localStorage.setItem('user_custom_photo_' + userId, croppedDataUrl);
