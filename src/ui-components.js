@@ -1672,7 +1672,7 @@ export async function fetchAndRenderLeaderboard() {
 
       const userSpan = document.createElement('span');
       userSpan.style.cssText = 'font-weight: 500; display: flex; align-items: center; gap: 6px;';
-      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉' : '✨';
+      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '✨';
       
       const displayName = user.full_name || user.name || 'Estudiante';
       userSpan.textContent = `${medal} ${displayName}`;
