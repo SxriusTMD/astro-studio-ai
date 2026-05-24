@@ -39,23 +39,70 @@ app.use((req, res, next) => {
   next();
 });
 
-// ===== EMAIL CONFIG (Brevo API) =====
+// ===== EMAIL CONFIG (Nodemailer SMTP & Brevo API Fallback) =====
 const { BrevoClient } = require('@getbrevo/brevo');
 const brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+const nodemailer = require('nodemailer');
 
-// Health check Brevo al iniciar
-(async () => {
-  try {
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Test SMTP connection at startup
+transporter.verify((error) => {
+  if (error) {
+    console.error('❌ Nodemailer SMTP Connection error:', error.message);
+  } else {
+    console.log('🚀 Nodemailer SMTP Connection established successfully!');
+  }
+});
+
+async function sendMail({ to, subject, htmlContent }) {
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    try {
+      const info = await transporter.sendMail({
+        from: `"AeroLex AI" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html: htmlContent
+      });
+      console.log('✅ Email sent via Nodemailer SMTP:', info.messageId);
+      return { success: true, method: 'nodemailer', id: info.messageId };
+    } catch (smtpError) {
+      console.error('❌ Nodemailer SMTP failed, falling back to Brevo:', smtpError.message);
+    }
+  }
+
+  if (process.env.BREVO_API_KEY) {
     const result = await brevoClient.transactionalEmails.sendTransacEmail({
       sender: { email: 'aerolexai@gmail.com', name: 'AeroLex AI' },
-      to: [{ email: 'aerolexai@gmail.com' }],
-      subject: '? Brevo API conectada - AeroLex AI',
-      htmlContent: '<p>Servidor iniciado correctamente. La API de Brevo funciona.</p>'
+      to: [{ email: to }],
+      subject,
+      htmlContent
     });
+    console.log('✅ Email sent via Brevo:', result);
+    return { success: true, method: 'brevo', result };
+  }
 
+  throw new Error('No mail transporter configured');
+}
+
+// Health check al iniciar
+(async () => {
+  try {
+    await sendMail({
+      to: 'aerolexai@gmail.com',
+      subject: '📧 Sistema de Correo Conectado - AeroLex AI',
+      htmlContent: '<p>Servidor iniciado correctamente. El sistema de correo funciona.</p>'
+    });
   } catch (err) {
-    console.error('? Brevo API Health Check falló:', err.message);
-    if (err.body) console.error('   Brevo detalle:', JSON.stringify(err.body, null, 2));
+    console.error('❌ Sistema de Correo Health Check falló:', err.message);
   }
 })();
 
@@ -381,13 +428,12 @@ app.post('/api/auth/register', async (req, res) => {
     try {
 
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
-      const mailRes = await brevoClient.transactionalEmails.sendTransacEmail({
-        sender: { email: 'aerolexai@gmail.com', name: 'AeroLex AI' },
-        to: [{ email }],
+      const mailRes = await sendMail({
+        to: email,
         subject: 'Verifica tu correo - AeroLex AI',
         htmlContent: `
           <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
-            <div style="font-size:48px;margin-bottom:16px;">??</div>
+            <div style="font-size:48px;margin-bottom:16px;">🚀</div>
             <h1 style="color:#8b5cf6;">AeroLex AI</h1>
             <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botón para verificar tu correo:</p>
             <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
@@ -397,8 +443,7 @@ app.post('/api/auth/register', async (req, res) => {
       });
 
     } catch (mailErr) {
-      console.error('? Error enviando correo a', email, ':', mailErr.message);
-      if (mailErr.body) console.error('   Brevo detalle:', JSON.stringify(mailErr.body, null, 2));
+      console.error('❌ Error enviando correo a', email, ':', mailErr.message);
       return res.status(500).json({ error: 'Error al enviar el correo de verificación. Intenta de nuevo más tarde.' });
     }
 
