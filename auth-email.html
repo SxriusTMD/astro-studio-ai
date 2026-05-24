@@ -6,29 +6,37 @@
 <title>Acceder - AeroLex AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   :root {
-    --bg-deep: #07071a;
-    --bg-card: #0e0e2a;
-    --border: #1e1e4a;
-    --text-primary: #e8e8f0;
-    --text-secondary: #9090b8;
-    --text-muted: #606088;
-    --accent-cyan: #00e5ff;
-    --accent-violet: #8b5cf6;
-    --accent-purple: #6c3bd2;
-    --gradient-primary: linear-gradient(135deg, #6c3bd2, #4f46e5);
-    --gradient-accent: linear-gradient(135deg, #00e5ff, #8b5cf6);
+    --bg-deep: #09090b;
+    --bg-card: #121214;
+    --border: #222226;
+    --accent-gold: #c5a880;
+    --text-primary: #f4f4f5;
+    --text-muted: #71717a;
+    --text-secondary: #a1a1aa;
     --radius: 16px;
     --radius-sm: 10px;
     --radius-xs: 6px;
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Fallbacks for existing styles */
+    --accent-cyan: var(--accent-gold);
+    --accent-violet: var(--accent-gold);
+    --accent-purple: #a88c6a;
+    --gradient-primary: linear-gradient(135deg, var(--accent-gold), #a88c6a);
+    --gradient-accent: linear-gradient(135deg, var(--accent-gold), #ffffff);
   }
   body {
     font-family: 'Inter', sans-serif;
-    background: var(--bg-deep);
+    background-color: var(--bg-deep);
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
@@ -38,9 +46,7 @@
     position: relative;
   }
   #stars-canvas {
-    position: fixed; inset: 0; z-index: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
+    display: none !important;
   }
 
   @keyframes fadeScale {
@@ -48,8 +54,8 @@
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
   @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.1); }
-    50% { box-shadow: 0 0 30px rgba(139,92,246,0.4), 0 0 60px rgba(139,92,246,0.2); }
+    0%, 100% { box-shadow: 0 0 20px rgba(197,168,128,0.1), 0 0 40px rgba(197,168,128,0.05); }
+    50% { box-shadow: 0 0 30px rgba(197,168,128,0.2), 0 0 60px rgba(197,168,128,0.1); }
   }
   @keyframes shimmer {
     0% { background-position: -200% center; }
@@ -65,13 +71,13 @@
     z-index: 1;
     width: min(440px, 94%);
     padding: 40px 36px;
-    background: rgba(13, 13, 30, 0.45);
+    background: rgba(18, 18, 20, 0.8);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
     animation: fadeScale 0.6s ease-out;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   }
 
   .glass-card .logo-img {
@@ -80,19 +86,19 @@
     height: 60px;
     object-fit: contain;
     margin: 0 auto 16px;
-    filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+    filter: drop-shadow(0 0 8px rgba(197, 168, 128, 0.8));
   }
   .glass-card h1 {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Playfair Display', serif;
     font-size: 24px; font-weight: 700; text-align: center;
-    background: var(--gradient-accent);
+    background: linear-gradient(135deg, #ffffff 30%, var(--accent-gold) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 4px;
   }
   .glass-card .subtitle {
     text-align: center;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: 14px;
     margin-bottom: 28px;
   }
@@ -108,8 +114,8 @@
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--border); transition: var(--transition);
   }
-  .step-dot.active { background: var(--accent-violet); box-shadow: 0 0 8px rgba(139,92,246,0.5); }
-  .step-dot.done { background: var(--accent-cyan); }
+  .step-dot.active { background: var(--accent-gold); box-shadow: 0 0 8px rgba(197,168,128,0.5); }
+  .step-dot.done { background: var(--accent-gold); }
 
   .auth-tabs {
     display: flex; gap: 0; margin-bottom: 20px;
@@ -124,7 +130,7 @@
     font-size: 14px; font-weight: 500;
     transition: var(--transition);
   }
-  .auth-tab.active { background: var(--accent-purple); color: #fff; }
+  .auth-tab.active { background: var(--accent-gold); color: var(--bg-deep); font-weight: 600; }
 
   .auth-form { display: flex; flex-direction: column; gap: 12px; }
   .auth-input {
@@ -139,23 +145,23 @@
     box-sizing: border-box;
   }
   .auth-input:focus {
-    border-color: var(--accent-violet);
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(197,168,128,0.15);
   }
   .auth-input::placeholder { color: var(--text-muted); }
 
   .auth-btn {
     width: 100%; padding: 13px;
-    border: none; border-radius: var(--radius-xs);
-    background: var(--gradient-primary);
-    color: #fff;
+    border: 1px solid var(--accent-gold); border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--accent-gold);
     font-family: 'Inter', sans-serif;
     font-size: 15px; font-weight: 600;
     cursor: pointer; transition: var(--transition);
     position: relative; overflow: hidden;
   }
-  .auth-btn:hover { opacity: 0.92; transform: translateY(-1px); animation: glowPulse 2s infinite; }
-  .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; animation: none; }
+  .auth-btn:hover { background: var(--accent-gold); color: var(--bg-deep); transform: translateY(-1px); }
+  .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; background: transparent; color: var(--text-muted); border-color: var(--border); }
 
   .auth-btn-secondary {
     background: transparent;
@@ -163,9 +169,8 @@
     color: var(--text-secondary);
   }
   .auth-btn-secondary:hover {
-    border-color: var(--accent-violet);
+    border-color: var(--accent-gold);
     color: var(--text-primary);
-    animation: none;
   }
 
   .auth-msg { font-size: 13px; min-height: 20px; text-align: center; }
@@ -201,10 +206,9 @@
     text-align: center;
     font-size: 48px; margin-bottom: 16px;
   }
-</style>
 </head>
 <body>
-<canvas id="stars-canvas"></canvas>
+
 
 <div class="glass-card" id="app">
   <img src="/assets/AeroLexAI_Ship_Trans.png" class="logo-img" alt="AeroLex AI Logo">
@@ -291,31 +295,7 @@
 </div>
 
 <script>
-// Stars background
-const canvas = document.getElementById('stars-canvas');
-if (canvas) {
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    let stars = [];
-    const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    for (let i = 0; i < 200; i++) {
-      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, a: Math.random() });
-    }
-    const drawStars = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      stars.forEach(s => {
-        s.a += 0.003;
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(s.a) * 0.3})`;
-        ctx.fill();
-      });
-      requestAnimationFrame(drawStars);
-    };
-    drawStars();
-  }
-}
+
 
 // DOM refs
 const step1 = document.getElementById('step1');

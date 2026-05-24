@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/AeroLexAI_Ship_Trans.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -21,7 +21,7 @@ tailwind.config = {
     extend: {
       fontFamily: {
         inter: ['Inter', 'sans-serif'],
-        grotesk: ['Space Grotesk', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
       }
     }
   }
@@ -35,21 +35,22 @@ tailwind.config = {
     }
 
     :root {
-      --bg-deep: #07071a;
-      --bg-card: #0e0e2a;
-      --bg-card-hover: #16163a;
-      --bg-surface: #12123a;
-      --border: #1e1e4a;
-      --border-active: #3b3b7a;
-      --text-primary: #d1d5db;
-      --text-secondary: #9090b8;
-      --text-muted: #606088;
-      --accent-cyan: #00e5ff;
-      --accent-violet: #8b5cf6;
-      --accent-purple: #6c3bd2;
-      --gradient-primary: linear-gradient(135deg, #6c3bd2, #4f46e5);
-      --gradient-accent: linear-gradient(135deg, #00e5ff, #8b5cf6);
-      --shadow-glow: 0 0 30px rgba(108, 59, 210, 0.08);
+      --bg-deep: #09090b;
+      --bg-card: #121214;
+      --bg-card-hover: #1a1a1e;
+      --bg-surface: #151517;
+      --border: #222226;
+      --border-active: #3a3a40;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-cyan: #c5a880;
+      --accent-violet: #c5a880;
+      --accent-purple: #a88c6a;
+      --accent-gold: #c5a880;
+      --gradient-primary: linear-gradient(135deg, #c5a880, #a88c6a);
+      --gradient-accent: linear-gradient(135deg, #c5a880, #d4b896);
+      --shadow-glow: 0 0 30px rgba(197, 168, 128, 0.06);
       --radius: 16px;
       --radius-sm: 10px;
       --radius-xs: 6px;
@@ -60,7 +61,12 @@ tailwind.config = {
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg-deep);
+      background-color: var(--bg-deep);
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-attachment: fixed;
       color: var(--text-primary);
       height: 100vh;
       overflow: hidden;
@@ -70,21 +76,14 @@ tailwind.config = {
     }
 
     h1, h2, h3, h4, h5, h6 {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', serif;
       font-weight: 600;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
 
-    /* ===== STARS CANVAS ===== */
+    /* ===== STARS CANVAS (disabled for Tech-Noir theme) ===== */
     #stars-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: -1;
-      pointer-events: none;
-      opacity: 0.08;
+      display: none !important;
     }
 
     #loadingScreen {
@@ -204,17 +203,21 @@ header.header-compact .logo-icon {
 .new-chat-btn {
   width: 100%;
   padding: 12px;
-  background: rgba(139,92,246,0.2);
-  border: 1px solid rgba(139,92,246,0.4);
+  background: rgba(197, 168, 128, 0.08);
+  border: 1px solid rgba(197, 168, 128, 0.35);
   border-radius: 10px;
-  color: #fff;
+  color: var(--accent-gold);
   cursor: pointer;
   font-size: 14px;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
 }
 
 .new-chat-btn:hover {
-  background: rgba(139,92,246,0.3);
+  background: rgba(197, 168, 128, 0.18);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 15px rgba(197, 168, 128, 0.12);
 }
 
 .sidebar-list {
@@ -238,7 +241,8 @@ header.header-compact .logo-icon {
 }
 
 .session-item.active {
-  background: rgba(139,92,246,0.2);
+  background: rgba(197, 168, 128, 0.12);
+  border-left: 2px solid var(--accent-gold);
 }
 
     .session-title {
@@ -257,7 +261,7 @@ header.header-compact .logo-icon {
 
 .session-pdfs {
   font-size: 11px;
-  color: #8b5cf6;
+  color: var(--accent-gold);
   margin-top: 2px;
 }
 
@@ -357,14 +361,14 @@ header.header-compact .logo-icon {
   width: 56px !important;
   height: 56px !important;
   object-fit: contain;
-  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.8)) !important;
+  filter: drop-shadow(0 0 12px rgba(197, 168, 128, 0.8)) !important;
   opacity: 1 !important;
   visibility: visible !important;
   transition: transform 0.3s ease;
 }
 
 .aerolex-logo-img:hover {
-  filter: drop-shadow(0 0 18px rgba(6, 182, 212, 1)) !important;
+  filter: drop-shadow(0 0 18px rgba(197, 168, 128, 1)) !important;
   transform: scale(1.05);
 }
 
@@ -404,8 +408,8 @@ header.header-compact .logo-icon {
   }
 }
 #sidebarToggle:hover {
-  background: rgba(139,92,246,0.2);
-  border-color: rgba(139,92,246,0.4);
+  background: rgba(197,168,128,0.12);
+  border-color: rgba(197,168,128,0.4);
 }
 
 .sidebar-overlay {
@@ -423,7 +427,7 @@ header.header-compact .logo-icon {
 }
 
     .logo-text {
-      font-family: 'Space Grotesk', sans-serif !important;
+      font-family: 'Playfair Display', sans-serif !important;
       font-size: 20px !important;
       font-weight: 700 !important;
       color: #f8fafc !important;
@@ -474,9 +478,8 @@ header.header-compact .logo-icon {
 }
 
 .plan-indicator.premium {
-  color: #fff;
-  background: linear-gradient(135deg, #F97316 0%, #4F46E5 100%);
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.3);
+  color: var(--bg-deep);
+  background: var(--accent-gold);
   border: none;
 }
 
@@ -534,12 +537,12 @@ body:not(.sidebar-closed) .sidebar {
     }
     
     .hero-title {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: clamp(32px, 5vw, 54px);
       font-weight: 700;
       line-height: 1.15;
       letter-spacing: -1.5px;
-      background: linear-gradient(135deg, #ffffff 30%, #a78bfa 70%, #00e5ff 100%);
+      background: linear-gradient(135deg, #ffffff 30%, #d4b896 65%, #c5a880 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -586,7 +589,7 @@ body:not(.sidebar-closed) .sidebar {
     .google-login-btn:hover {
       border-color: var(--accent-cyan);
       background: var(--bg-card-hover);
-      box-shadow: 0 0 18px rgba(0, 229, 255, 0.14);
+      box-shadow: 0 0 18px rgba(197, 168, 128, 0.14);
       transform: translateY(-1px);
     }
 
@@ -915,13 +918,17 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .btn-primary {
-      background: var(--gradient-primary);
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(108, 59, 210, 0.3);
+      background-color: transparent;
+      color: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+      box-shadow: none;
+      transition: all 0.3s ease;
     }
 
     .btn-primary:hover {
-      box-shadow: 0 6px 24px rgba(108, 59, 210, 0.45);
+      background-color: var(--accent-gold);
+      color: var(--bg-deep);
+      box-shadow: 0 4px 16px rgba(197, 168, 128, 0.25);
       transform: translateY(-1px);
     }
 
@@ -1229,13 +1236,13 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .message.ai { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    .message.ai h3, .message.ai h4 { margin: 16px 0 8px; color: var(--accent-cyan); font-family:'Space Grotesk','Inter',sans-serif; font-weight: 600; letter-spacing: -0.01em; }
+    .message.ai h3, .message.ai h4 { margin: 16px 0 8px; color: var(--accent-cyan); font-family:'Playfair Display','Inter',sans-serif; font-weight: 600; letter-spacing: -0.01em; }
     .message.ai h3:first-child { margin-top: 0; }
     .message.ai p { margin: 10px 0; line-height: 1.7; }
     .message.ai ul, .message.ai ol { margin: 10px 0; padding-left: 24px; }
     .message.ai li { margin: 6px 0; line-height: 1.7; }
     .message.ai strong { color: var(--accent-violet); font-weight: 600; }
-    .message.ai code { background: rgba(139,92,246,0.15); padding: 3px 8px; border-radius: 4px; font-size: 13px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .message.ai code { background: rgba(197,168,128,0.15); padding: 3px 8px; border-radius: 4px; font-size: 13px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     .message.ai pre { background: rgba(0,0,0,0.3); padding: 14px 16px; border-radius: 10px; overflow-x: auto; margin: 12px 0; border: 1px solid rgba(255,255,255,0.06); }
     .message.ai pre code { background: none; padding: 0; font-size: 13px; line-height: 1.6; }
     .message.ai table {
@@ -1256,7 +1263,7 @@ body:not(.sidebar-closed) .sidebar {
     .message.ai th {
       background: rgba(255, 255, 255, 0.04);
       color: var(--accent-cyan);
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-weight: 600;
     }
     .message.ai tr:hover {
@@ -1368,18 +1375,19 @@ body:not(.sidebar-closed) .sidebar {
     .flashcards-actions .btn-primary,
     .summary-actions .btn-primary,
     .study-plan-actions .btn-primary {
-      background: rgba(108, 59, 210, 0.25);
-      color: #c4b5fd;
-      border: 1px solid rgba(108, 59, 210, 0.35);
+      background: rgba(197, 168, 128, 0.1);
+      color: var(--accent-gold);
+      border: 1px solid rgba(197, 168, 128, 0.3);
       box-shadow: none;
     }
     .flashcards-actions .btn-primary:hover,
     .summary-actions .btn-primary:hover,
     .study-plan-actions .btn-primary:hover {
-      background: rgba(108, 59, 210, 0.35);
-      border-color: rgba(108, 59, 210, 0.5);
+      background: var(--accent-gold);
+      color: var(--bg-deep);
+      border-color: var(--accent-gold);
       transform: none;
-      box-shadow: 0 2px 12px rgba(108, 59, 210, 0.2);
+      box-shadow: 0 2px 12px rgba(197, 168, 128, 0.2);
     }
     .flashcards-actions .btn-secondary,
     .summary-actions .btn-secondary,
@@ -1464,10 +1472,10 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .flashcard-face.front {
-      background: linear-gradient(135deg, #4c1d95 0%, #1e1b4b 50%, #312e81 100%);
+      background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
       color: #fff;
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+      border: 1px solid rgba(197, 168, 128, 0.35);
+      box-shadow: 0 8px 32px rgba(197, 168, 128, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
     }
 
     .flashcard-face.front .card-number {
@@ -1480,7 +1488,7 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .flashcard-face.front .card-label {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 2px;
@@ -1506,13 +1514,13 @@ body:not(.sidebar-closed) .sidebar {
     }
 
      .flashcard-face.back {
-      background: rgba(15, 15, 35, 0.85);
+      background: rgba(18, 18, 20, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(139, 92, 246, 0.25);
+      border: 1px solid rgba(197, 168, 128, 0.25);
       transform: rotateY(180deg);
       color: var(--text-primary);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
     .flashcard-face.back .card-hint {
@@ -1592,7 +1600,7 @@ body:not(.sidebar-closed) .sidebar {
 
     .flashcard-dots .dot.active {
       background: var(--accent-cyan);
-      box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+      box-shadow: 0 0 8px rgba(197, 168, 128, 0.4);
     }
 
     .flashcard-dots .dot.diff-easy {
@@ -1696,7 +1704,7 @@ body:not(.sidebar-closed) .sidebar {
       font-size: 20px;
       font-weight: 700;
       color: #f8fafc;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
     }
     .deck-complete-msg .complete-sub {
       font-size: 14px;
@@ -1705,20 +1713,20 @@ body:not(.sidebar-closed) .sidebar {
     .deck-complete-msg .btn-restart-deck {
       padding: 10px 24px;
       border-radius: 12px;
-      border: 1px solid rgba(6, 182, 212, 0.4);
-      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(197, 168, 128, 0.4);
+      background: rgba(197, 168, 128, 0.12);
       backdrop-filter: blur(12px);
-      color: #67e8f9;
+      color: var(--accent-gold);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.25s ease;
     }
     .deck-complete-msg .btn-restart-deck:hover {
-      background: rgba(6, 182, 212, 0.25);
-      border-color: rgba(6, 182, 212, 0.6);
+      background: rgba(197, 168, 128, 0.25);
+      border-color: rgba(197, 168, 128, 0.6);
       transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.2);
+      box-shadow: 0 4px 16px rgba(197, 168, 128, 0.2);
     }
 
     @keyframes fadeInScale {
@@ -1851,7 +1859,7 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .stat-card .stat-value {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: 24px;
       font-weight: 700;
       background: var(--gradient-accent);
@@ -1939,7 +1947,7 @@ body:not(.sidebar-closed) .sidebar {
     .exam-progress .step.active {
       border-color: var(--accent-cyan);
       color: var(--accent-cyan);
-      box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+      box-shadow: 0 0 12px rgba(197, 168, 128, 0.2);
     }
 
     .exam-progress .step.done {
@@ -1964,7 +1972,7 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .exam-card .exam-question-text {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: 18px;
       line-height: 1.5;
       margin-bottom: 20px;
@@ -2020,7 +2028,7 @@ body:not(.sidebar-closed) .sidebar {
 
     .exam-option.selected {
       border-color: var(--accent-cyan);
-      background: rgba(0, 229, 255, 0.14);
+      background: rgba(197, 168, 128, 0.14);
       color: var(--accent-cyan);
     }
 
@@ -2051,7 +2059,7 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .exam-feedback .score {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: 28px;
       font-weight: 700;
     }
@@ -2072,7 +2080,7 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .exam-results .final-score {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: 48px;
       font-weight: 700;
       background: var(--gradient-accent);
@@ -2260,9 +2268,9 @@ body:not(.sidebar-closed) .sidebar {
     }
     .pdf-tab:hover { background: rgba(255,255,255,0.08); }
     .pdf-tab.active {
-      background: rgba(139,92,246,0.2);
-      border-color: rgba(139,92,246,0.5);
-      color: #fff;
+      background: rgba(197, 168, 128, 0.12);
+      border-color: rgba(197, 168, 128, 0.5);
+      color: var(--accent-gold);
     }
     .pdf-tab .tab-close {
       background: none;
@@ -2282,18 +2290,19 @@ body:not(.sidebar-closed) .sidebar {
       gap: 4px;
       padding: 10px 16px;
       background: transparent;
-      border: 1px dashed rgba(139,92,246,0.8);
+      border: 1px dashed rgba(197, 168, 128, 0.5);
       border-radius: 12px 12px 0 0;
       font-size: 16px;
-      color: rgba(139,92,246,0.8);
+      color: rgba(197, 168, 128, 0.8);
       cursor: pointer;
       transition: var(--transition);
       white-space: nowrap;
       flex-shrink: 0;
     }
     .pdf-tab-add:hover {
-      background: rgba(139,92,246,0.1);
-      color: var(--accent-violet);
+      background: rgba(197, 168, 128, 0.1);
+      color: var(--accent-gold);
+      border-color: var(--accent-gold);
     }
 
     /* ===== TOAST ===== */
@@ -2367,7 +2376,7 @@ body:not(.sidebar-closed) .sidebar {
 }
 
 .progress-modal {
-  background: #0d0d1e;
+  background: #09090b;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   max-width: 480px;
@@ -2489,7 +2498,7 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .upgrade-header h2 {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Playfair Display', sans-serif;
       font-size: 20px;
       margin: 0;
     }
@@ -2748,9 +2757,9 @@ body:not(.sidebar-closed) .sidebar {
     .skeleton {
       background: linear-gradient(
         90deg,
-        rgba(139, 92, 246, 0.06) 25%,
-        rgba(0, 229, 255, 0.10) 50%,
-        rgba(139, 92, 246, 0.06) 75%
+        rgba(197, 168, 128, 0.04) 25%,
+        rgba(197, 168, 128, 0.12) 50%,
+        rgba(197, 168, 128, 0.04) 75%
       );
       background-size: 200% 100%;
       animation: shimmer 1.8s ease-in-out infinite;
@@ -2799,14 +2808,14 @@ body:not(.sidebar-closed) .sidebar {
       letter-spacing: 0.3px;
     }
     .citation-badge.annex {
-      background: rgba(0, 229, 255, 0.1);
-      border-color: rgba(0, 229, 255, 0.25);
-      color: #5eead4;
+      background: rgba(197, 168, 128, 0.1);
+      border-color: rgba(197, 168, 128, 0.25);
+      color: #e5cda8;
     }
     .citation-badge.primary {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: rgba(139, 92, 246, 0.4);
-      color: #c4b5fd;
+      background: rgba(197, 168, 128, 0.2);
+      border-color: rgba(197, 168, 128, 0.4);
+      color: #ffffff;
     }
 
     .message.ai .citation-badge {
@@ -2848,7 +2857,7 @@ body:not(.sidebar-closed) .sidebar {
       100% { background-position: 1000px 0; }
     }
     .cosmic-skeleton {
-      background: linear-gradient(90deg, #0d0d2b 25%, #1a1a4a 50%, #0d0d2b 75%);
+      background: linear-gradient(90deg, #121214 25%, #222226 50%, #121214 75%);
       background-size: 1000px 100%;
       animation: cosmicShimmer 2s infinite linear;
       border-radius: 8px;
@@ -2862,7 +2871,7 @@ body:not(.sidebar-closed) .sidebar {
       display: block;
       width: 100%;
       height: 40px;
-      background: linear-gradient(90deg, #0d0d2b 25%, #1a1a4a 50%, #0d0d2b 75%);
+      background: linear-gradient(90deg, #121214 25%, #222226 50%, #121214 75%);
       background-size: 1000px 100%;
       animation: cosmicShimmer 2s infinite linear;
       border-radius: 8px;
@@ -2870,10 +2879,10 @@ body:not(.sidebar-closed) .sidebar {
 
     /* ===== PHASE 6C: NEXT-GEN GLASSMORPHISM OVERHAUL ===== */
     :root {
-      --glass-bg: rgba(13, 13, 30, 0.75);
-      --glass-bg-soft: rgba(8, 8, 20, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --neon-ring: 0 4px 20px rgba(108, 59, 210, 0.15);
+      --glass-bg: rgba(12, 12, 14, 0.8);
+      --glass-bg-soft: rgba(9, 9, 11, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.06);
+      --neon-ring: 0 4px 20px rgba(197, 168, 128, 0.06);
     }
 
     button, a, input, textarea, select,
@@ -2911,10 +2920,10 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .tab-btn.active {
-      background: rgba(108, 59, 210, 0.2);
-      border-color: rgba(255,255,255,0.12);
+      background: rgba(197, 168, 128, 0.12);
+      border-color: rgba(197, 168, 128, 0.25);
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      color: #ffffff;
+      color: #f4f4f5;
     }
 
     .btn-primary, .new-chat-btn, .btn-change-pdf:hover {
@@ -2924,7 +2933,7 @@ body:not(.sidebar-closed) .sidebar {
     .btn:hover, .new-chat-btn:hover, .session-item:hover, .cloud-doc-shortcut:hover,
     .pdf-tab:hover, .exam-option:hover:not(:disabled) {
       transform: translateY(-1px);
-      border-color: rgba(0,229,255,0.2);
+      border-color: rgba(197, 168, 128, 0.2);
       box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
 
@@ -2986,60 +2995,16 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     @keyframes aeroPulseGlow {
-      0%, 100% { box-shadow: var(--neon-ring), 0 0 22px rgba(139,92,246,0.10); }
-      50% { box-shadow: var(--neon-ring), 0 0 36px rgba(0,229,255,0.16); }
+      0%, 100% { box-shadow: var(--neon-ring), 0 0 22px rgba(197,168,128,0.06); }
+      50% { box-shadow: var(--neon-ring), 0 0 36px rgba(197,168,128,0.10); }
     }
 
-    /* ===== COSMIC NEBULA GLOW EFFECTS ===== */
+    /* ===== COSMIC NEBULA (disabled for Tech-Noir theme) ===== */
     .cosmic-nebula-container {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      overflow: hidden;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, #0c072b 0%, #040212 100%);
+      display: none !important;
     }
-    .nebula-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(140px);
-      opacity: 0.08;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      animation: floatOrb 35s infinite ease-in-out alternate;
-    }
-    .orb-cyan {
-      width: 450px;
-      height: 450px;
-      background: radial-gradient(circle, #00e5ff 0%, transparent 70%);
-      top: -10%;
-      left: -10%;
-      animation-duration: 25s;
-    }
-    .orb-purple {
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
-      bottom: -15%;
-      right: -10%;
-      animation-duration: 35s;
-    }
-    .orb-indigo {
-      width: 350px;
-      height: 350px;
-      background: radial-gradient(circle, #4f46e5 0%, transparent 70%);
-      top: 40%;
-      left: 60%;
-      animation-duration: 40s;
-    }
-
-    @keyframes floatOrb {
-      0% {
-        transform: translate(0, 0) scale(1);
-      }
-      100% {
-        transform: translate(100px, 60px) scale(1.2);
-      }
+    .nebula-orb, .orb-cyan, .orb-purple, .orb-indigo {
+      display: none !important;
     }
     #profileOverlay {
       z-index: 999 !important;
@@ -3053,7 +3018,7 @@ body:not(.sidebar-closed) .sidebar {
       height: auto !important;
       margin: 0 auto;
       display: block;
-      filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.8));
+      filter: drop-shadow(0 0 12px rgba(197, 168, 128, 0.8));
     }
     @media (max-width: 768px) {
       .header-actions-container {
@@ -3108,7 +3073,7 @@ body:not(.sidebar-closed) .sidebar {
       max-height: 100%;
       object-fit: contain;
       margin: 0;
-      filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+      filter: drop-shadow(0 0 8px rgba(197, 168, 128, 0.6));
     }
     #leaderboardPanel {
       left: auto;
@@ -3128,7 +3093,7 @@ body:not(.sidebar-closed) .sidebar {
     }
     </style>
 </head>
-<body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#07071a] text-[#e8e8f0]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
+<body class="auth-checking h-screen w-full flex flex-col overflow-hidden bg-[#09090b] text-[#f4f4f5]" style="font-family: 'Inter', sans-serif; line-height: 1.6;">
 
   <!-- Cosmic Background Nebulas -->
   <div class="cosmic-nebula-container">
@@ -3141,25 +3106,24 @@ body:not(.sidebar-closed) .sidebar {
   <div id="loadingScreen">
     <div class="text-center">
       <div class="flex justify-center mb-4"><img src="assets/AeroLexAI_Ship_Trans.png" class="h-20 w-auto object-contain" alt="AeroLex AI"></div>
-      <div class="font-['Space_Grotesk'] text-xl font-bold bg-gradient-to-r from-[#00e5ff] to-[#8b5cf6] bg-clip-text text-transparent">AeroLex AI</div>
+      <div class="font-['Playfair_Display'] text-xl font-bold bg-gradient-to-r from-[#c5a880] to-[#d4b896] bg-clip-text text-transparent">AeroLex AI</div>
       <div class="flex gap-1.5 justify-center mt-5">
-        <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0s"></span>
-        <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.15s"></span>
-        <span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] animate-bounce" style="animation-delay:0.3s"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#c5a880] animate-bounce" style="animation-delay:0s"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#c5a880] animate-bounce" style="animation-delay:0.15s"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#c5a880] animate-bounce" style="animation-delay:0.3s"></span>
       </div>
-      <p class="text-sm text-[#606088] mt-4">Verificando Conexión Segura...</p>
+      <p class="text-sm text-[#71717a] mt-4">Verificando Conexión Segura...</p>
     </div>
   </div>
 
-  <!-- Stars Background -->
-  <canvas id="stars-canvas" class="fixed inset-0 w-screen h-screen z-[-1] pointer-events-none"></canvas>
+
 
   <main class="login-screen" id="loginScreen">
     <div class="login-content" id="loginContent">
       <div class="login-logo flex items-center justify-center mb-6">
         <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img hero-logo-img" style="width: 160px !important; height: auto !important; max-width: none;" alt="AeroLex AI" />
       </div>
-      <h1 class="hero-title" style="font-family: 'Space Grotesk', sans-serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: #f8fafc; margin-bottom: 8px; letter-spacing: -1px;">AeroLex AI</h1>
+      <h1 class="hero-title" style="font-family: 'Playfair Display', sans-serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: #f8fafc; margin-bottom: 8px; letter-spacing: -1px;">AeroLex AI</h1>
       <p class="hero-subtitle" style="margin-top: 0;">El copiloto galáctico que extrae conceptos clave, genera exámenes personalizados y planea tu ruta de aprendizaje de tus PDFs de forma inteligente.</p>
 
       <div class="hero-actions">
@@ -3218,7 +3182,7 @@ body:not(.sidebar-closed) .sidebar {
 <div class="history-overlay" id="progressOverlay">
   <div class="progress-modal" id="progressModal">
     <div class="upgrade-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
-      <h2 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: #ffffff;">
+      <h2 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-family: 'Playfair Display', sans-serif; font-weight: 600; color: #ffffff;">
         <svg class="w-6 h-6 text-yellow-400 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="7"></circle>
           <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
@@ -3570,7 +3534,7 @@ body:not(.sidebar-closed) .sidebar {
               <button class="btn btn-primary" id="startExam">Iniciar Examen</button>
             </div>
             <div id="examHistoryContainer" style="margin-top: 32px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 24px;">
-              <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: #f8fafc; margin-bottom: 16px;">Historial de Exámenes</h3>
+              <h3 style="font-family: 'Playfair Display', sans-serif; font-size: 18px; font-weight: 600; color: #f8fafc; margin-bottom: 16px;">Historial de Exámenes</h3>
             </div>
           </div>
         </div>
@@ -3642,7 +3606,7 @@ body:not(.sidebar-closed) .sidebar {
 
     <!-- ===== PROFILE PANEL (Fullscreen Immersive) ===== -->
     <div class="history-overlay" id="profileOverlay"></div>
-    <div id="profilePanel" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #0d0d1e; display: none; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; opacity: 0; transition: opacity 0.3s ease-in-out;">
+    <div id="profilePanel" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #09090b; display: none; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; opacity: 0; transition: opacity 0.3s ease-in-out;">
 
       <!-- Close button top-right -->
       <button id="closeProfile" style="position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #9090b8; font-size: 20px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; z-index: 10;">✕</button>
@@ -3656,7 +3620,7 @@ body:not(.sidebar-closed) .sidebar {
 
         <!-- Title -->
         <div style="text-align: center;">
-          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: #f8fafc; margin: 0 0 6px;">Mi Perfil</h2>
+          <h2 style="font-family: 'Playfair Display', sans-serif; font-size: 22px; font-weight: 700; color: #f8fafc; margin: 0 0 6px;">Mi Perfil</h2>
           <p id="profileProviderInfo" style="font-size: 13px; color: var(--text-muted); margin: 0;">Cuenta vinculada</p>
         </div>
 

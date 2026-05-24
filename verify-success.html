@@ -6,21 +6,33 @@
 <title>Verificado - AeroLex AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   :root {
-    --bg-deep: #07071a;
-    --accent-cyan: #00e5ff;
-    --accent-violet: #8b5cf6;
-    --accent-purple: #6c3bd2;
-    --gradient-accent: linear-gradient(135deg, #00e5ff, #8b5cf6);
-    --gradient-primary: linear-gradient(135deg, #6c3bd2, #4f46e5);
+    --bg-deep: #09090b;
+    --border: #222226;
+    --accent-gold: #c5a880;
+    --text-primary: #f4f4f5;
+    --text-muted: #71717a;
+    --text-secondary: #a1a1aa;
+    
+    /* Fallback variables */
+    --accent-cyan: var(--accent-gold);
+    --accent-violet: var(--accent-gold);
+    --accent-purple: #a88c6a;
+    --gradient-accent: linear-gradient(135deg, var(--accent-gold), #ffffff);
+    --gradient-primary: linear-gradient(135deg, var(--accent-gold), #a88c6a);
   }
   body {
     font-family: 'Inter', sans-serif;
-    background: var(--bg-deep);
-    color: #e8e8f0;
+    background-color: var(--bg-deep);
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-attachment: fixed;
+    color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -29,9 +41,7 @@
     position: relative;
   }
   #stars {
-    position: fixed; inset: 0; z-index: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
+    display: none !important;
   }
 
   @keyframes fadeScale {
@@ -51,8 +61,8 @@
     50% { opacity: 1; transform: scale(1); }
   }
   @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 30px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.1); }
-    50% { box-shadow: 0 0 50px rgba(139,92,246,0.4), 0 0 80px rgba(139,92,246,0.2); }
+    0%, 100% { box-shadow: 0 0 30px rgba(197,168,128,0.1), 0 0 60px rgba(197,168,128,0.05); }
+    50% { box-shadow: 0 0 50px rgba(197,168,128,0.2), 0 0 80px rgba(197,168,128,0.1); }
   }
   @keyframes progressFill {
     from { width: 0%; }
@@ -63,14 +73,14 @@
     position: relative; z-index: 1;
     width: min(440px, 92%);
     padding: 48px 36px 40px;
-    background: rgba(14,14,42,0.6);
+    background: rgba(18,18,20,0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 24px;
     text-align: center;
     animation: fadeScale 0.7s ease-out;
-    box-shadow: 0 0 60px rgba(108,59,210,0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   }
 
   .rocket-container {
@@ -91,24 +101,24 @@
   .sparkle:nth-child(3) { animation-delay: 0.8s; }
 
   h1 {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Playfair Display', serif;
     font-size: 26px; font-weight: 700;
-    background: var(--gradient-accent);
+    background: linear-gradient(135deg, #ffffff 30%, var(--accent-gold) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 8px;
   }
   p {
-    color: #9090b8; font-size: 15px;
+    color: var(--text-muted); font-size: 15px;
     margin-bottom: 24px;
   }
   .badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 16px;
     border-radius: 999px;
-    background: rgba(0,229,255,0.1);
-    border: 1px solid rgba(0,229,255,0.2);
-    color: var(--accent-cyan);
+    background: rgba(197, 168, 128, 0.15);
+    border: 1px solid rgba(197, 168, 128, 0.25);
+    color: var(--accent-gold);
     font-size: 13px; font-weight: 500;
     margin-bottom: 28px;
   }
@@ -120,51 +130,50 @@
   }
   .progress-fill {
     height: 100%; width: 0%;
-    background: var(--gradient-primary);
+    background: var(--accent-gold);
     border-radius: 4px;
     animation: progressFill 3s linear forwards;
   }
 </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
 
 <div class="glass-card">
   <div class="rocket-container">
     <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Fins -->
-      <path d="M60 100 L30 130 L60 115 Z" fill="#4f46e5" opacity="0.8"/>
-      <path d="M60 100 L90 130 L60 115 Z" fill="#4f46e5" opacity="0.8"/>
+      <path d="M60 100 L30 130 L60 115 Z" fill="#a88c6a" opacity="0.8"/>
+      <path d="M60 100 L90 130 L60 115 Z" fill="#a88c6a" opacity="0.8"/>
       <!-- Body -->
       <ellipse cx="60" cy="65" rx="26" ry="48" fill="url(#bodyGrad)"/>
       <!-- Nose cone -->
       <path d="M60 8 Q34 35 34 50 Q34 60 60 65 Q86 60 86 50 Q86 35 60 8 Z" fill="url(#noseGrad)"/>
       <!-- Window -->
-      <circle cx="60" cy="48" r="11" fill="#0a0a2a" stroke="rgba(0,229,255,0.4)" stroke-width="2"/>
-      <circle cx="60" cy="48" r="6" fill="rgba(0,229,255,0.15)"/>
-      <circle cx="58" cy="46" r="2" fill="rgba(0,229,255,0.5)"/>
+      <circle cx="60" cy="48" r="11" fill="#121214" stroke="rgba(197, 168, 128, 0.4)" stroke-width="2"/>
+      <circle cx="60" cy="48" r="6" fill="rgba(197, 168, 128, 0.15)"/>
+      <circle cx="58" cy="46" r="2" fill="rgba(197, 168, 128, 0.5)"/>
       <!-- Stripe -->
-      <rect x="34" y="70" width="52" height="6" rx="3" fill="rgba(0,229,255,0.2)"/>
+      <rect x="34" y="70" width="52" height="6" rx="3" fill="rgba(197, 168, 128, 0.2)"/>
       <!-- Flame -->
       <path class="flame" d="M60 112 Q48 128 44 140 Q52 130 60 140 Q68 130 76 140 Q72 128 60 112 Z" fill="url(#flameGrad)"/>
       <!-- Sparks -->
-      <circle class="sparkle" cx="40" cy="130" r="2.5" fill="#00e5ff"/>
-      <circle class="sparkle" cx="80" cy="125" r="2" fill="#8b5cf6"/>
-      <circle class="sparkle" cx="64" cy="138" r="1.8" fill="#00e5ff"/>
+      <circle class="sparkle" cx="40" cy="130" r="2.5" fill="#c5a880"/>
+      <circle class="sparkle" cx="80" cy="125" r="2" fill="#ffffff"/>
+      <circle class="sparkle" cx="64" cy="138" r="1.8" fill="#c5a880"/>
       <defs>
         <linearGradient id="bodyGrad" x1="60" y1="17" x2="60" y2="113">
-          <stop offset="0%" stop-color="#8b5cf6"/>
-          <stop offset="50%" stop-color="#6c3bd2"/>
-          <stop offset="100%" stop-color="#4f46e5"/>
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="50%" stop-color="#d4b896"/>
+          <stop offset="100%" stop-color="#c5a880"/>
         </linearGradient>
         <linearGradient id="noseGrad" x1="60" y1="8" x2="60" y2="65">
-          <stop offset="0%" stop-color="#a78bfa"/>
-          <stop offset="100%" stop-color="#8b5cf6"/>
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#c5a880"/>
         </linearGradient>
         <linearGradient id="flameGrad" x1="60" y1="112" x2="60" y2="140">
-          <stop offset="0%" stop-color="#f97316"/>
-          <stop offset="40%" stop-color="#ef4444"/>
-          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#c5a880"/>
+          <stop offset="40%" stop-color="#a88c6a"/>
+          <stop offset="100%" stop-color="#121214" stop-opacity="0"/>
         </linearGradient>
       </defs>
     </svg>
