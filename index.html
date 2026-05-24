@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -325,11 +327,15 @@ header.header-compact .logo-icon {
 }
 
 .aerolex-logo-img {
+  width: 48px !important;
+  height: 48px !important;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
   transition: all 0.3s ease;
 }
 
 .aerolex-logo-img:hover {
-  filter: drop-shadow(0 0 10px #F97316);
+  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.9));
   transform: scale(1.05);
 }
 
@@ -388,13 +394,14 @@ header.header-compact .logo-icon {
 }
 
     .logo-text {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-      background: var(--gradient-accent);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-family: 'Space Grotesk', sans-serif !important;
+      font-size: 20px !important;
+      font-weight: 700 !important;
+      color: #f8fafc !important;
+      background: none !important;
+      -webkit-text-fill-color: initial !important;
+      background-clip: initial !important;
+      letter-spacing: -0.5px !important;
     }
 
     .tagline {
@@ -1197,6 +1204,30 @@ body:not(.sidebar-closed) .sidebar {
     .message.ai code { background: rgba(139,92,246,0.15); padding: 3px 8px; border-radius: 4px; font-size: 13px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     .message.ai pre { background: rgba(0,0,0,0.3); padding: 14px 16px; border-radius: 10px; overflow-x: auto; margin: 12px 0; border: 1px solid rgba(255,255,255,0.06); }
     .message.ai pre code { background: none; padding: 0; font-size: 13px; line-height: 1.6; }
+    .message.ai table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+      background: rgba(255,255,255,0.01);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .message.ai th, .message.ai td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .message.ai th {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--accent-cyan);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+    .message.ai tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
 
     .chat-input-area {
       display: flex;
@@ -2978,38 +3009,7 @@ body:not(.sidebar-closed) .sidebar {
   </div>
 </div>
 
-<!-- ===== EDIT PROFILE MODAL ===== -->
-<div class="history-overlay" id="editProfileOverlay">
-  <div class="progress-modal" id="editProfileModal" style="background: rgba(13, 13, 30, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); max-width: 420px; padding: 28px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-    <div class="upgrade-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-      <h2 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: #ffffff;">
-        <svg class="w-5 h-5 text-cyan-400 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Editar Perfil
-      </h2>
-      <button id="closeEditProfile" style="background: none; border: none; color: rgba(255,255,255,0.6); font-size: 20px; cursor: pointer;">✕</button>
-    </div>
-    
-    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left;">Nombre completo</label>
-        <input type="text" id="editProfileName" class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50" style="width: 100%; box-sizing: border-box;">
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left;">Correo electrónico</label>
-        <input type="email" id="editProfileEmail" class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50" style="width: 100%; box-sizing: border-box; opacity: 0.6;" disabled>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left;">URL de Foto de Perfil</label>
-        <input type="url" id="editProfilePhoto" class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50" style="width: 100%; box-sizing: border-box;">
-      </div>
-    </div>
-    
-    <div style="display: flex; gap: 12px; justify-content: flex-end;">
-      <button class="btn btn-secondary btn-small" id="cancelEditProfile">Cancelar</button>
-      <button class="btn btn-primary btn-small" id="saveEditProfile">Guardar Cambios</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- ===== HEADER ===== -->
 <header class="flex-none h-14 md:h-16 bg-[rgba(10,10,26,0.85)] backdrop-blur-md border-b border-[#1e1e4a] z-[101] flex-shrink-0">
@@ -3017,7 +3017,7 @@ body:not(.sidebar-closed) .sidebar {
   <div class="flex items-center gap-3 flex-none">
     <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></button>
     <div class="logo-section flex items-center gap-3">
-      <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img h-20 w-auto object-contain cursor-pointer" alt="AeroLex AI Logo">
+      <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img object-contain cursor-pointer" alt="AeroLex AI Logo">
       <div>
         <div class="logo-text font-semibold text-[17px] tracking-tight">AeroLex AI</div>
       </div>
@@ -3354,11 +3354,52 @@ body:not(.sidebar-closed) .sidebar {
 </div>
 </div>
 
+    <!-- ===== PROFILE PANEL ===== -->
+    <div class="history-overlay" id="profileOverlay"></div>
+    <div class="history-panel" id="profilePanel">
+      <div class="history-panel-header">
+        <h3>
+          <svg class="w-5 h-5 mr-2 inline-block text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Mi Perfil
+        </h3>
+        <button id="closeProfile">✕</button>
+      </div>
+      <div class="profile-content" style="padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; flex: 1;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left;">Nombre completo</label>
+            <input type="text" id="editProfileName" class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50" style="width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left;">Correo electrónico</label>
+            <input type="email" id="editProfileEmail" class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50" style="width: 100%; box-sizing: border-box; opacity: 0.6;" disabled>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left;">Subir nueva foto</label>
+            <input type="file" id="editProfilePhotoFile" accept="image/*" class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50" style="width: 100%; box-sizing: border-box; font-size: 13px;">
+          </div>
+        </div>
+
+        <div id="cropperContainer" style="display: none; flex-direction: column; gap: 10px; border: 1px dashed rgba(255,255,255,0.15); padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.02);">
+          <div style="max-height: 240px; overflow: hidden; display: flex; justify-content: center; align-items: center; border-radius: 8px; background: #000;">
+            <img id="cropperImage" style="max-width: 100%; max-height: 240px; display: block;">
+          </div>
+          <p style="font-size: 11px; color: var(--text-secondary); text-align: center;">Ajusta el círculo para recortar tu avatar</p>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border);">
+          <button class="btn btn-secondary btn-small" id="cancelEditProfile" style="padding: 8px 16px;">Cancelar</button>
+          <button class="btn btn-primary btn-small" id="saveEditProfile" style="padding: 8px 16px;">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+
 <!-- ===== FOOTER ===== -->
 <footer class="flex flex-col sm:flex-row items-center justify-between px-6 py-5 text-[13px] text-[#606088] border-t border-white/5 flex-shrink-0 gap-4 sm:gap-0">
   <div class="flex items-center gap-6">
     <span class="font-semibold text-white/50">AeroLex AI © 2026</span>
-    <a href="#" id="btnTerms" class="hover:text-white transition-colors decoration-transparent">Términos y Privacidad</a>
+    <a href="#" id="btnTerms" class="text-[#cbd5e1] hover:text-white transition-colors duration-300 decoration-transparent">Términos y Privacidad</a>
   </div>
   <div class="flex items-center gap-2">
     <span class="w-2 h-2 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span>

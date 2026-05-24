@@ -1662,8 +1662,8 @@ export function restoreSession(id) {
 }
 
 export function closeHistoryPanel() {
-  document.getElementById('historyPanel')?.classList.remove('open');
-  document.getElementById('historyOverlay')?.classList.remove('open');
+  document.getElementById('historyPanel')?.classList.remove('active');
+  document.getElementById('historyOverlay')?.classList.remove('active');
 }
 
 // ===== STORAGE RESTORE =====

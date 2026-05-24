@@ -65,23 +65,22 @@
     z-index: 1;
     width: min(440px, 94%);
     padding: 40px 36px;
-    background: rgba(14,14,42,0.6);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(13, 13, 30, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     animation: fadeScale 0.6s ease-out;
-    box-shadow: 0 0 60px rgba(108,59,210,0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
   }
 
-  .glass-card .logo {
-    width: 56px; height: 56px;
-    margin: 0 auto 14px;
-    border-radius: 16px;
-    background: var(--gradient-primary);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
-    box-shadow: 0 0 24px rgba(108,59,210,0.35);
+  .glass-card .logo-img {
+    display: block;
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin: 0 auto 16px;
+    filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
   }
   .glass-card h1 {
     font-family: 'Space Grotesk', sans-serif;
@@ -208,7 +207,7 @@
 <canvas id="stars-canvas"></canvas>
 
 <div class="glass-card" id="app">
-  <div class="logo">🚀</div>
+  <img src="/assets/AeroLexAI_Ship_Trans.png" class="logo-img" alt="AeroLex AI Logo">
   <h1>AeroLex AI</h1>
   <p class="subtitle" id="stepTitle">Accede con tu correo</p>
 

@@ -849,13 +849,21 @@ export function initToastSave() {
   });
 }
 
-// ===== HISTORY PANEL =====
-
 export function initHistoryPanel() {
-  document.getElementById('historyBtn')?.addEventListener('click', () => {
-    renderHistory();
-    document.getElementById('historyPanel')?.classList.add('open');
-    document.getElementById('historyOverlay')?.classList.add('open');
+  document.getElementById('historyBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const panel = document.getElementById('historyPanel');
+    const overlay = document.getElementById('historyOverlay');
+    const willBeOpen = panel && !panel.classList.contains('active');
+    
+    if (willBeOpen) {
+      renderHistory();
+      panel?.classList.add('active');
+      overlay?.classList.add('active');
+    } else {
+      panel?.classList.remove('active');
+      overlay?.classList.remove('active');
+    }
   });
 
   document.getElementById('closeHistory')?.addEventListener('click', () => {
@@ -1218,47 +1226,115 @@ export function exportFlashcardsToCSV(cardsArray) {
 
 export function initEditProfileModal() {
   const btn = document.getElementById('menuEditProfile');
-  const overlay = document.getElementById('editProfileOverlay');
-  const closeBtn = document.getElementById('closeEditProfile');
+  const overlay = document.getElementById('profileOverlay');
+  const panel = document.getElementById('profilePanel');
+  const closeBtn = document.getElementById('closeProfile');
   const cancelBtn = document.getElementById('cancelEditProfile');
   const saveBtn = document.getElementById('saveEditProfile');
   
   const editProfileName = document.getElementById('editProfileName');
   const editProfileEmail = document.getElementById('editProfileEmail');
-  const editProfilePhoto = document.getElementById('editProfilePhoto');
+  const editProfilePhotoFile = document.getElementById('editProfilePhotoFile');
+  const cropperContainer = document.getElementById('cropperContainer');
+  const cropperImage = document.getElementById('cropperImage');
+  
+  const closeProfile = () => {
+    panel?.classList.remove('active');
+    overlay?.classList.remove('active');
+    if (window.profileCropper) {
+      window.profileCropper.destroy();
+      window.profileCropper = null;
+    }
+    if (cropperContainer) cropperContainer.style.display = 'none';
+    if (cropperImage) cropperImage.src = '';
+    if (editProfilePhotoFile) editProfilePhotoFile.value = '';
+  };
   
   if (btn) {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const dropdown = document.getElementById('userDropdown');
       if (dropdown) dropdown.style.display = 'none';
       
       if (window.userLimits) {
         if (editProfileName) editProfileName.value = window.userLimits.displayName || '';
         if (editProfileEmail) editProfileEmail.value = window.userLimits.email || '';
-        if (editProfilePhoto) editProfilePhoto.value = window.userLimits.photo || '';
       }
       
-      overlay?.classList.add('open');
+      if (cropperContainer) cropperContainer.style.display = 'none';
+      if (cropperImage) cropperImage.src = '';
+      if (editProfilePhotoFile) editProfilePhotoFile.value = '';
+      if (window.profileCropper) {
+        window.profileCropper.destroy();
+        window.profileCropper = null;
+      }
+      
+      panel?.classList.add('active');
+      overlay?.classList.add('active');
     });
   }
   
-  const closeModal = () => {
-    overlay?.classList.remove('open');
-  };
-  
-  closeBtn?.addEventListener('click', closeModal);
-  cancelBtn?.addEventListener('click', closeModal);
+  closeBtn?.addEventListener('click', closeProfile);
+  cancelBtn?.addEventListener('click', closeProfile);
   
   if (overlay) {
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeModal();
+      if (e.target === overlay) closeProfile();
+    });
+  }
+  
+  if (editProfilePhotoFile) {
+    editProfilePhotoFile.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (cropperImage && event.target?.result) {
+          cropperImage.src = event.target.result;
+          if (cropperContainer) cropperContainer.style.display = 'flex';
+          
+          if (window.profileCropper) {
+            window.profileCropper.destroy();
+          }
+          
+          setTimeout(() => {
+            window.profileCropper = new Cropper(cropperImage, {
+              aspectRatio: 1,
+              viewMode: 1,
+              autoCropArea: 0.8,
+              responsive: true,
+              background: false,
+              zoomable: false,
+              movable: true,
+              scalable: false
+            });
+          }, 50);
+        }
+      };
+      reader.readAsDataURL(file);
     });
   }
   
   saveBtn?.addEventListener('click', () => {
     if (window.userLimits) {
       window.userLimits.displayName = editProfileName?.value || '';
-      window.userLimits.photo = editProfilePhoto?.value || '';
+      
+      if (window.profileCropper) {
+        try {
+          const canvas = window.profileCropper.getCroppedCanvas({
+            width: 150,
+            height: 150
+          });
+          if (canvas) {
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            window.userLimits.photo = croppedDataUrl;
+            localStorage.setItem('user_custom_photo', croppedDataUrl);
+          }
+        } catch (cropErr) {
+          console.error('Error cropping image:', cropErr);
+        }
+      }
       
       const userName = document.getElementById('userName');
       const userAvatar = document.getElementById('userAvatar');
@@ -1282,11 +1358,10 @@ export function initEditProfileModal() {
       }
       
       localStorage.setItem('user_custom_name', window.userLimits.displayName);
-      localStorage.setItem('user_custom_photo', window.userLimits.photo);
       
       mostrarToast('✅ Perfil actualizado exitosamente');
     }
     
-    closeModal();
+    closeProfile();
   });
 }
