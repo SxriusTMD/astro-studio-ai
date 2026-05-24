@@ -567,7 +567,7 @@ body:not(.sidebar-closed) .sidebar {
     
     .hero-subtitle {
       font-size: clamp(15px, 2vw, 18px);
-      color: #9090b8;
+      color: var(--text-muted) !important;
       max-width: 600px;
       line-height: 1.6;
       margin-bottom: 32px;
@@ -645,9 +645,9 @@ body:not(.sidebar-closed) .sidebar {
       width: 100%;
       padding: 13px 18px;
       border-radius: var(--radius-sm);
-      border: 1px solid rgba(139,92,246,0.3);
-      background: rgba(139,92,246,0.08);
-      color: var(--text-primary);
+      border: 1px solid var(--border) !important;
+      background: var(--bg-card) !important;
+      color: var(--text-primary) !important;
       font-family: 'Inter', sans-serif;
       font-size: 15px;
       font-weight: 600;
@@ -656,12 +656,12 @@ body:not(.sidebar-closed) .sidebar {
       backdrop-filter: blur(8px);
     }
     .email-login-btn:hover {
-      border-color: var(--accent-violet);
-      background: rgba(139,92,246,0.18);
-      box-shadow: 0 0 24px rgba(139,92,246,0.25);
+      border-color: var(--accent-gold) !important;
+      background: var(--bg-card-hover) !important;
+      box-shadow: 0 0 24px rgba(197, 168, 128, 0.2) !important;
       transform: translateY(-2px);
     }
-    .email-login-btn svg { flex-shrink: 0; color: var(--accent-cyan); }
+    .email-login-btn svg { flex-shrink: 0; color: var(--accent-gold) !important; }
 
     .auth-msg {
       font-size: 13px;
@@ -3140,7 +3140,7 @@ body:not(.sidebar-closed) .sidebar {
         <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img hero-logo-img" style="width: 160px !important; height: auto !important; max-width: none;" alt="AeroLex AI" />
       </div>
       <h1 class="hero-title" style="font-family: 'Playfair Display', sans-serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: #f8fafc; margin-bottom: 8px; letter-spacing: -1px;">AeroLex AI</h1>
-      <p class="hero-subtitle" style="margin-top: 0;">El copiloto galáctico que extrae conceptos clave, genera exámenes personalizados y planea tu ruta de aprendizaje de tus PDFs de forma inteligente.</p>
+      <p class="hero-subtitle" style="margin-top: 0; color: var(--text-muted) !important;">El copiloto galáctico que extrae conceptos clave, genera exámenes personalizados y planea tu ruta de aprendizaje de tus PDFs de forma inteligente.</p>
 
       <div class="hero-actions">
         <a href="/auth/google" class="google-login-btn w-full">
@@ -3150,7 +3150,7 @@ body:not(.sidebar-closed) .sidebar {
 
         <div class="login-divider w-full"><span>o</span></div>
 
-        <button class="email-login-btn w-full" id="emailLoginBtn" onclick="window.location.href='/auth/email'">
+        <button class="email-login-btn w-full" id="emailLoginBtn" onclick="window.location.href='/auth/email'" style="background-color: var(--bg-card) !important; border: 1px solid var(--border) !important; color: var(--text-primary) !important;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           Continuar con Correo
         </button>
