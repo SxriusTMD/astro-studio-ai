@@ -599,8 +599,8 @@ export async function loadDocument(docId) {
 }
 
 export function closeLibrary() {
-  document.getElementById('libraryPanel')?.classList.remove('open');
-  document.getElementById('libraryOverlay')?.classList.remove('open');
+  document.getElementById('libraryPanel')?.classList.remove('active');
+  document.getElementById('libraryOverlay')?.classList.remove('active');
 }
 
 // ===== EXPORT PDF =====
@@ -988,10 +988,20 @@ export function initLegalModal() {
 // ===== LIBRARY PANEL =====
 
 export function initLibraryPanel() {
-  document.getElementById('libraryBtn')?.addEventListener('click', () => {
-    loadLibrary();
-    document.getElementById('libraryPanel')?.classList.add('open');
-    document.getElementById('libraryOverlay')?.classList.add('open');
+  document.getElementById('libraryBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const panel = document.getElementById('libraryPanel');
+    const overlay = document.getElementById('libraryOverlay');
+    const willBeOpen = panel && !panel.classList.contains('active');
+    
+    if (willBeOpen) {
+      loadLibrary();
+      panel?.classList.add('active');
+      overlay?.classList.add('active');
+    } else {
+      panel?.classList.remove('active');
+      overlay?.classList.remove('active');
+    }
   });
 
   document.getElementById('closeLibrary')?.addEventListener('click', closeLibrary);
@@ -1193,7 +1203,6 @@ export function exportFlashcardsToCSV(cardsArray) {
   const csvContent = csvLines.join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
-  
   const link = document.createElement('a');
   link.setAttribute('href', url);
   link.setAttribute('download', 'flashcards_anki.csv');
@@ -1203,4 +1212,81 @@ export function exportFlashcardsToCSV(cardsArray) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+// ===== EDIT PROFILE MODAL =====
+
+export function initEditProfileModal() {
+  const btn = document.getElementById('menuEditProfile');
+  const overlay = document.getElementById('editProfileOverlay');
+  const closeBtn = document.getElementById('closeEditProfile');
+  const cancelBtn = document.getElementById('cancelEditProfile');
+  const saveBtn = document.getElementById('saveEditProfile');
+  
+  const editProfileName = document.getElementById('editProfileName');
+  const editProfileEmail = document.getElementById('editProfileEmail');
+  const editProfilePhoto = document.getElementById('editProfilePhoto');
+  
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const dropdown = document.getElementById('userDropdown');
+      if (dropdown) dropdown.style.display = 'none';
+      
+      if (window.userLimits) {
+        if (editProfileName) editProfileName.value = window.userLimits.displayName || '';
+        if (editProfileEmail) editProfileEmail.value = window.userLimits.email || '';
+        if (editProfilePhoto) editProfilePhoto.value = window.userLimits.photo || '';
+      }
+      
+      overlay?.classList.add('open');
+    });
+  }
+  
+  const closeModal = () => {
+    overlay?.classList.remove('open');
+  };
+  
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+  }
+  
+  saveBtn?.addEventListener('click', () => {
+    if (window.userLimits) {
+      window.userLimits.displayName = editProfileName?.value || '';
+      window.userLimits.photo = editProfilePhoto?.value || '';
+      
+      const userName = document.getElementById('userName');
+      const userAvatar = document.getElementById('userAvatar');
+      const menuAvatar = document.getElementById('menuAvatar');
+      const menuUsername = document.getElementById('menuUsername');
+      
+      if (userName) userName.textContent = window.userLimits.displayName || window.userLimits.email || 'Usuario';
+      if (menuUsername) menuUsername.textContent = window.userLimits.displayName || window.userLimits.email || 'Usuario';
+      
+      if (userAvatar) {
+        if (window.userLimits.photo) {
+          userAvatar.src = window.userLimits.photo;
+          userAvatar.style.display = 'block';
+        } else {
+          userAvatar.style.display = 'none';
+        }
+      }
+      
+      if (menuAvatar) {
+        menuAvatar.src = window.userLimits.photo || 'https://ui-avatars.com/api/?name=User&background=6366f1&color=fff';
+      }
+      
+      localStorage.setItem('user_custom_name', window.userLimits.displayName);
+      localStorage.setItem('user_custom_photo', window.userLimits.photo);
+      
+      mostrarToast('✅ Perfil actualizado exitosamente');
+    }
+    
+    closeModal();
+  });
 }

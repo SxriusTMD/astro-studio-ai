@@ -56,7 +56,10 @@ window.askAI = async function (prompt) {
     return data.text;
   } catch (err) {
     console.error('askAI error:', err);
-    return '⚠️ Lo siento, hubo un error al conectar con la IA. Por favor intenta de nuevo.';
+    if (err.data && err.data.error) {
+      return `⚠️ Error de la IA: ${err.data.error}`;
+    }
+    return `⚠️ Error de la IA: ${err.message || 'Error al conectar con la IA.'}`;
   }
 };
 

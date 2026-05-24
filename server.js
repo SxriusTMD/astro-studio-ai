@@ -956,7 +956,7 @@ REGLAS DE FORMATO Y ESTILO:
     res.json({ text, chat_used: chatUsed });
   } catch (err) {
     console.error("🔥 ERROR CRÍTICO EN /api/chat:", err);
-    res.status(503).json({ error: 'Error al conectar con la IA.' });
+    res.status(503).json({ error: err.message || 'Error al conectar con la IA.' });
   }
 });
 

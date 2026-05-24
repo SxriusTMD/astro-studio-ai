@@ -23,6 +23,12 @@ export async function initAuth() {
       return;
     }
 
+    const savedCustomName = localStorage.getItem('user_custom_name');
+    const savedCustomPhoto = localStorage.getItem('user_custom_photo');
+    
+    if (savedCustomName && data.user) data.user.displayName = savedCustomName;
+    if (savedCustomPhoto && data.user) data.user.photo = savedCustomPhoto;
+
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     if (userName) userName.textContent = data.user?.displayName || data.user?.email || 'Usuario';
@@ -73,6 +79,12 @@ export async function initAuth() {
 export async function fetchUserLimits() {
   try {
     const data = await apiFetchUserLimits();
+    
+    const savedCustomName = localStorage.getItem('user_custom_name');
+    const savedCustomPhoto = localStorage.getItem('user_custom_photo');
+    if (savedCustomName && data) data.displayName = savedCustomName;
+    if (savedCustomPhoto && data) data.photo = savedCustomPhoto;
+
     window.userLimits = { ...window.userLimits, ...data };
     updatePlanIndicator();
     const { restoreFromStorage } = await import('./chat.js');
@@ -161,12 +173,40 @@ export function updateUserMenu() {
   if (menuEmail) menuEmail.textContent = user.email || '';
 
   if (menuPlanBadge) {
+    menuPlanBadge.replaceChildren();
     if (user.plan === 'premium') {
       menuPlanBadge.className = 'menu-plan-badge premium';
-      menuPlanBadge.textContent = '⭐ Plan Premium';
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "w-4 h-4 mr-1 inline-block text-yellow-400");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "currentColor");
+      svg.setAttribute("stroke-width", "2");
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2");
+      svg.appendChild(polygon);
+      menuPlanBadge.appendChild(svg);
+      menuPlanBadge.appendChild(document.createTextNode(' Plan Premium'));
     } else {
       menuPlanBadge.className = 'menu-plan-badge free';
-      menuPlanBadge.textContent = '🆓 Plan Gratuito';
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "w-4 h-4 mr-1 inline-block text-cyan-400");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "currentColor");
+      svg.setAttribute("stroke-width", "2");
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", "3");
+      rect.setAttribute("y", "3");
+      rect.setAttribute("width", "18");
+      rect.setAttribute("height", "18");
+      rect.setAttribute("rx", "2");
+      svg.appendChild(rect);
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M7 10h4v4M17 14h-4v-4");
+      svg.appendChild(path);
+      menuPlanBadge.appendChild(svg);
+      menuPlanBadge.appendChild(document.createTextNode(' Plan Gratuito'));
     }
   }
 
