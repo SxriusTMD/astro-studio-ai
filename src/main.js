@@ -9,7 +9,7 @@ import {
   initExportButtons, initToastSave, initHistoryPanel,
   initTabs, initDragDrop, initLibraryPanel, initUpgradeModal,
   initUserDropdownClose, initSidebarEvents, initHeaderScroll,
-  initSessionClickDelegation, initLegalModal
+  initSessionClickDelegation, initLegalModal, initProgressDashboard
 } from './ui-components.js';
 
 function init() {
@@ -49,6 +49,7 @@ function init() {
   initSummaryGenerator();
   initExamMode();
   initLegalModal();
+  initProgressDashboard();
 
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     clearStorage();

@@ -1330,6 +1330,7 @@ export async function loadSession(id) {
     if (window.flashcardsData) {
       renderFlashcards(window.flashcardsData);
       document.getElementById('exportFlashcards').style.display = 'inline-block';
+      document.getElementById('exportAnkiCSV').style.display = 'inline-block';
     }
     if (window.summaryData) {
       const summaryText = document.getElementById('summaryText');
@@ -1430,6 +1431,7 @@ export function newSession() {
   tomorrow.setDate(tomorrow.getDate() + 7);
   document.getElementById('planDate').value = tomorrow.toISOString().split('T')[0];
   document.getElementById('exportFlashcards').style.display = 'none';
+  document.getElementById('exportAnkiCSV').style.display = 'none';
   document.getElementById('exportSummary').style.display = 'none';
   document.getElementById('exportPlan').style.display = 'none';
   const examContent = document.getElementById('examContent');
@@ -1670,6 +1672,7 @@ export function restoreFromStorage() {
     window.flashcardsData = flashcards;
     renderFlashcards(flashcards);
     document.getElementById('exportFlashcards').style.display = 'inline-block';
+    document.getElementById('exportAnkiCSV').style.display = 'inline-block';
     updateExportAllButton();
     restored = true;
   }
@@ -1712,7 +1715,15 @@ export function initCardClickHandlers() {
   const prevCardBtn = document.getElementById('prevCard');
   const nextCardBtn = document.getElementById('nextCard');
 
-  if (flashcard) flashcard.addEventListener('click', () => flashcard.classList.toggle('flipped'));
+  if (flashcard) {
+    flashcard.addEventListener('click', () => {
+      const willBeFlipped = !flashcard.classList.contains('flipped');
+      flashcard.classList.toggle('flipped');
+      if (willBeFlipped) {
+        import('./ui-components.js').then(m => m.incrementCardsReviewed());
+      }
+    });
+  }
   if (prevCardBtn) prevCardBtn.addEventListener('click', () => { if (currentCard > 0) updateCard(currentCard - 1); });
   if (nextCardBtn) nextCardBtn.addEventListener('click', () => { if (currentCard < flashcardData.length - 1) updateCard(currentCard + 1); });
 
@@ -1744,6 +1755,7 @@ export function initFlashcardGenerator() {
         window.flashcardsData = normalized;
         saveToStorage('flashcards', window.flashcardsData);
         document.getElementById('exportFlashcards').style.display = 'inline-block';
+        document.getElementById('exportAnkiCSV').style.display = 'inline-block';
         updateExportAllButton();
         saveCurrentSession();
       }

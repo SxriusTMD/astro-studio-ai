@@ -2124,6 +2124,91 @@ body:not(.sidebar-closed) .sidebar {
       display: none;
     }
 
+/* ===== PROGRESS MODAL ===== */
+.progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.progress-overlay.open {
+  display: flex;
+  opacity: 1;
+}
+
+.progress-modal {
+  background: #0d0d1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  max-width: 480px;
+  width: 95%;
+  padding: 32px;
+  position: relative;
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.progress-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.progress-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.progress-card-icon {
+  font-size: 32px;
+  background: rgba(255, 255, 255, 0.04);
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.progress-card-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.progress-card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 4px;
+}
+
 /* ===== UPGRADE MODAL ===== */
 .upgrade-overlay {
   position: fixed;
@@ -2819,6 +2904,54 @@ body:not(.sidebar-closed) .sidebar {
 </div>
 </div>
 </div>
+</div>
+
+<!-- ===== PROGRESS DASHBOARD MODAL ===== -->
+<div class="history-overlay" id="progressOverlay">
+  <div class="progress-modal" id="progressModal">
+    <div class="upgrade-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: #ffffff;">
+        <svg class="w-6 h-6 text-yellow-400 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="7"></circle>
+          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+        </svg>
+        Mi Progreso Académico
+      </h2>
+      <button id="closeProgress" style="background: none; border: none; color: rgba(255,255,255,0.6); font-size: 20px; cursor: pointer; transition: color 0.2s ease;">✕</button>
+    </div>
+    
+    <div class="progress-grid">
+      <!-- Card 1: Racha -->
+      <div class="progress-card">
+        <div class="progress-card-icon">🔥</div>
+        <div>
+          <div class="progress-card-title">Racha de Estudio</div>
+          <div id="statStreak" class="progress-card-value">1 día</div>
+        </div>
+      </div>
+      <!-- Card 2: Tarjetas -->
+      <div class="progress-card">
+        <div class="progress-card-icon">🧠</div>
+        <div>
+          <div class="progress-card-title">Tarjetas Repasadas</div>
+          <div id="statCardsReviewed" class="progress-card-value">0</div>
+        </div>
+      </div>
+      <!-- Card 3: Precisión -->
+      <div class="progress-card">
+        <div class="progress-card-icon">🎯</div>
+        <div>
+          <div class="progress-card-title">Precisión en Exámenes</div>
+          <div id="statExamAccuracy" class="progress-card-value">85%</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="text-align: center; color: var(--text-muted); font-size: 13px; font-family: 'Inter', sans-serif; opacity: 0.8; margin-top: 8px;">
+      🚀 ¡Sigue interactuando para aumentar tus logros!
+    </div>
+  </div>
+</div>
 
 <!-- ===== HEADER ===== -->
 <header class="flex-none h-14 md:h-16 bg-[rgba(10,10,26,0.85)] backdrop-blur-md border-b border-[#1e1e4a] z-[101] flex-shrink-0">
@@ -2839,6 +2972,7 @@ body:not(.sidebar-closed) .sidebar {
       <button class="btn btn-secondary btn-small btn-icon" id="libraryBtn" title="Biblioteca de documentos"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="historyBtn" title="Historial de sesiones"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
       <button class="btn btn-secondary btn-small btn-icon" id="exportAllBtn" title="Exportar todo a PDF" disabled style="opacity:0.4;cursor:not-allowed;"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+      <button class="btn btn-secondary btn-small btn-icon" id="progressDashboardBtn" title="Mi Progreso" style="margin-left: 2px;"><svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></button>
     </div>
     <div class="user-profile" id="userProfile">
       <div class="user-avatar-container" id="userAvatarContainer">
@@ -2963,6 +3097,9 @@ body:not(.sidebar-closed) .sidebar {
         </button>
         <button class="btn btn-secondary" id="exportFlashcards" style="display:none;">
           <svg class="w-4 h-4 mr-1 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Exportar PDF
+        </button>
+        <button class="btn btn-secondary" id="exportAnkiCSV" style="display:none; margin-left: 8px;">
+          <svg class="w-4 h-4 mr-1 inline-block text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Exportar a Anki (.csv)
         </button>
       </div>
             <div style="margin-top:24px;">

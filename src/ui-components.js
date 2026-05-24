@@ -812,6 +812,13 @@ function exportAllPDF() {
 
 export function initExportButtons() {
   document.getElementById('exportFlashcards')?.addEventListener('click', exportFlashcardsPDF);
+  document.getElementById('exportAnkiCSV')?.addEventListener('click', () => {
+    if (window.flashcardsData) {
+      exportFlashcardsToCSV(window.flashcardsData);
+    } else {
+      alert("No hay flashcards generadas para exportar.");
+    }
+  });
   document.getElementById('exportSummary')?.addEventListener('click', exportSummaryPDF);
   document.getElementById('exportPlan')?.addEventListener('click', exportPlanPDF);
   document.getElementById('exportAllBtn')?.addEventListener('click', exportAllPDF);
@@ -1092,4 +1099,108 @@ export function initSessionClickDelegation() {
       loadSession(item.dataset.id);
     }
   });
+}
+
+// ===== PROGRESS DASHBOARD =====
+
+export function hydrateProgressDashboard() {
+  if (!window.userProgress) {
+    const savedCards = parseInt(localStorage.getItem('userProgress_cardsReviewed') || '0', 10);
+    const savedStreak = parseInt(localStorage.getItem('userProgress_streak') || '1', 10);
+    const savedAccuracy = parseInt(localStorage.getItem('userProgress_examAccuracy') || '85', 10);
+    window.userProgress = { cardsReviewed: savedCards, streak: savedStreak, examAccuracy: savedAccuracy };
+  }
+  
+  const statCardsReviewed = document.getElementById('statCardsReviewed');
+  if (statCardsReviewed) {
+    statCardsReviewed.textContent = window.userProgress.cardsReviewed;
+  }
+  
+  const statStreak = document.getElementById('statStreak');
+  if (statStreak) {
+    statStreak.textContent = `${window.userProgress.streak} ${window.userProgress.streak === 1 ? 'día' : 'días'}`;
+  }
+  
+  const statExamAccuracy = document.getElementById('statExamAccuracy');
+  if (statExamAccuracy) {
+    statExamAccuracy.textContent = `${window.userProgress.examAccuracy}%`;
+  }
+}
+
+export function incrementCardsReviewed() {
+  if (!window.userProgress) {
+    hydrateProgressDashboard();
+  }
+  window.userProgress.cardsReviewed++;
+  localStorage.setItem('userProgress_cardsReviewed', window.userProgress.cardsReviewed);
+  
+  const statCardsReviewed = document.getElementById('statCardsReviewed');
+  if (statCardsReviewed) {
+    statCardsReviewed.textContent = window.userProgress.cardsReviewed;
+  }
+}
+
+export function initProgressDashboard() {
+  const btn = document.getElementById('progressDashboardBtn');
+  const overlay = document.getElementById('progressOverlay');
+  const closeBtn = document.getElementById('closeProgress');
+  
+  if (btn) {
+    btn.addEventListener('click', () => {
+      hydrateProgressDashboard();
+      overlay?.classList.add('open');
+    });
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      overlay?.classList.remove('open');
+    });
+  }
+  
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+      }
+    });
+  }
+  
+  // Initial load hydrate
+  hydrateProgressDashboard();
+}
+
+// ===== ANKI CSV EXPORT =====
+
+export function exportFlashcardsToCSV(cardsArray) {
+  if (!cardsArray || !cardsArray.length) {
+    alert("No hay flashcards para exportar.");
+    return;
+  }
+  
+  const escapeCSV = (text) => {
+    if (text == null) return '';
+    const str = String(text).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  const csvLines = cardsArray.map(card => {
+    const q = card.q || card.pregunta || card.front || '';
+    const a = card.a || card.respuesta || card.back || '';
+    return `${escapeCSV(q)},${escapeCSV(a)}`;
+  });
+
+  const csvContent = csvLines.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'flashcards_anki.csv');
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
