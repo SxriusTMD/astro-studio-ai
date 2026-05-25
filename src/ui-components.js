@@ -874,6 +874,189 @@ function exportAllPDF() {
   doc.save(pdfName);
 }
 
+function convertNodeToMarkdown(node) {
+  if (!node) return '';
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return '';
+  }
+  const nodeName = node.nodeName.toUpperCase();
+  switch (nodeName) {
+    case 'H1':
+      return `# ${convertChildren(node).trim()}\n\n`;
+    case 'H2':
+      return `## ${convertChildren(node).trim()}\n\n`;
+    case 'H3':
+      return `### ${convertChildren(node).trim()}\n\n`;
+    case 'H4':
+      return `#### ${convertChildren(node).trim()}\n\n`;
+    case 'H5':
+      return `##### ${convertChildren(node).trim()}\n\n`;
+    case 'H6':
+      return `###### ${convertChildren(node).trim()}\n\n`;
+    case 'P':
+      return `${convertChildren(node).trim()}\n\n`;
+    case 'STRONG':
+    case 'B':
+      return `**${convertChildren(node).trim()}**`;
+    case 'EM':
+    case 'I':
+      return `*${convertChildren(node).trim()}*`;
+    case 'CODE':
+      return `\`${convertChildren(node).trim()}\``;
+    case 'PRE':
+      return `\`\`\`\n${node.textContent.trim()}\n\`\`\`\n\n`;
+    case 'UL': {
+      let md = '';
+      for (const child of node.children) {
+        if (child.nodeName.toUpperCase() === 'LI') {
+          md += `- ${convertChildren(child).trim()}\n`;
+        }
+      }
+      return md + '\n';
+    }
+    case 'OL': {
+      let md = '';
+      let idx = 1;
+      for (const child of node.children) {
+        if (child.nodeName.toUpperCase() === 'LI') {
+          md += `${idx}. ${convertChildren(child).trim()}\n`;
+          idx++;
+        }
+      }
+      return md + '\n';
+    }
+    case 'TABLE': {
+      let md = '\n';
+      const rows = Array.from(node.querySelectorAll('tr'));
+      if (rows.length > 0) {
+        const ths = Array.from(rows[0].querySelectorAll('th, td'));
+        const headers = ths.map(cell => cell.textContent.trim().replace(/\s+/g, ' '));
+        md += `| ${headers.join(' | ')} |\n`;
+        md += `| ${headers.map(() => '---').join(' | ')} |\n`;
+        for (let i = 1; i < rows.length; i++) {
+          const tds = Array.from(rows[i].querySelectorAll('td'));
+          if (tds.length > 0) {
+            const cells = tds.map(cell => cell.textContent.trim().replace(/\s+/g, ' '));
+            md += `| ${cells.join(' | ')} |\n`;
+          }
+        }
+      }
+      return md + '\n';
+    }
+    case 'BR':
+      return '\n';
+    case 'BUTTON':
+      return '';
+    default:
+      return convertChildren(node);
+  }
+}
+
+function convertChildren(parent) {
+  let md = '';
+  if (!parent) return md;
+  for (const child of parent.childNodes) {
+    md += convertNodeToMarkdown(child);
+  }
+  return md;
+}
+
+export function exportToMarkdown(type) {
+  if (type === 'summary') {
+    const summaryText = document.getElementById('summaryText');
+    if (!summaryText || !summaryText.textContent.trim()) {
+      throw new Error('No hay contenido en el resumen para exportar.');
+    }
+    return convertChildren(summaryText);
+  } else if (type === 'plan') {
+    const planBody = document.getElementById('planBody');
+    const planTable = document.getElementById('planTable');
+    if (!planBody || !planBody.textContent.trim() || planBody.textContent.includes('Esperando contenido')) {
+      throw new Error('No hay un plan de estudio generado para exportar.');
+    }
+    const fallbackCell = planBody.querySelector('td[colSpan]');
+    if (fallbackCell) {
+      return fallbackCell.textContent.trim();
+    }
+    const subject = document.getElementById('planSubject')?.value || 'Materia';
+    const dateVal = document.getElementById('planDate')?.value;
+    const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('es-ES') : '—';
+    let md = `# Plan de Estudio: ${subject}\n`;
+    md += `**Fecha del examen:** ${dateStr}\n\n`;
+    md += convertNodeToMarkdown(planTable);
+    return md;
+  }
+  return '';
+}
+
+async function copyToClipboardFallback(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    if (!successful) throw new Error('execCommand copy returned false');
+  } catch (err) {
+    document.body.removeChild(textArea);
+    throw err;
+  }
+}
+
+async function handleMarkdownCopy(type, button) {
+  try {
+    const text = exportToMarkdown(type);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      await copyToClipboardFallback(text);
+    }
+    button.replaceChildren();
+    button.appendChild(document.createTextNode('¡Copiado!'));
+    button.style.borderColor = '#22c55e';
+    button.style.color = '#22c55e';
+    setTimeout(() => {
+      button.replaceChildren();
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('class', 'w-4 h-4 mr-1 inline-block');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      icon.setAttribute('stroke-linecap', 'round');
+      icon.setAttribute('stroke-linejoin', 'round');
+      icon.style.verticalAlign = 'middle';
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2');
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', '8');
+      rect.setAttribute('y', '2');
+      rect.setAttribute('width', '8');
+      rect.setAttribute('height', '4');
+      rect.setAttribute('rx', '1');
+      rect.setAttribute('ry', '1');
+      icon.appendChild(path);
+      icon.appendChild(rect);
+      button.appendChild(icon);
+      button.appendChild(document.createTextNode(' Exportar a Notion (Markdown)'));
+      button.style.borderColor = 'var(--border, #222226)';
+      button.style.color = 'var(--text-muted, #71717a)';
+    }, 2000);
+    mostrarToast('📋 ¡Copiado al portapapeles en formato Markdown!');
+  } catch (err) {
+    console.error('Copy failed:', err);
+    alert(`⚠️ Acceso denegado o no soportado por tu navegador para copiar al portapapeles. Intenta otorgar permisos de portapapeles o usa un navegador moderno.`);
+  }
+}
+
 export function initExportButtons() {
   document.getElementById('exportFlashcards')?.addEventListener('click', exportFlashcardsPDF);
   document.getElementById('exportAnkiCSV')?.addEventListener('click', () => {
@@ -886,6 +1069,84 @@ export function initExportButtons() {
   document.getElementById('exportSummary')?.addEventListener('click', exportSummaryPDF);
   document.getElementById('exportPlan')?.addEventListener('click', exportPlanPDF);
   document.getElementById('exportAllBtn')?.addEventListener('click', exportAllPDF);
+
+  const summaryActions = document.querySelector('.summary-actions');
+  if (summaryActions && !document.getElementById('exportSummaryMarkdown')) {
+    const exportSummaryMarkdown = document.createElement('button');
+    exportSummaryMarkdown.id = 'exportSummaryMarkdown';
+    exportSummaryMarkdown.style.cssText = 'display: none; background-color: var(--bg-card, #1c1c1f); border: 1px solid var(--border, #222226); color: var(--text-muted, #71717a); padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; margin-left: 8px; font-family: "Inter", sans-serif; font-size: 14px;';
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('class', 'w-4 h-4 mr-1 inline-block');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '2');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.style.verticalAlign = 'middle';
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2');
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '8');
+    rect.setAttribute('y', '2');
+    rect.setAttribute('width', '8');
+    rect.setAttribute('height', '4');
+    rect.setAttribute('rx', '1');
+    rect.setAttribute('ry', '1');
+    icon.appendChild(path);
+    icon.appendChild(rect);
+    exportSummaryMarkdown.appendChild(icon);
+    exportSummaryMarkdown.appendChild(document.createTextNode(' Exportar a Notion (Markdown)'));
+    exportSummaryMarkdown.addEventListener('mouseenter', () => {
+      exportSummaryMarkdown.style.borderColor = 'var(--accent-gold)';
+      exportSummaryMarkdown.style.color = 'var(--accent-gold)';
+    });
+    exportSummaryMarkdown.addEventListener('mouseleave', () => {
+      exportSummaryMarkdown.style.borderColor = 'var(--border, #222226)';
+      exportSummaryMarkdown.style.color = 'var(--text-muted, #71717a)';
+    });
+    exportSummaryMarkdown.addEventListener('click', () => handleMarkdownCopy('summary', exportSummaryMarkdown));
+    summaryActions.appendChild(exportSummaryMarkdown);
+  }
+
+  const planActions = document.querySelector('.study-plan-actions');
+  if (planActions && !document.getElementById('exportPlanMarkdown')) {
+    const exportPlanMarkdown = document.createElement('button');
+    exportPlanMarkdown.id = 'exportPlanMarkdown';
+    exportPlanMarkdown.style.cssText = 'display: none; background-color: var(--bg-card, #1c1c1f); border: 1px solid var(--border, #222226); color: var(--text-muted, #71717a); padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; margin-left: 8px; font-family: "Inter", sans-serif; font-size: 14px;';
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('class', 'w-4 h-4 mr-1 inline-block');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '2');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.style.verticalAlign = 'middle';
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2');
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '8');
+    rect.setAttribute('y', '2');
+    rect.setAttribute('width', '8');
+    rect.setAttribute('height', '4');
+    rect.setAttribute('rx', '1');
+    rect.setAttribute('ry', '1');
+    icon.appendChild(path);
+    icon.appendChild(rect);
+    exportPlanMarkdown.appendChild(icon);
+    exportPlanMarkdown.appendChild(document.createTextNode(' Exportar a Notion (Markdown)'));
+    exportPlanMarkdown.addEventListener('mouseenter', () => {
+      exportPlanMarkdown.style.borderColor = 'var(--accent-gold)';
+      exportPlanMarkdown.style.color = 'var(--accent-gold)';
+    });
+    exportPlanMarkdown.addEventListener('mouseleave', () => {
+      exportPlanMarkdown.style.borderColor = 'var(--border, #222226)';
+      exportPlanMarkdown.style.color = 'var(--text-muted, #71717a)';
+    });
+    exportPlanMarkdown.addEventListener('click', () => handleMarkdownCopy('plan', exportPlanMarkdown));
+    planActions.appendChild(exportPlanMarkdown);
+  }
 }
 
 // ===== TOAST SAVE =====

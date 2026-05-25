@@ -1422,11 +1422,15 @@ export async function loadSession(id) {
       const summaryText = document.getElementById('summaryText');
       renderSummaryText(summaryText, window.summaryData.text);
       document.getElementById('exportSummary').style.display = 'inline-block';
+      const exportSummaryMarkdown = document.getElementById('exportSummaryMarkdown');
+      if (exportSummaryMarkdown) exportSummaryMarkdown.style.display = 'inline-block';
     }
     if (window.planData) {
       const planBody = document.getElementById('planBody');
       renderPlanTable(planBody, window.planData.items);
       document.getElementById('exportPlan').style.display = 'inline-block';
+      const exportPlanMarkdown = document.getElementById('exportPlanMarkdown');
+      if (exportPlanMarkdown) exportPlanMarkdown.style.display = 'inline-block';
     }
 
     updateExportAllButton();
@@ -1519,7 +1523,11 @@ export function newSession() {
   document.getElementById('exportFlashcards').style.display = 'none';
   document.getElementById('exportAnkiCSV').style.display = 'none';
   document.getElementById('exportSummary').style.display = 'none';
+  const exportSummaryMarkdown = document.getElementById('exportSummaryMarkdown');
+  if (exportSummaryMarkdown) exportSummaryMarkdown.style.display = 'none';
   document.getElementById('exportPlan').style.display = 'none';
+  const exportPlanMarkdown = document.getElementById('exportPlanMarkdown');
+  if (exportPlanMarkdown) exportPlanMarkdown.style.display = 'none';
   const examContent = document.getElementById('examContent');
   if (examContent) {
     examContent.replaceChildren();
@@ -1801,6 +1809,8 @@ export function restoreFromStorage() {
     if (planBody) renderPlanTable(planBody, plan.items);
 
     document.getElementById('exportPlan').style.display = 'inline-block';
+    const exportPlanMarkdown = document.getElementById('exportPlanMarkdown');
+    if (exportPlanMarkdown) exportPlanMarkdown.style.display = 'inline-block';
     updateExportAllButton();
     restored = true;
   }
@@ -1813,6 +1823,8 @@ export function restoreFromStorage() {
       renderSummaryText(summaryText, summary.text);
     }
     document.getElementById('exportSummary').style.display = 'inline-block';
+    const exportSummaryMarkdown = document.getElementById('exportSummaryMarkdown');
+    if (exportSummaryMarkdown) exportSummaryMarkdown.style.display = 'inline-block';
     updateExportAllButton();
     restored = true;
   }
@@ -2067,6 +2079,8 @@ export function initPlanGenerator() {
 
       if (window.planData?.items?.length > 0) {
         document.getElementById('exportPlan').style.display = 'inline-block';
+        const exportPlanMarkdown = document.getElementById('exportPlanMarkdown');
+        if (exportPlanMarkdown) exportPlanMarkdown.style.display = 'inline-block';
         updateExportAllButton();
       }
       saveCurrentSession();
@@ -2104,6 +2118,8 @@ export function initSummaryGenerator() {
       window.summaryData = { text: data.text, pdfs: window.pdfDocs.map(d => d.name) };
       saveToStorage('summary', window.summaryData);
       document.getElementById('exportSummary').style.display = 'inline-block';
+      const exportSummaryMarkdown = document.getElementById('exportSummaryMarkdown');
+      if (exportSummaryMarkdown) exportSummaryMarkdown.style.display = 'inline-block';
       updateExportAllButton();
       saveCurrentSession();
     } catch (e) {
