@@ -1314,13 +1314,17 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
   const now = new Date();
   const hoyStr = now.toISOString().split('T')[0];
   
-  const systemPrompt = `Eres un planeador de estudio de alta precisión de AeroLex AI. REGLA CRÍTICA: NO INVENTES TEMAS GENÉRICOS (ej. 'Introducción', 'Conceptos básicos'). Extrae los nombres de los temas EXACTOS y ESPECÍFICOS directamente del documento proporcionado. Si el texto habla de 'Matrices Inversas por Gauss', ese debe ser el título del día. Responde ÚNICAMENTE con un array JSON válido con este formato: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}]. Sin texto extra, sin markdown, solo el JSON puro. REGLA DE FORMATO: NO utilices sintaxis LaTeX ni ecuaciones matemáticas (como $\rightarrow$). Utiliza EXCLUSIVAMENTE caracteres Unicode estándar (ejemplo: -> o ➔) para las flechas y viñetas.`;
+  const systemPrompt = `Eres un planeador de estudio de alta precisión de AeroLex AI. 
+REGLA CRÍTICA DE FORMATO: Responde ÚNICAMENTE con un ÚNICO array JSON plano de objetos en este formato exacto: [{"dia": 1, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}, {"dia": 2, "fecha": "YYYY-MM-DD", "tema": "...", "tiempo": "2 h"}].
+Toda la respuesta debe abrir con un único '[' y cerrar con un único ']'. NO crees múltiples arrays, NO envuelvas cada día en su propio array individual, y NO pongas corchetes alrededor de cada día en cada línea. La respuesta debe ser un solo JSON válido analizable con JSON.parse().
+REGLA DE CONTENIDO: Extrae los nombres de los temas EXACTOS y ESPECÍFICOS directamente del documento proporcionado (ej. 'Matrices Inversas por Gauss'). NO utilices sintaxis LaTeX ni ecuaciones matemáticas (como $\rightarrow$). Utiliza EXCLUSIVAMENTE caracteres Unicode estándar (ejemplo: -> o ➔). Sin texto extra, sin markdown, solo el JSON puro.`;
   
   const prompt = `Genera un plan de estudio día por día para preparar un examen de "${materia}" usando el contenido de este documento.
 La fecha de HOY es ${hoyStr}.
 El examen es el ${fechaExamen} (dentro de ${diffDays} días).
-REGLA CRÍTICA DE COBERTURA: Debes generar exactamente una entrada/fila para cada día disponible, comenzando desde HOY (${hoyStr}) hasta el día anterior al examen. Por lo tanto, debes generar exactamente ${diffDays - 1} entradas en tu JSON.
-Calcula la fecha correspondiente a cada día de forma estrictamente correlativa y cronológica diaria (Día 1 = HOY, Día 2 = Mañana, etc., sumando exactamente 1 día a la fecha en cada fila).
+
+REGLA CRÍTICA DE COBERTURA: Debes generar exactamente un objeto en el array JSON por cada día calendario disponible, comenzando desde HOY (${hoyStr}) hasta el día anterior al examen. Por lo tanto, el array debe contener exactamente ${diffDays - 1} elementos.
+Calcula la fecha correspondiente a cada elemento de forma estrictamente correlativa y cronológica diaria (Elemento 1 = HOY, Elemento 2 = Mañana, etc., sumando exactamente 1 día a la fecha en cada objeto).
 Asigna temas y subtemas específicos extraídos del documento a cada uno de estos días de forma progresiva, distribuyendo la carga de estudio de forma equitativa.
 
 Documento:
@@ -1330,7 +1334,7 @@ ${getEvenlyDistributedChunks(pdfContent, 3)}`;
     const text = await callNVIDIA([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: prompt }
-    ], { model: 'meta/llama-3.1-8b-instruct', temperature: 0.2, max_tokens: 1024 });
+    ], { model: 'meta/llama-3.1-8b-instruct', temperature: 0.2, max_tokens: 4096 });
 
     let cleanText = text || '';
     // Quitar backticks de Markdown
