@@ -327,7 +327,7 @@ header.header-compact .logo-icon {
     .header-tools {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
     }
 
     .btn-icon {
@@ -746,7 +746,7 @@ body:not(.sidebar-closed) .sidebar {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      border: 2px solid rgba(139,92,246,0.5);
+      border: 2px solid var(--accent-gold);
       object-fit: cover;
     }
 
@@ -1221,7 +1221,7 @@ body:not(.sidebar-closed) .sidebar {
       background: rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(197, 168, 128, 0.15);
       border-radius: var(--radius);
       border-bottom-left-radius: 4px;
       padding: 16px 20px;
@@ -1313,8 +1313,8 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .chat-input-area input:focus {
-      border-color: var(--accent-violet);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
     }
 
     .chat-input-area input::placeholder { color: var(--text-muted); }
@@ -1785,8 +1785,8 @@ body:not(.sidebar-closed) .sidebar {
 
     .study-plan-form input:focus,
     .study-plan-form select:focus {
-      border-color: var(--accent-violet);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
     }
 
     .study-plan-form input::placeholder { color: var(--text-muted); }
@@ -1843,8 +1843,8 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .tag-cyan { background: rgba(0, 229, 255, 0.12); color: var(--accent-cyan); }
-    .tag-violet { background: rgba(139, 92, 246, 0.12); color: var(--accent-violet); }
-    .tag-purple { background: rgba(108, 59, 210, 0.2); color: #a78bfa; }
+    .tag-violet { background: rgba(197, 168, 128, 0.12); color: var(--accent-gold); }
+    .tag-purple { background: rgba(197, 168, 128, 0.2); color: var(--accent-gold); }
 
     /* ===== TAB 4 - SUMMARY ===== */
     .summary-section .section-header {
@@ -2010,8 +2010,8 @@ body:not(.sidebar-closed) .sidebar {
     }
 
     .exam-card textarea:focus {
-      border-color: var(--accent-violet);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
     }
 
     .exam-card textarea::placeholder { color: var(--text-muted); }
@@ -2813,13 +2813,13 @@ body:not(.sidebar-closed) .sidebar {
     /* ===== CITATION BADGES ===== */
     .citation-badge {
       display: inline-block;
-      background: rgba(139, 92, 246, 0.15);
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      background: rgba(197, 168, 128, 0.15);
+      border: 1px solid rgba(197, 168, 128, 0.3);
       border-radius: 4px;
       padding: 1px 6px;
       font-size: 11px;
       font-weight: 600;
-      color: #a78bfa;
+      color: var(--accent-gold);
       font-family: 'Inter', monospace;
       letter-spacing: 0.3px;
     }
@@ -2843,8 +2843,8 @@ body:not(.sidebar-closed) .sidebar {
     .leyenda-tecnica {
       margin-top: 12px;
       padding: 8px 12px;
-      background: rgba(139, 92, 246, 0.06);
-      border-left: 3px solid rgba(139, 92, 246, 0.4);
+      background: rgba(197, 168, 128, 0.06);
+      border-left: 3px solid rgba(197, 168, 128, 0.5);
       border-radius: 0 6px 6px 0;
       font-size: 12px;
       color: var(--text-secondary);
@@ -3101,7 +3101,7 @@ body:not(.sidebar-closed) .sidebar {
       flex-direction: column !important;
       height: 100vh !important;
       box-sizing: border-box;
-      padding-top: 60px !important;
+      padding-top: 0 !important;
     }
     #leaderboardPanel.active {
       transform: translateX(0);
@@ -3251,7 +3251,7 @@ body:not(.sidebar-closed) .sidebar {
 <header class="flex-none h-[72px] md:h-[88px] bg-[var(--bg-deep)] backdrop-blur-md border-b border-[var(--border)] z-[101] flex-shrink-0">
 <div class="flex items-center justify-between px-4 md:px-6 h-full max-w-[1400px] mx-auto">
   <div class="flex items-center gap-3 flex-none">
-    <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(139,92,246,0.2)] hover:border-[rgba(139,92,246,0.4)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></button>
+    <button id="sidebarToggle" class="relative z-50 flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-[rgba(197,168,128,0.15)] hover:border-[rgba(197,168,128,0.35)] transition-all duration-200 text-lg cursor-pointer" title="Alternar sidebar"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></button>
     <div class="logo-section flex items-center gap-3">
       <img src="assets/AeroLexAI_Ship_Trans.png" class="aerolex-logo-img object-contain cursor-pointer" style="width: 160px !important; height: auto !important; max-width: none;" alt="AeroLex AI Logo">
       <div>
@@ -3372,7 +3372,7 @@ body:not(.sidebar-closed) .sidebar {
       <div class="chat-container flex-1 flex flex-col overflow-hidden">
         <div class="chat-messages flex-1 overflow-y-auto p-4 space-y-3 whitespace-pre-wrap leading-relaxed" id="chatMessages">
           <div class="empty-chat">
-            <div class="icon"><svg class="w-8 h-8 mx-auto text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+            <div class="icon"><svg class="w-8 h-8 mx-auto text-[#c5a880]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
             <p>Sube un PDF y haz cualquier pregunta sobre tus apuntes</p>
           </div>
         </div>
