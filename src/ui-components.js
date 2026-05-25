@@ -439,7 +439,7 @@ export async function handleFile(file) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
     const pageText = content.items.map(item => item.str).join(' ');
-    fullText += pageText + '\n';
+    fullText += `[Pagina: ${i}] ` + pageText + '\n';
 
     const pct = Math.round((i / totalPages) * 100);
     if (progressFill) progressFill.style.width = `${pct}%`;
@@ -743,7 +743,7 @@ function exportFlashcardsPDF() {
     doc.setFontSize(9); doc.setTextColor(128, 128, 128);
     doc.text(`Tarjeta ${i + 1} / ${window.flashcardsData.length}`, 15, yPos);
     yPos += 5;
-    drawBox(doc, 15, yPos, 180, 20, 'PREGUNTA', card.pregunta, '#8b5cf6');
+    drawBox(doc, 15, yPos, 180, 20, 'PREGUNTA', card.pregunta, '#c5a880');
     yPos += 25;
     drawBox(doc, 15, yPos, 180, 20, 'RESPUESTA', card.respuesta, '#10b981');
     yPos += 30;
@@ -835,7 +835,7 @@ function exportAllPDF() {
       if (yPos > 250) { doc.addPage(); yPos = 35; }
       doc.setFontSize(9); doc.setTextColor(128, 128, 128);
       doc.text(`Tarjeta ${i + 1}`, 15, yPos); yPos += 5;
-      drawBox(doc, 15, yPos, 180, 20, 'PREGUNTA', card.pregunta, '#8b5cf6');
+      drawBox(doc, 15, yPos, 180, 20, 'PREGUNTA', card.pregunta, '#c5a880');
       yPos += 25;
       drawBox(doc, 15, yPos, 180, 20, 'RESPUESTA', card.respuesta, '#10b981');
       yPos += 30;

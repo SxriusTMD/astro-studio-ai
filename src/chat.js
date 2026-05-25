@@ -78,10 +78,42 @@ export function appendSafeHTML(parent, htmlString) {
   const doc = parser.parseFromString(htmlString, 'text/html');
   parent.replaceChildren();
   
+  function parseCitationsAndAppend(textVal, destParent) {
+    const parts = textVal.split(/(\[P[aá]gina:\s*\d+\])/gi);
+    parts.forEach(part => {
+      const match = part.match(/\[P[aá]gina:\s*(\d+)\]/i);
+      if (match) {
+        const pageNum = parseInt(match[1], 10);
+        const citeBtn = document.createElement('button');
+        citeBtn.className = 'citation-badge interactive';
+        citeBtn.style.cssText = 'background-color: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold); border-radius: 4px; padding: 2px 6px; font-size: 0.8em; margin-left: 4px; cursor: pointer; transition: all 0.2s ease; font-family: \'Inter\', sans-serif; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;';
+        citeBtn.textContent = `Pag. ${pageNum}`;
+        
+        citeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('scrollToPdfPage', { detail: { page: pageNum } }));
+        });
+        
+        citeBtn.addEventListener('mouseenter', () => {
+          citeBtn.style.backgroundColor = 'var(--accent-gold)';
+          citeBtn.style.color = 'var(--bg-deep)';
+        });
+        citeBtn.addEventListener('mouseleave', () => {
+          citeBtn.style.backgroundColor = 'transparent';
+          citeBtn.style.color = 'var(--accent-gold)';
+        });
+
+        destParent.appendChild(citeBtn);
+      } else if (part) {
+        destParent.appendChild(document.createTextNode(part));
+      }
+    });
+  }
+  
   function sanitizeAndAppend(srcNode, destParent) {
     srcNode.childNodes.forEach(child => {
       if (child.nodeType === Node.TEXT_NODE) {
-        destParent.appendChild(document.createTextNode(child.textContent));
+        parseCitationsAndAppend(child.textContent, destParent);
       } else if (child.nodeType === Node.ELEMENT_NODE) {
         const tag = child.tagName.toLowerCase();
         const safeTags = ['p', 'span', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div'];
@@ -93,7 +125,7 @@ export function appendSafeHTML(parent, htmlString) {
           sanitizeAndAppend(child, newEl);
           destParent.appendChild(newEl);
         } else {
-          destParent.appendChild(document.createTextNode(child.textContent));
+          parseCitationsAndAppend(child.textContent, destParent);
         }
       }
     });
@@ -755,7 +787,7 @@ function ensureExamStartButtonAfterLoad() {
 
   examContent.replaceChildren();
   const btn = document.createElement('button');
-  btn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  btn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(197,168,128,0.1)]';
   btn.id = 'startExam';
   btn.textContent = 'Iniciar Examen';
   examContent.appendChild(btn);
@@ -787,7 +819,7 @@ function renderExamQuestion() {
 
   // Contenedor principal con Glassmorphism
   const card = document.createElement('div');
-  card.className = 'exam-card backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)] p-6 rounded-xl';
+  card.className = 'exam-card backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(197,168,128,0.1)] p-6 rounded-xl';
 
   const header = document.createElement('div');
   header.style.display = 'flex';
@@ -821,7 +853,7 @@ function renderExamQuestion() {
   optionsContainer.className = 'exam-options flex flex-col gap-2';
 
   const confirmBtn = document.createElement('button');
-  confirmBtn.className = 'btn btn-primary mt-4 backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  confirmBtn.className = 'btn btn-primary mt-4 backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(197,168,128,0.1)]';
   confirmBtn.id = 'confirmAnswer';
   confirmBtn.disabled = true;
   confirmBtn.textContent = 'Confirmar respuesta';
@@ -837,9 +869,9 @@ function renderExamQuestion() {
     btn.addEventListener('click', () => {
       selectedExamOption = btn.dataset.value;
       optionsContainer.querySelectorAll('.exam-option').forEach(opt => {
-        opt.classList.remove('selected', 'border-purple-500', 'bg-purple-900/30');
+        opt.classList.remove('selected');
       });
-      btn.classList.add('selected', 'border-purple-500', 'bg-purple-900/30');
+      btn.classList.add('selected');
       confirmBtn.disabled = false;
     });
 
@@ -890,7 +922,7 @@ function handleExamAnswer() {
 
   document.querySelectorAll('.exam-option').forEach((btn) => {
     btn.disabled = true;
-    btn.classList.remove('selected', 'border-purple-500', 'bg-purple-900/30');
+    btn.classList.remove('selected');
     
     let btnIsCorrect = (btn.dataset.value.trim().toLowerCase() === correctValue.trim().toLowerCase() || btn.dataset.value.startsWith(correctValue));
 
@@ -908,7 +940,7 @@ function handleExamAnswer() {
     feedbackDiv.replaceChildren();
     
     const fbCard = document.createElement('div');
-    fbCard.className = 'exam-feedback mt-4 p-4 rounded-lg bg-slate-800/80 border border-slate-700 backdrop-blur-md shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+    fbCard.className = 'exam-feedback mt-4 p-4 rounded-lg bg-slate-800/80 border border-slate-700 backdrop-blur-md shadow-[0_0_15px_rgba(197,168,128,0.1)]';
 
     const score = document.createElement('div');
     score.className = `score font-bold text-lg ${isCorrect ? 'text-green-400' : 'text-red-400'}`;
@@ -925,7 +957,7 @@ function handleExamAnswer() {
     const btnWrapper = document.createElement('div');
     btnWrapper.style.marginTop = '12px';
     const nextBtn = document.createElement('button');
-    nextBtn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+    nextBtn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(197,168,128,0.1)]';
     nextBtn.id = 'nextQuestion';
     nextBtn.textContent = examIndex < examQuestions.length - 1 ? 'Siguiente pregunta' : 'Ver resultados';
     btnWrapper.appendChild(nextBtn);
@@ -957,7 +989,7 @@ function renderExamResults() {
   examContent.replaceChildren();
 
   const resultsCard = document.createElement('div');
-  resultsCard.className = 'exam-results backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 p-6 rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  resultsCard.className = 'exam-results backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 p-6 rounded-xl shadow-[0_0_15px_rgba(197,168,128,0.1)]';
 
   resultsCard.appendChild(renderExamProgressNode());
 
@@ -1025,7 +1057,7 @@ function renderExamResults() {
   actions.className = 'exam-actions mt-6 flex justify-center gap-4';
   
   const explainBtn = document.createElement('button');
-  explainBtn.className = 'btn btn-primary backdrop-blur-xl bg-purple-900/40 border border-purple-700/50 shadow-[0_0_15px_rgba(139,92,246,0.2)] text-purple-200 hover:bg-purple-800/60';
+  explainBtn.className = 'btn btn-primary backdrop-blur-xl bg-[#c5a880]/10 border border-[#c5a880]/30 shadow-[0_0_15px_rgba(197,168,128,0.15)] text-[#e8e8f0] hover:bg-[#c5a880]/20';
   explainBtn.id = 'explainExamErrors';
   const errors = examAnswers.filter(a => !a.acierto);
   if (errors.length === 0) {
@@ -1038,7 +1070,7 @@ function renderExamResults() {
   actions.appendChild(explainBtn);
 
   const backBtn = document.createElement('button');
-  backBtn.className = 'btn btn-secondary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+  backBtn.className = 'btn btn-secondary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(197,168,128,0.1)]';
   backBtn.id = 'backToExam';
   backBtn.textContent = 'Crear nuevo examen';
   actions.appendChild(backBtn);
@@ -1492,7 +1524,7 @@ export function newSession() {
   if (examContent) {
     examContent.replaceChildren();
     const btn = document.createElement('button');
-    btn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(139,92,246,0.1)]';
+    btn.className = 'btn btn-primary backdrop-blur-xl bg-slate-900/40 border border-slate-700/50 shadow-[0_0_15px_rgba(197,168,128,0.1)]';
     btn.id = 'startExam';
     btn.textContent = 'Iniciar Examen';
     examContent.appendChild(btn);

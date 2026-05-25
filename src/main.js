@@ -10,7 +10,7 @@ import {
   initTabs, initDragDrop, initLibraryPanel, initUpgradeModal,
   initUserDropdownClose, initSidebarEvents, initHeaderScroll,
   initSessionClickDelegation, initLegalModal, initProgressDashboard,
-  initEditProfileModal, initLeaderboard
+  initEditProfileModal, initLeaderboard, mostrarToast
 } from './ui-components.js';
 
 function init() {
@@ -119,6 +119,13 @@ function init() {
       if (loader) loader.style.display = 'none';
     }
   })();
+
+  // Listener de auto-scroll para citación RAG
+  window.addEventListener('scrollToPdfPage', (e) => {
+    const pageNum = e.detail.page;
+    console.log(`[AeroLex PDF Linker] Saltando a la página del PDF: ${pageNum}`);
+    mostrarToast(`📌 Saltando a la página del PDF: ${pageNum}`);
+  });
 
   // Inicialización terminada
 }

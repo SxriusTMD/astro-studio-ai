@@ -444,9 +444,9 @@ app.post('/api/auth/register', async (req, res) => {
         htmlContent: `
           <div style="background:#0a0a1a;color:#e8e8f0;font-family:Arial;padding:40px;text-align:center;border-radius:16px;">
             <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-            <h1 style="color:#8b5cf6;">AeroLex AI</h1>
+            <h1 style="color:#c5a880;">AeroLex AI</h1>
             <p style="font-size:16px;margin:24px 0;">Gracias por registrarte. Haz clic en el botón para verificar tu correo:</p>
-            <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#6c3bd2,#4f46e5);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
+            <a href="${verificationUrl}" style="display:inline-block;background:linear-gradient(135deg,#c5a880,#a88c6a);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600;">Verificar correo</a>
             <p style="margin-top:24px;font-size:13px;color:#9090b8;">Si no creaste esta cuenta, ignora este mensaje.</p>
           </div>
         `
@@ -1109,7 +1109,8 @@ REGLAS DE FORMATO Y ESTILO:
 3. (CIERRE) Inserta una línea de separación (---) y al final de tu respuesta agrega una sección llamada "📌 Leyenda Técnica:" con una frase inspiradora o dato curioso que motive el estudio o resuma la importancia académica de lo aprendido.
 4. (TONO DE APRENDIZAJE) Actúa como un tutor experto, claro y directo. Usa explicaciones sencillas y ejemplos prácticos para explicar temas difíciles. Sé empático, profesional y alienta siempre al estudiante, sin usar metáforas confusas.
 5. (FORMATO DE PARRAFO) Deja siempre saltos de línea dobles entre secciones y viñetas para que la lectura sea sumamente fluida y touch-friendly en dispositivos móviles. NUNCA generes bloques densos o de un solo párrafo de texto continuo.
-6. REGLA DE FORMATO: NO utilices sintaxis LaTeX ni ecuaciones matemáticas (como $\rightarrow$). Utiliza EXCLUSIVAMENTE caracteres Unicode estándar (ejemplo: -> o ➔) para las flechas y viñetas.`;
+6. REGLA DE FORMATO: NO utilices sintaxis LaTeX ni ecuaciones matemáticas (como $\rightarrow$). Utiliza EXCLUSIVAMENTE caracteres Unicode estándar (ejemplo: -> o ➔) para las flechas y viñetas.
+7. REGLA DE CITAS: Cuando respondas basándote en el documento, DEBES incluir la página exacta de donde sacaste la información al final de la oración, usando estrictamente este formato: [Pagina: X]. Por ejemplo, si la información de una frase proviene de la página 3, finaliza esa frase con [Pagina: 3].`;
 
   const contextPrompt = pdfContent
     ? `Contexto del PDF:\n${getRelevantChunksForQuery(prompt, pdfContent)}\n\n${prompt}`

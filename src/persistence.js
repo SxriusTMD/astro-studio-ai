@@ -228,7 +228,7 @@ export class EngagementTracker {
         // Build the bubble with safe DOM
         const bubble = document.createElement('div');
         bubble.id = 'suggestionBubble';
-        bubble.style.cssText = 'position:absolute;bottom:100%;left:16px;right:16px;margin-bottom:8px;padding:12px 16px;background:rgba(108,59,210,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:12px;color:#d1d5db;font-size:13px;cursor:pointer;opacity:0;transition:opacity 0.4s ease;display:flex;align-items:center;gap:10px;backdrop-filter:blur(8px);z-index:10;';
+        bubble.style.cssText = 'position:absolute;bottom:100%;left:16px;right:16px;margin-bottom:8px;padding:12px 16px;background:rgba(197, 168, 128, 0.06);border:1px solid rgba(197, 168, 128, 0.45);border-radius:12px;color:#d1d5db;font-size:13px;cursor:pointer;opacity:0;transition:opacity 0.4s ease;display:flex;align-items:center;gap:10px;backdrop-filter:blur(8px);z-index:10;';
 
         const icon = document.createElement('span');
         icon.textContent = '💡';
