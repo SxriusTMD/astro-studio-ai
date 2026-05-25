@@ -1766,9 +1766,6 @@ export async function fetchAndRenderLeaderboard() {
 
     // --- Lógica de Gamificación y Retención Agresiva ---
     let misMinutos = 0;
-    const session = window._supabaseSession || window.currentSession;
-    const currentUserId = session?.user?.id || window.userLimits?.google_id || '';
-    const currentUserEmail = session?.user?.email || window.userLimits?.email || '';
 
     // Buscar si el usuario actual está en el Top 10
     const miIndice = data.findIndex(user => 
