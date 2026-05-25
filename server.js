@@ -64,33 +64,43 @@ transporter.verify((error) => {
 });
 
 async function sendMail({ to, subject, htmlContent }) {
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    try {
-      const info = await transporter.sendMail({
-        from: `"AeroLex AI" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        html: htmlContent
-      });
-      console.log('✅ Email sent via Nodemailer SMTP:', info.messageId);
-      return { success: true, method: 'nodemailer', id: info.messageId };
-    } catch (smtpError) {
-      console.error('❌ Nodemailer SMTP failed, falling back to Brevo:', smtpError.message);
+  try {
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        const info = await transporter.sendMail({
+          from: `"AeroLex AI" <${process.env.EMAIL_USER}>`,
+          to,
+          subject,
+          html: htmlContent
+        });
+        console.log('✅ Email sent via Nodemailer SMTP:', info.messageId);
+        return { success: true, method: 'nodemailer', id: info.messageId };
+      } catch (smtpError) {
+        console.error('❌ Nodemailer SMTP failed, falling back to Brevo:', smtpError.message);
+      }
     }
-  }
 
-  if (process.env.BREVO_API_KEY) {
-    const result = await brevoClient.transactionalEmails.sendTransacEmail({
-      sender: { email: 'aerolexai@gmail.com', name: 'AeroLex AI' },
-      to: [{ email: to }],
-      subject,
-      htmlContent
-    });
-    console.log('✅ Email sent via Brevo:', result);
-    return { success: true, method: 'brevo', result };
-  }
+    if (process.env.BREVO_API_KEY) {
+      try {
+        const result = await brevoClient.transactionalEmails.sendTransacEmail({
+          sender: { email: 'aerolexai@gmail.com', name: 'AeroLex AI' },
+          to: [{ email: to }],
+          subject,
+          htmlContent
+        });
+        console.log('✅ Email sent via Brevo:', result);
+        return { success: true, method: 'brevo', result };
+      } catch (brevoError) {
+        console.warn('❌ Brevo API failed:', brevoError.message);
+      }
+    }
 
-  throw new Error('No mail transporter configured');
+    console.warn('⚠️ No mail transporter configured or all mail delivery methods failed');
+    return { success: false, error: 'No mail transporter configured' };
+  } catch (err) {
+    console.warn('⚠️ sendMail failed completely:', err.message);
+    return { success: false, error: err.message };
+  }
 }
 
 // Health check al iniciar
@@ -427,7 +437,6 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Enviar correo de verificación
     try {
-
       const verificationUrl = `https://${req.get('host')}/api/auth/verify-email?token=${verification_token}`;
       const mailRes = await sendMail({
         to: email,
@@ -442,10 +451,11 @@ app.post('/api/auth/register', async (req, res) => {
           </div>
         `
       });
-
+      if (!mailRes || !mailRes.success) {
+        console.warn('⚠️ Registro exitoso, pero falló el envío del correo de verificación a:', email, mailRes?.error);
+      }
     } catch (mailErr) {
-      console.error('❌ Error enviando correo a', email, ':', mailErr.message);
-      return res.status(500).json({ error: 'Error al enviar el correo de verificación. Intenta de nuevo más tarde.' });
+      console.warn('⚠️ Error enviando correo a', email, ':', mailErr.message);
     }
 
     res.json({ ok: true, message: 'Revisa tu correo para verificar la cuenta' });
@@ -840,7 +850,7 @@ async function callNVIDIA(messages, options = {}) {
   const maxRetries = 2;
   let lastError;
   
-  const model = options.model || 'google/gemma-4-31b-it';
+  const model = options.model || 'meta/llama-3.1-8b-instruct';
   const temperature = options.temperature !== undefined ? options.temperature : 0.7;
   const max_tokens = options.max_tokens || 4096;
   
@@ -1312,7 +1322,7 @@ app.post('/api/plan', ensureAuthenticated, async (req, res) => {
     const text = await callNVIDIA([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: prompt }
-    ], { model: 'google/gemma-2-9b-it', temperature: 0.2 });
+    ], { model: 'meta/llama-3.1-8b-instruct', temperature: 0.2, max_tokens: 1024 });
 
     let cleanText = text || '';
     // Quitar backticks de Markdown
