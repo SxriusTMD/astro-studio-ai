@@ -1615,6 +1615,31 @@ export function initLeaderboard() {
   closeBtn?.addEventListener('click', closeLeaderboard);
   overlay?.addEventListener('click', closeLeaderboard);
 }
+function updateGamificationAlert(nombreObjetivo, minutosRestantes, esPrimero) {
+  const leaderboardPanel = document.getElementById('leaderboardPanel');
+  if (!leaderboardPanel) return;
+
+  let alertDiv = document.getElementById('gamification-alert');
+  if (!alertDiv) {
+    alertDiv = document.createElement('div');
+    alertDiv.id = 'gamification-alert';
+  }
+
+  if (esPrimero) {
+    alertDiv.textContent = '¡Eres el Lider Supremo de la flota!';
+  } else {
+    alertDiv.textContent = `Estas a ${minutosRestantes} minutos de superar a ${nombreObjetivo}.`;
+  }
+
+  alertDiv.style.cssText = 'background-color: var(--bg-card); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center; font-weight: 500; font-family: \'Inter\', sans-serif; display: block;';
+
+  const header = leaderboardPanel.querySelector('.history-panel-header');
+  if (header && header.nextSibling) {
+    leaderboardPanel.insertBefore(alertDiv, header.nextSibling);
+  } else {
+    leaderboardPanel.prepend(alertDiv);
+  }
+}
 
 export async function fetchAndRenderLeaderboard() {
   const leaderboardList = document.getElementById('leaderboardList');
@@ -1738,8 +1763,70 @@ export async function fetchAndRenderLeaderboard() {
 
       leaderboardList.appendChild(li);
     });
+
+    // --- Lógica de Gamificación y Retención Agresiva ---
+    let misMinutos = 0;
+    const session = window._supabaseSession || window.currentSession;
+    const currentUserId = session?.user?.id || window.userLimits?.google_id || '';
+    const currentUserEmail = session?.user?.email || window.userLimits?.email || '';
+
+    // Buscar si el usuario actual está en el Top 10
+    const miIndice = data.findIndex(user => 
+      (user.id && String(user.id) === String(currentUserId)) || 
+      (user.email && String(user.email).toLowerCase() === String(currentUserEmail).toLowerCase())
+    );
+
+    if (miIndice !== -1) {
+      misMinutos = data[miIndice].active_minutes || 0;
+    } else {
+      // Si no está en el top 10, buscar en Supabase sus minutos específicos
+      if (currentUserId || currentUserEmail) {
+        try {
+          const query = supabase.from('users').select('active_minutes');
+          if (currentUserId) {
+            query.eq('id', currentUserId);
+          } else {
+            query.eq('email', currentUserEmail);
+          }
+          const { data: userData, error: userError } = await query.single();
+          if (!userError && userData) {
+            misMinutos = userData.active_minutes || 0;
+          }
+        } catch (dbErr) {
+          console.warn('Error fetching current user minutes:', dbErr);
+        }
+      }
+    }
+
+    let nombreObjetivo = '';
+    let minutosDelObjetivo = 0;
+    let minutosRestantes = 0;
+    let esPrimero = false;
+
+    if (miIndice === 0) {
+      esPrimero = true;
+    } else if (miIndice > 0) {
+      // Está en el Top 10 pero no es el #1, seleccionamos al de index - 1
+      const objetivo = data[miIndice - 1];
+      nombreObjetivo = objetivo.full_name || objetivo.name || 'Estudiante';
+      minutosDelObjetivo = objetivo.active_minutes || 0;
+      minutosRestantes = (minutosDelObjetivo - misMinutos) + 1;
+    } else {
+      // NO está en el Top 10, seleccionamos al de index 9 (posición #10)
+      const objetivo = data[Math.min(9, data.length - 1)];
+      if (objetivo) {
+        nombreObjetivo = objetivo.full_name || objetivo.name || 'Estudiante';
+        minutosDelObjetivo = objetivo.active_minutes || 0;
+        minutosRestantes = (minutosDelObjetivo - misMinutos) + 1;
+      }
+    }
+
+    updateGamificationAlert(nombreObjetivo, minutosRestantes, esPrimero);
+
   } catch (err) {
     console.error('Error fetching leaderboard:', err);
+    const alertDiv = document.getElementById('gamification-alert');
+    if (alertDiv) alertDiv.style.display = 'none';
     leaderboardList.replaceChildren();
     const errorDiv = document.createElement('div');
     errorDiv.style.cssText = 'text-align:center;padding:28px 16px;color:#ef4444;font-size:13px;';
