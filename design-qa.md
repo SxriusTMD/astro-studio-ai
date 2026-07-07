@@ -79,3 +79,17 @@ final result: passed
 - Hero console density can be refined later if needed.
 
 Final verdict: READY TO COMMIT.
+
+## Sprint 1C — Public Landing Readiness
+
+- Root landing creator-cloud copy and navigation: PASS.
+- Public metadata: updated title, prototype-safe description and basic Open Graph fields.
+- Architecture P1 copy: updated to clarify that heavy compute moves to the cloud.
+- Mobile tools tabs: retained the existing design with safer horizontal overflow and scroll snapping.
+- Brand safety scan of `index.html`, `assets/landing/landing.css` and `assets/landing/landing.js`: PASS.
+- Legacy auth HTML: retained because all three files are referenced by active Express auth routes/handlers.
+- Duplicate `POST /api/user/increment`: resolved by removing the second unreachable handler; the original guarded handler remains unchanged.
+- Academic API/runtime internals: deferred. They are not linked from the public landing and require a dedicated migration sprint rather than deletion during public-surface cleanup.
+- Remaining mockups: GPU jobs, output files, processing states, credits and early-access submission.
+
+Sprint 1C verdict: READY TO COMMIT.

@@ -990,24 +990,6 @@ app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// POST /api/user/increment - increment a counter
-app.post('/api/user/increment', ensureAuthenticated, async (req, res) => {
-  const { type } = req.body;
-  if (!['chat', 'exam'].includes(type)) return res.status(400).json({ error: 'Tipo inválido' });
-  
-  try {
-    const column = type === 'chat' ? 'chat_count' : 'exam_count';
-    const result = await pool.query(
-      `UPDATE usuarios SET ${column} = ${column} + 1 WHERE google_id = $1 RETURNING ${column}`,
-      [req.user.id]
-    );
-    res.json({ [type + '_used']: result.rows[0][column] });
-  } catch (err) {
-    console.error('Increment error:', err);
-    res.status(500).json({ error: 'Error al incrementar contador' });
-  }
-});
-
 // POST /api/user/upgrade-success - Simulates a successful payment webhook
 app.post('/api/user/upgrade-success', ensureAuthenticated, async (req, res) => {
   try {
