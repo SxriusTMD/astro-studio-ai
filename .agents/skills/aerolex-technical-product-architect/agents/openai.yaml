@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Product Architect"
+  short_description: "Disena la arquitectura cloud para flujos 3D"
+  default_prompt: "Usa $aerolex-technical-product-architect para disenar esta capacidad cloud de AeroLex por etapas."

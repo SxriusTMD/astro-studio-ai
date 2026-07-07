@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Frontend UX"
+  short_description: "Frontend y UX responsive de AeroLex AI"
+  default_prompt: "Usa $aerolex-frontend-ux para implementar y verificar este cambio de interfaz en AeroLex AI."

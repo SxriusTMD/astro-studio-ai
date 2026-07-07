@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Demo Director"
+  short_description: "Disena demos creibles de transformacion 3D"
+  default_prompt: "Usa $aerolex-demo-wow-director para convertir esta capacidad de AeroLex en una demo breve y creible."

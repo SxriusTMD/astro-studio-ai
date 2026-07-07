@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Backend Security"
+  short_description: "Backend, autenticacion y datos de AeroLex AI"
+  default_prompt: "Usa $aerolex-backend-security para implementar este cambio seguro en el backend de AeroLex AI."

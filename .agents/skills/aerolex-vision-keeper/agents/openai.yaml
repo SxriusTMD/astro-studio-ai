@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Vision Keeper"
+  short_description: "Protege la nueva direccion de producto AeroLex"
+  default_prompt: "Usa $aerolex-vision-keeper para evaluar si esta propuesta encaja con la nueva vision de AeroLex."

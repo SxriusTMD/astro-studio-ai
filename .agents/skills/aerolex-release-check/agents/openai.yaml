@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Release Check"
+  short_description: "Validacion previa a release de AeroLex AI"
+  default_prompt: "Usa $aerolex-release-check para validar estos cambios antes de publicar AeroLex AI."

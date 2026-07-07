@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Landing Auditor"
+  short_description: "Audita claridad y conversion de la landing"
+  default_prompt: "Usa $aerolex-landing-conversion-auditor para revisar esta landing de AeroLex y priorizar mejoras."

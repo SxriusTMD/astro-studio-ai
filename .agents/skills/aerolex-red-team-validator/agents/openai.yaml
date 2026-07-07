@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroLex Red Team"
+  short_description: "Ataca ideas antes de invertir en construirlas"
+  default_prompt: "Usa $aerolex-red-team-validator para evaluar esta idea de AeroLex antes de implementarla."
