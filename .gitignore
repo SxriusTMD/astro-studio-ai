@@ -1,2 +1,12 @@
 node_modules/
 .env
+
+# Generated landing source renders; production uses committed WebP assets.
+assets/landing/audiopose.png
+assets/landing/hero-rig.png
+assets/landing/rigflip.png
+assets/landing/textureshrink.png
+assets/landing/viberender.png
+
+# Local safety copies are not production artifacts.
+backups-legacy/
