@@ -13,8 +13,38 @@ require('dns').setDefaultResultOrder('ipv4first');
 const app = express();
 const PORT = 3000;
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const EARLY_ACCESS_WINDOW_MS = 15 * 60 * 1000;
+const EARLY_ACCESS_MAX_ATTEMPTS = 5;
+const EARLY_ACCESS_MAX_RATE_KEYS = 10000;
+const earlyAccessAttempts = new Map();
+
+const EARLY_ACCESS_ROLES = new Set([
+  'animator',
+  '3d_artist',
+  'indie_dev',
+  'studio',
+  'other'
+]);
+
+const EARLY_ACCESS_MAIN_PAINS = new Set([
+  'rigging',
+  'animation',
+  'texture_optimization',
+  'rendering',
+  'pipeline_automation'
+]);
 
 app.use(express.json());
+
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      ok: false,
+      message: 'Please check the form fields and try again.'
+    });
+  }
+  return next(err);
+});
 
 // Forzar charset utf-8 en todas las respuestas para evitar corrupciones
 app.use((req, res, next) => {
@@ -264,6 +294,93 @@ function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated && req.isAuthenticated()) return next();
   return res.status(401).json({ error: 'No autenticado' });
 }
+
+// Single-instance protection only. The key is kept in memory and is never persisted or logged.
+function allowEarlyAccessAttempt(ipKey, now = Date.now()) {
+  for (const [key, entry] of earlyAccessAttempts) {
+    if (entry.resetAt <= now) earlyAccessAttempts.delete(key);
+  }
+
+  const key = typeof ipKey === 'string' && ipKey ? ipKey : 'unknown';
+  const current = earlyAccessAttempts.get(key);
+
+  if (!current) {
+    if (earlyAccessAttempts.size >= EARLY_ACCESS_MAX_RATE_KEYS) {
+      const oldestKey = earlyAccessAttempts.keys().next().value;
+      if (oldestKey !== undefined) earlyAccessAttempts.delete(oldestKey);
+    }
+    earlyAccessAttempts.set(key, { count: 1, resetAt: now + EARLY_ACCESS_WINDOW_MS });
+    return true;
+  }
+
+  if (current.count >= EARLY_ACCESS_MAX_ATTEMPTS) return false;
+  current.count += 1;
+  return true;
+}
+
+function validateEarlyAccessLead(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
+
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const role = typeof body.role === 'string' ? body.role : '';
+  const mainPain = typeof body.mainPain === 'string' ? body.mainPain : '';
+  const website = typeof body.website === 'string' ? body.website.trim() : '';
+  const validEmail = email.length > 0
+    && email.length <= 254
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!validEmail || !EARLY_ACCESS_ROLES.has(role) || !EARLY_ACCESS_MAIN_PAINS.has(mainPain)) {
+    return null;
+  }
+
+  return { email, role, mainPain, website };
+}
+
+app.post('/api/early-access/leads', async (req, res) => {
+  const honeypot = req.body
+    && typeof req.body === 'object'
+    && !Array.isArray(req.body)
+    && typeof req.body.website === 'string'
+    && req.body.website.trim();
+
+  if (honeypot) {
+    return res.json({ ok: true, message: 'Early access request received.' });
+  }
+
+  if (!allowEarlyAccessAttempt(req.ip)) {
+    return res.status(429).json({ ok: false, message: 'Unable to process the request.' });
+  }
+
+  const lead = validateEarlyAccessLead(req.body);
+  if (!lead) {
+    return res.status(400).json({
+      ok: false,
+      message: 'Please check the form fields and try again.'
+    });
+  }
+
+  if (!dbOk) {
+    return res.status(503).json({ ok: false, message: 'Unable to process the request.' });
+  }
+
+  const userAgent = typeof req.get('user-agent') === 'string'
+    ? req.get('user-agent').slice(0, 512)
+    : null;
+
+  try {
+    await pool.query(
+      `INSERT INTO early_access_leads (id, email, role, main_pain, source, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (email) DO NOTHING`,
+      [crypto.randomUUID(), lead.email, lead.role, lead.mainPain, 'landing', userAgent]
+    );
+
+    return res.json({ ok: true, message: 'Early access request received.' });
+  } catch (err) {
+    console.error('Early access lead persistence failed');
+    return res.status(500).json({ ok: false, message: 'Unable to process the request.' });
+  }
+});
 
 async function syncUserToDB(email, name) {
   if (!supabase) {

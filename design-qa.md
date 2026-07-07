@@ -93,3 +93,17 @@ Final verdict: READY TO COMMIT.
 - Remaining mockups: GPU jobs, output files, processing states, credits and early-access submission.
 
 Sprint 1C verdict: READY TO COMMIT.
+
+## Sprint 2 Phase 1 — Early Access Capture
+
+- Added public `POST /api/early-access/leads` with strict email, role and main-pain validation.
+- Added a honeypot and a bounded in-memory rate limit of five attempts per IP per 15 minutes.
+- Added `docs/sql/early-access-leads.sql`; it must be applied before production deployment.
+- No automatic table migration runs during server startup.
+- PostgreSQL uses the existing `pg.Pool`; Supabase is not used by this flow.
+- No emails are sent and no account is created.
+- IP addresses are used only as ephemeral in-memory rate keys and are not persisted or logged.
+- The rate limiter is suitable for a single server instance only.
+- GPU jobs, outputs, processing states, credits and models remain product mockups.
+- Validation performed: build, whitespace, release check, invalid payloads, honeypot, rate limit and safe unavailable-DB response.
+- Database insert and duplicate integration require the SQL table and a configured test PostgreSQL instance.

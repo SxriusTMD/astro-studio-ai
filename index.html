@@ -113,13 +113,14 @@
     </section>
 
     <section class="early section-shell" id="early-access">
-      <div><p class="eyebrow">Join early access</p><h2>Build the cloud layer your 3D pipeline actually needs.</h2><p>Tell us where your workflow slows down. This preview form stores nothing and does not submit to a backend.</p></div>
+      <div><p class="eyebrow">Join early access</p><h2>Build the cloud layer your 3D pipeline actually needs.</h2><p>Tell us where your workflow slows down. Early access requests are stored so we can contact selected creators. No account is created yet.</p></div>
       <form id="earlyAccessForm">
         <label>Email<input type="email" name="email" placeholder="you@studio.com" required></label>
-        <label>Role<select name="role" required><option value="">Select your role</option><option>Animator</option><option>3D artist</option><option>Indie dev</option><option>Studio</option><option>Other</option></select></label>
-        <label>Main pain<select name="pain" required><option value="">Select the biggest bottleneck</option><option>Rigging</option><option>Animation</option><option>Texture optimization</option><option>Rendering</option><option>Pipeline automation</option></select></label>
+        <label>Role<select name="role" required><option value="">Select your role</option><option value="animator">Animator</option><option value="3d_artist">3D artist</option><option value="indie_dev">Indie dev</option><option value="studio">Studio</option><option value="other">Other</option></select></label>
+        <label>Main pain<select name="mainPain" required><option value="">Select the biggest bottleneck</option><option value="rigging">Rigging</option><option value="animation">Animation</option><option value="texture_optimization">Texture optimization</option><option value="rendering">Rendering</option><option value="pipeline_automation">Pipeline automation</option></select></label>
+        <label hidden aria-hidden="true">Website<input type="text" name="website" autocomplete="off" tabindex="-1"></label>
         <button class="button primary" type="submit">Join Early Access <span>→</span></button>
-        <p class="form-note" role="status">Preview only · no data leaves this page.</p>
+        <p class="form-note" role="status">Early access requests are stored so we can contact selected creators. No account is created yet.</p>
       </form>
     </section>
   </main>
