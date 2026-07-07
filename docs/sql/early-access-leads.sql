@@ -1,3 +1,6 @@
+-- Apply manually to the PostgreSQL database referenced by DATABASE_URL before deployment.
+-- The API generates UUID values with crypto.randomUUID(); no UUID extension is required.
+-- Phase 1 does not persist raw IP addresses or populate ip_hash.
 CREATE TABLE IF NOT EXISTS early_access_leads (
   id UUID PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
@@ -15,6 +18,6 @@ CREATE TABLE IF NOT EXISTS early_access_leads (
   ),
   source TEXT NOT NULL DEFAULT 'landing',
   user_agent TEXT,
-  ip_hash TEXT,
+  ip_hash TEXT, -- Reserved for a future privacy-reviewed multi-instance rate-limit design.
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

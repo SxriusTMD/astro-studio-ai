@@ -84,15 +84,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Test SMTP connection at startup
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Nodemailer SMTP Connection error:', error.message);
-  } else {
-    console.log('🚀 Nodemailer SMTP Connection established successfully!');
-  }
-});
-
 async function sendMail({ to, subject, htmlContent }) {
   try {
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
@@ -132,19 +123,6 @@ async function sendMail({ to, subject, htmlContent }) {
     return { success: false, error: err.message };
   }
 }
-
-// Health check al iniciar
-(async () => {
-  try {
-    await sendMail({
-      to: 'aerolexai@gmail.com',
-      subject: '📧 Sistema de Correo Conectado - AeroLex AI',
-      htmlContent: '<p>Servidor iniciado correctamente. El sistema de correo funciona.</p>'
-    });
-  } catch (err) {
-    console.error('❌ Sistema de Correo Health Check falló:', err.message);
-  }
-})();
 
 // PostgreSQL
 const pool = new Pool({ 

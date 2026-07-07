@@ -107,3 +107,13 @@ Sprint 1C verdict: READY TO COMMIT.
 - GPU jobs, outputs, processing states, credits and models remain product mockups.
 - Validation performed: build, whitespace, release check, invalid payloads, honeypot, rate limit and safe unavailable-DB response.
 - Database insert and duplicate integration require the SQL table and a configured test PostgreSQL instance.
+
+## Sprint 2 Phase 2 — Production Readiness Gate
+
+- SMTP startup audit: the legacy server performed both a real SMTP verification connection and a real health-check email on every startup.
+- SMTP startup fix: removed automatic `transporter.verify()` and the startup `sendMail()` health check. Existing email routes still call the unchanged lazy `sendMail()` function when explicitly used.
+- Early-access endpoint safety: no Supabase, email delivery, raw-IP persistence, sensitive logging, duplicate disclosure or SQL detail disclosure.
+- SQL safety: manual `CREATE TABLE IF NOT EXISTS`, unique normalized email, allowlist checks and server-generated UUID documented.
+- Deployment checklist: `docs/deploy-readiness.md`.
+- Manual smoke-test matrix: `docs/testing/early-access-smoke-tests.md`.
+- External gates still required before production: destination `DATABASE_URL`, manual SQL application and destination-environment HTTP/log verification.
