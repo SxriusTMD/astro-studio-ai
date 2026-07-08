@@ -57,6 +57,7 @@ Run each message as a distinct post or clip so its response can be attributed.
 ## Operating rules
 
 - Use prototype, workflow preview and planned capability language; do not imply that GPU processing is already generally available.
+- No public video should present mockups as functional Axiora features.
 - Attach a channel/message label to campaign links when practical, but do not add tracking infrastructure during this sprint.
 - Reply manually and personally. Ask what tool, asset type and current workaround the creator uses.
 - Record only useful product evidence; do not copy private community messages into public documents.

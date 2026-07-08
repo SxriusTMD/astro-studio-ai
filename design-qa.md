@@ -167,3 +167,15 @@ Historical verdict: BLOCKED at the time; superseded by the final PASS closure be
 - Build and release validation: PASS.
 
 Final verdict: **DEPLOY GATE CLOSED.**
+
+## Sprint 3A — Product Truth Alignment
+
+- Product truth pass: COMPLETED across `index.html` and `assets/landing/landing.js`.
+- AudioPose, RigFlip, TextureShrink and VibeRender are clearly labeled as prototype workflows or concept previews.
+- Operator-console job, queue, progress, output and GPU states are explicitly simulated.
+- Axiora/SX3D cloud submission and result handoff are planned integrations, not shipped functionality.
+- IK controls, solving, foot lock and hand targets are concept previews; Axiora does not currently provide these as functional features.
+- Before/after visuals are labeled as mockups rather than generated model outputs.
+- Early Access capture remains functional and unchanged.
+
+Product truth verdict: PASS.
