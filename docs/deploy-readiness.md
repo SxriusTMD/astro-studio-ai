@@ -90,3 +90,11 @@ External deploy gate verdict: **DEPLOY GATE CLOSED.**
 - SMTP startup connection: PASS; disabled by default and not observed.
 
 Final verdict: **DEPLOY GATE CLOSED.**
+
+## Post-deploy validation mode
+
+- Do not build GPU execution or API-key infrastructure until creator validation produces a clear signal.
+- Review real leads and aggregate role/pain patterns weekly using `docs/lead-review.md`.
+- Do not contact the list in bulk or send automated campaigns during this validation cycle.
+- Use manual, relevant and personalized messages when inviting a creator to a conversation.
+- The current success gate is 20 real leads or 3 real creator conversations within 14 days.
