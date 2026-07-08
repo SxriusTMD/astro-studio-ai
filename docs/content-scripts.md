@@ -43,3 +43,10 @@ These scripts present AeroLex AI as a prototype and invite feedback rather than 
 - **Visual:** Select a local PNG texture, show the original and optimized previews, then reveal the before/after file sizes and download button.
 - **Narration:** “TextureShrink Lite converts and compresses the image locally with browser Canvas APIs. The file never leaves this device. It is a prototype utility for quick visual validation—not the final GPU pipeline.”
 - **CTA:** “Try it with one of your textures and tell me whether the visual tradeoff is useful.”
+
+## 7. Public TextureShrink Lite demo
+
+- **Hook:** “I stopped myself from showing fake GPU demos. This is the first real AeroLex micro-demo.”
+- **Visual:** Texture upload, local compression, before/after previews, measured size reduction and WebP download.
+- **Narration:** “TextureShrink Lite runs in the browser and shows the real output. Your file stays on this device. It is a small prototype utility—not AI, not a cloud GPU job and not the final pipeline.”
+- **CTA:** “If texture optimization is part of your 3D workflow, join early access and tell me what hurts most.”

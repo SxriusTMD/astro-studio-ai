@@ -188,3 +188,16 @@ Product truth verdict: PASS.
 - Privacy: no file upload, Railway request, Supabase storage or server persistence is used by the demo.
 - Honest limits: Prototype utility, not the final GPU pipeline, best for quick visual validation, and a 4096 px maximum output edge.
 - Existing AudioPose, RigFlip, VibeRender, GPU jobs, job outputs, processing and credit estimates remain labeled mockups/concepts.
+
+## Sprint 3C — TextureShrink Lite Demo QA
+
+- PNG, JPG and WebP conversion: PASS.
+- Non-image and over-25-MB validation: PASS.
+- 5000 × 3000 proportional resize to 4096 × 2458: PASS.
+- Downloaded output signature and `.webp` filename: PASS.
+- Repeated replacement and object-URL cleanup: PASS; no heap growth evident in the sampled Chromium run.
+- Network privacy: PASS; no non-GET request occurred during demo processing or download.
+- Mobile 390 px layout: PASS; no horizontal overflow or preview distortion.
+- Product truth labels and forbidden-claim scan: PASS.
+- Bug corrected: stale previews/metrics are now cleared before validation of each newly selected file.
+- Evidence: `docs/qa/textureshrink-lite/`.

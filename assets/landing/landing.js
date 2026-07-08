@@ -40,6 +40,16 @@ document.querySelector('#earlyAccessForm')?.addEventListener('submit',async even
     if(optimizedUrl)URL.revokeObjectURL(optimizedUrl);
     originalUrl='';optimizedUrl='';
   };
+  const resetOutput=()=>{
+    revokeUrls();
+    optimizedBlob=null;
+    originalPreview.removeAttribute('src');originalPreview.hidden=true;
+    optimizedPreview.removeAttribute('src');optimizedPreview.hidden=true;
+    originalSize.textContent='—';optimizedSize.textContent='—';
+    reduction.textContent='—';dimensions.textContent='—';
+    reduction.classList.remove('positive','negative');
+    download.disabled=true;
+  };
   const canvasToBlob=(canvas,quality)=>new Promise((resolve,reject)=>{
     canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('WebP encoding is not available in this browser.')),'image/webp',quality);
   });
@@ -54,7 +64,7 @@ document.querySelector('#earlyAccessForm')?.addEventListener('submit',async even
   input.addEventListener('change',async()=>{
     const file=input.files?.[0];
     if(!file)return;
-    download.disabled=true;optimizedBlob=null;
+    resetOutput();
     if(!allowedTypes.has(file.type)){
       setStatus('Choose a PNG, JPG or WebP image.','error');
       input.value='';return;
@@ -82,7 +92,6 @@ document.querySelector('#earlyAccessForm')?.addEventListener('submit',async even
       if(blob.size>=file.size)blob=await canvasToBlob(canvas,.62);
       if(blob.size>=file.size)blob=await canvasToBlob(canvas,.45);
       optimizedBlob=blob;
-      revokeUrls();
       originalUrl=URL.createObjectURL(file);
       optimizedUrl=URL.createObjectURL(blob);
       originalPreview.src=originalUrl;originalPreview.hidden=false;
