@@ -135,3 +135,13 @@ Sprint 1C verdict: READY TO COMMIT.
 - Separate legacy risk: Supabase reports RLS disabled on `public.users` and `public.documents`. No policy changes were made because legacy consumers require an audit first.
 
 Final verdict: BLOCKED — correct Railway's destination `DATABASE_URL`/database permissions, restart the service, then repeat valid, duplicate, insertion and application-log checks.
+
+## Sprint 2 Phase 2B — Railway Rate Limit Identity Fix
+
+- Railway rate-limit identity bug: FIXED in implementation; destination deployment verification remains required.
+- Cause: `trust proxy = 1` could resolve a different managed Railway proxy hop for requests from the same client.
+- Identity: the endpoint prefers the first Express-resolved forwarded client, normalizes forwarded candidates and IPv6-mapped IPv4, then falls back through `req.ip`, controlled proxy headers and the socket address.
+- Key storage: SHA-256 of the `early-access:`-prefixed identity; only the hash is held in the bounded in-memory map.
+- Privacy: raw IP and hashed identity are not persisted or logged; complete email addresses are not logged.
+- Ordering: every POST reaching the handler counts, including honeypot and invalid payloads.
+- Scope: single-instance only. Multi-instance Railway deployments require a shared Redis/Upstash or PostgreSQL-backed limiter later.

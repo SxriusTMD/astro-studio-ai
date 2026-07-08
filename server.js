@@ -213,7 +213,9 @@ await pool.query(`
 
   }
 })();
-app.set('trust proxy', 1);
+// Railway is a managed proxy environment and may use more than one proxy hop.
+// Trusting the full forwarded chain lets Express expose the original client in req.ips[0].
+app.set('trust proxy', true);
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "aerolex-ai-dev-secret",
@@ -273,13 +275,41 @@ function ensureAuthenticated(req, res, next) {
   return res.status(401).json({ error: 'No autenticado' });
 }
 
-// Single-instance protection only. The key is kept in memory and is never persisted or logged.
-function allowEarlyAccessAttempt(ipKey, now = Date.now()) {
+function normalizeRateLimitCandidate(value) {
+  if (typeof value !== 'string') return '';
+  const candidate = value.split(',').map((part) => part.trim()).find(Boolean) || '';
+  return candidate.startsWith('::ffff:') ? candidate.slice(7) : candidate;
+}
+
+function getClientRateLimitIdentity(req) {
+  const forwardedByExpress = Array.isArray(req.ips)
+    ? req.ips.map(normalizeRateLimitCandidate).find(Boolean)
+    : '';
+
+  return forwardedByExpress
+    || normalizeRateLimitCandidate(req.ip)
+    || normalizeRateLimitCandidate(req.get('x-forwarded-for'))
+    || normalizeRateLimitCandidate(req.get('x-real-ip'))
+    || normalizeRateLimitCandidate(req.socket?.remoteAddress)
+    || 'unknown';
+}
+
+function hashRateLimitIdentity(identity) {
+  return crypto
+    .createHash('sha256')
+    .update(`early-access:${identity}`)
+    .digest('hex');
+}
+
+// Single-instance protection only. The hashed key is kept in memory and is never persisted or logged.
+function allowEarlyAccessAttempt(rateLimitKey, now = Date.now()) {
   for (const [key, entry] of earlyAccessAttempts) {
     if (entry.resetAt <= now) earlyAccessAttempts.delete(key);
   }
 
-  const key = typeof ipKey === 'string' && ipKey ? ipKey : 'unknown';
+  const key = typeof rateLimitKey === 'string' && rateLimitKey
+    ? rateLimitKey
+    : hashRateLimitIdentity('unknown');
   const current = earlyAccessAttempts.get(key);
 
   if (!current) {
@@ -315,6 +345,13 @@ function validateEarlyAccessLead(body) {
 }
 
 app.post('/api/early-access/leads', async (req, res) => {
+  const rateLimitIdentity = getClientRateLimitIdentity(req);
+  const rateLimitKey = hashRateLimitIdentity(rateLimitIdentity);
+
+  if (!allowEarlyAccessAttempt(rateLimitKey)) {
+    return res.status(429).json({ ok: false, message: 'Unable to process the request.' });
+  }
+
   const honeypot = req.body
     && typeof req.body === 'object'
     && !Array.isArray(req.body)
@@ -323,10 +360,6 @@ app.post('/api/early-access/leads', async (req, res) => {
 
   if (honeypot) {
     return res.json({ ok: true, message: 'Early access request received.' });
-  }
-
-  if (!allowEarlyAccessAttempt(req.ip)) {
-    return res.status(429).json({ ok: false, message: 'Unable to process the request.' });
   }
 
   const lead = validateEarlyAccessLead(req.body);

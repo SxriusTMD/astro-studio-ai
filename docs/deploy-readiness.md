@@ -53,20 +53,27 @@ Environments inspected: destination Supabase PostgreSQL project and the reactiva
 | --- | --- | --- |
 | SQL applied | PASS | Migration `create_early_access_leads` is registered in the destination database. |
 | `early_access_leads` table verified | PASS | Table exists with eight expected columns, UUID primary key, unique email, allowlist checks, `created_at` default and RLS enabled. |
-| Valid public/staging submit | FAIL | Railway returned generic HTTP 500; no row reached Supabase. |
-| Duplicate indistinguishable | FAIL | Both attempts returned the same generic HTTP 500, but persistence/deduplication could not execute. |
+| Valid public/staging submit | PASS | Railway returned HTTP 200 and Supabase stored the synthetic test lead. |
+| Duplicate indistinguishable | PASS | The repeated request returned the same HTTP 200 and the database retained one row. |
 | Invalid payload | PASS | Invalid email, role and main pain returned HTTP 400. |
 | Honeypot | PASS | Returned generic HTTP 200 before persistence. |
-| Rate limit | PASS | The sixth counted attempt returned HTTP 429. |
+| Rate limit | FIXED LOCALLY — DEPLOY PENDING | Railway proxy identity varied with `trust proxy = 1`; the implementation now hashes the first Express-resolved client identity from the trusted proxy chain. |
 | Application logs omit email/IP | FAIL — NOT VERIFIABLE | Railway application logs are not accessible from this workspace. Database platform logs are not application logs. |
-| Landing stores a real lead | FAIL | Supabase `early_access_leads` remained at zero rows after the valid Railway request. |
+| Landing stores a real lead | PASS | The Railway endpoint persisted a synthetic lead; the QA row was removed after verification. |
 
 ### Pending risks and unblock conditions
 
-- Correct Railway's `DATABASE_URL` so the Express service uses the verified Supabase PostgreSQL database, then redeploy/restart it. The HTTP 500 with `dbOk` already true indicates a query-time database/schema/permission failure rather than an unavailable web service.
-- Confirm that the application role can insert and execute `ON CONFLICT (email) DO NOTHING`.
+- Deploy the rate-limit identity fix and repeat six requests from one unchanged client/network; the sixth must return HTTP 429.
 - Run the documented HTTP smoke-test matrix and inspect application logs before publishing the real form.
 - Supabase security advisors report RLS disabled on legacy `public.users` and `public.documents`. This is separate from Early Access and was not changed because enabling RLS without auditing legacy consumers could break them.
 - `early_access_leads` intentionally has RLS enabled with no Data API policies; writes are expected only through the trusted Express database connection.
 
-External deploy gate verdict: **BLOCKED — Railway is reachable, but valid lead persistence returns HTTP 500 and no row reaches the destination table. Railway application logs also remain to be reviewed.**
+External deploy gate verdict: **BLOCKED — rate-limit fix requires Railway deployment/verification, and Railway application logs remain to be reviewed.**
+
+## Sprint 2 Phase 2B — Railway Rate Limit Identity
+
+- Root cause: `trust proxy = 1` selected different proxy hops as `req.ip` when Railway's managed proxy chain varied.
+- Fix: trust Railway's forwarded chain, prefer Express's first resolved client identity, normalize forwarded/IPv6-mapped values, and hash the transient identity with SHA-256 before using it as the in-memory key.
+- Raw IP addresses and hashes are neither persisted nor logged.
+- Honeypot and invalid POST payloads now count toward the same limit before early returns.
+- The limiter remains in-memory and single-instance only. Horizontal scaling requires a shared Redis/Upstash or PostgreSQL-backed limiter in a future sprint.

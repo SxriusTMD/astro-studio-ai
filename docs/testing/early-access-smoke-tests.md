@@ -46,18 +46,20 @@ Expected: HTTP 200 and no database insert.
 
 ## Rate limit
 
-Use a fresh source IP and send six requests within 15 minutes:
+Use one client/terminal and send six requests within 15 minutes. Invalid payloads are useful here because they count without inserting test leads:
 
 ```bash
 for attempt in 1 2 3 4 5 6; do
   curl -s -o /dev/null -w "$attempt %{http_code}\n" \
     "$BASE_URL/api/early-access/leads" \
     -H "Content-Type: application/json" \
-    --data "{\"email\":\"rate-$attempt@example.com\",\"role\":\"studio\",\"mainPain\":\"rendering\",\"website\":\"\"}"
+    --data '{"email":"invalid","role":"studio","mainPain":"rendering","website":""}'
 done
 ```
 
-Expected: the sixth request returns HTTP 429. Because the limiter is single-instance, run this check against one known application instance.
+Expected: attempts one through five are not HTTP 429 (the invalid example returns HTTP 400), and the sixth returns HTTP 429. Honeypot and invalid requests both count.
+
+On Railway, use the same client/terminal and do not change network or VPN during the test. Because the limiter is single-instance, run this check against one known application instance.
 
 ## Log review
 
