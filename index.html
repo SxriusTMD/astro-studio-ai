@@ -92,6 +92,46 @@
       </div>
     </section>
 
+    <section class="texture-lite section-shell" id="textureshrink-lite">
+      <div class="section-heading">
+        <div><p class="eyebrow">Real browser utility <span>Prototype utility</span></p><h2>TextureShrink Lite</h2></div>
+        <p>Compress a local texture into WebP for quick visual validation. This is not the final GPU pipeline.</p>
+      </div>
+      <div class="lite-console">
+        <div class="lite-console-bar"><span><b>AeroLex</b> / TextureShrink Lite</span><span class="lite-local"><i></i> Local processing only</span></div>
+        <div class="lite-body">
+          <aside class="lite-controls">
+            <span class="prototype">Prototype utility</span>
+            <h3>Choose a texture</h3>
+            <p>PNG, JPG or WebP · up to 25 MB</p>
+            <label class="lite-upload" for="textureLiteInput"><span>Select local file</span><small>Nothing is uploaded</small></label>
+            <input id="textureLiteInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+            <div class="lite-privacy"><strong>Local browser demo — your texture does not leave this device.</strong><span>No Railway upload. No Supabase storage. No server request.</span></div>
+            <button class="button primary lite-download" id="textureLiteDownload" type="button" disabled>Download optimized WebP <span>↓</span></button>
+          </aside>
+          <div class="lite-workspace">
+            <div class="lite-previews">
+              <figure class="lite-preview">
+                <figcaption><span>Before</span><strong>Original texture</strong></figcaption>
+                <div class="lite-image-frame"><p>Select a texture to begin.</p><img id="textureLiteOriginal" alt="Original local texture preview" hidden></div>
+              </figure>
+              <figure class="lite-preview">
+                <figcaption><span>After</span><strong>Optimized WebP</strong></figcaption>
+                <div class="lite-image-frame"><p>Optimized preview appears here.</p><img id="textureLiteOptimized" alt="Locally optimized texture preview" hidden></div>
+              </figure>
+            </div>
+            <dl class="lite-metrics">
+              <div><dt>Original</dt><dd id="textureLiteOriginalSize">—</dd></div>
+              <div><dt>Optimized</dt><dd id="textureLiteOptimizedSize">—</dd></div>
+              <div><dt>Size change</dt><dd id="textureLiteReduction">—</dd></div>
+              <div><dt>Output</dt><dd id="textureLiteDimensions">—</dd></div>
+            </dl>
+            <p class="lite-status" id="textureLiteStatus" role="status" aria-live="polite">Best for quick visual validation. Large textures are capped at a 4096 px edge in this prototype.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="results section-shell" id="results">
       <div class="section-heading"><div><p class="eyebrow">Simulated before / after</p><h2>Visual concepts. Creative direction.</h2></div><p>These mockups communicate intended workflow differences; they are not generated outputs from working models.</p></div>
       <div class="comparison-grid">

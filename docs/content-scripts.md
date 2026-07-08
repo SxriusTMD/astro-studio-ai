@@ -36,3 +36,10 @@ These scripts present AeroLex AI as a prototype and invite feedback rather than 
 - **Visual:** Show the four workflow previews, then the Early Access form and a simple counter reading `Goal: 20 creator leads`.
 - **Narration:** “The current landing demonstrates AudioPose, RigFlip, TextureShrink and VibeRender as prototypes. The next decision comes from creator feedback—not another month of assumptions.”
 - **CTA:** “Pick your role and biggest pipeline pain. I’ll use the responses to decide what gets tested first.”
+
+## 6. The first real browser demo
+
+- **Hook:** “I’m not showing fake GPU jobs. Here is the first real AeroLex browser demo: texture compression.”
+- **Visual:** Select a local PNG texture, show the original and optimized previews, then reveal the before/after file sizes and download button.
+- **Narration:** “TextureShrink Lite converts and compresses the image locally with browser Canvas APIs. The file never leaves this device. It is a prototype utility for quick visual validation—not the final GPU pipeline.”
+- **CTA:** “Try it with one of your textures and tell me whether the visual tradeoff is useful.”

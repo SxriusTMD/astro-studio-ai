@@ -179,3 +179,12 @@ Final verdict: **DEPLOY GATE CLOSED.**
 - Early Access capture remains functional and unchanged.
 
 Product truth verdict: PASS.
+
+## Sprint 3B — TextureShrink Lite
+
+- Added a real client-side texture conversion demo below the tools section.
+- Accepted inputs: local PNG, JPG and WebP files up to 25 MB.
+- Real behavior: local Canvas conversion to WebP, before/after previews, byte metrics, size-change percentage and downloadable output.
+- Privacy: no file upload, Railway request, Supabase storage or server persistence is used by the demo.
+- Honest limits: Prototype utility, not the final GPU pipeline, best for quick visual validation, and a 4096 px maximum output edge.
+- Existing AudioPose, RigFlip, VibeRender, GPU jobs, job outputs, processing and credit estimates remain labeled mockups/concepts.
