@@ -21,3 +21,8 @@ CREATE TABLE IF NOT EXISTS early_access_leads (
   ip_hash TEXT, -- Reserved for a future privacy-reviewed multi-instance rate-limit design.
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Leads are written through the trusted Express/PostgreSQL connection only.
+-- No public Data API policy is intentionally defined.
+ALTER TABLE public.early_access_leads ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.early_access_leads FROM anon, authenticated;

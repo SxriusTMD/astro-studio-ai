@@ -5,7 +5,7 @@ This checklist is a deployment gate. Do not publish the real Early Access form u
 ## Repository gate
 
 - [x] Working tree was clean before Sprint 2 Phase 2.
-- [ ] Sprint 2 Phase 2 commit is pushed to `origin/main`.
+- [x] Sprint 2 Phase 2 commit is pushed to `origin/main`.
 - [x] `.env` is ignored and not committed.
 - [x] Production landing references WebP assets.
 - [x] Source PNG files are ignored and not committed.
@@ -16,10 +16,10 @@ This checklist is a deployment gate. Do not publish the real Early Access form u
 ## Destination database gate
 
 - [ ] `DATABASE_URL` is configured in the destination environment.
-- [ ] `docs/sql/early-access-leads.sql` was reviewed and applied manually.
+- [x] `docs/sql/early-access-leads.sql` was reviewed and applied through the Supabase MCP migration tool.
 - [ ] The `early_access_leads` table is reachable by the application role.
 - [ ] The application role can insert and resolve `ON CONFLICT (email) DO NOTHING`.
-- [ ] No raw IP address is persisted; `ip_hash` remains unused.
+- [x] No raw IP address is persisted; `ip_hash` remains unused.
 
 ## Destination HTTP gate
 
