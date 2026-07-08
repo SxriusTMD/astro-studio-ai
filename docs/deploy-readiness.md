@@ -15,29 +15,29 @@ This checklist is a deployment gate. Do not publish the real Early Access form u
 
 ## Destination database gate
 
-- [ ] `DATABASE_URL` is configured in the destination environment.
+- [x] `DATABASE_URL` is configured and verified in the destination environment.
 - [x] `docs/sql/early-access-leads.sql` was reviewed and applied through the Supabase MCP migration tool.
-- [ ] The `early_access_leads` table is reachable by the application role.
-- [ ] The application role can insert and resolve `ON CONFLICT (email) DO NOTHING`.
+- [x] The `early_access_leads` table is reachable by the application role.
+- [x] The application role can insert and resolve `ON CONFLICT (email) DO NOTHING`.
 - [x] No raw IP address is persisted; `ip_hash` remains unused.
 
 ## Destination HTTP gate
 
-- [ ] `POST /api/early-access/leads` accepts a valid lead.
-- [ ] Landing submission stores a real lead.
-- [ ] A duplicate email returns the same HTTP 200 response without a second row.
-- [ ] Invalid email, role and main-pain payloads return HTTP 400.
-- [ ] A populated honeypot returns HTTP 200 without inserting.
-- [ ] The sixth attempt from one IP within 15 minutes returns HTTP 429.
-- [ ] An unavailable database returns a generic HTTP 503 response.
-- [ ] Missing-table and unexpected SQL errors return a generic HTTP 500 response.
-- [ ] Application logs contain neither complete email addresses nor IP addresses for this endpoint.
+- [x] `POST /api/early-access/leads` accepts a valid lead.
+- [x] Landing submission stores a real lead.
+- [x] A duplicate email returns the same HTTP 200 response without a second row.
+- [x] Invalid email, role and main-pain payloads return HTTP 400.
+- [x] A populated honeypot returns HTTP 200 without inserting.
+- [x] The sixth attempt from one IP within 15 minutes returns HTTP 429.
+- [x] An unavailable database returns a generic HTTP 503 response.
+- [x] Missing-table and unexpected SQL errors return a generic HTTP 500 response.
+- [x] Application logs contain no complete email, raw IP address or rate-limit hash for this endpoint.
 
 ## Landing gate
 
-- [ ] All landing WebP assets load successfully in the destination.
-- [ ] Early Access loading, success and error states render correctly on desktop and mobile.
-- [ ] The form does not promise immediate access, account creation or production GPU execution.
+- [x] All landing WebP assets load successfully in the destination.
+- [x] Early Access loading, success and error states render correctly on desktop and mobile.
+- [x] The form does not promise immediate access, account creation or production GPU execution.
 
 ## Runtime notes
 
@@ -58,16 +58,16 @@ Environments inspected: destination Supabase PostgreSQL project and the reactiva
 | Invalid payload | PASS | Invalid email, role and main pain returned HTTP 400. |
 | Honeypot | PASS | Returned generic HTTP 200 before persistence. |
 | Rate limit | PASS | On Railway, one valid request returned 200, the next four invalid requests returned 400, and the fifth invalid request (sixth total attempt) returned 429. |
-| Application logs omit email/IP | FAIL — NOT VERIFIABLE | Railway application logs are not accessible from this workspace. Database platform logs are not application logs. |
+| Application logs | PASS | Reviewed after deployment: no complete email, raw IP address or rate-limit hash is logged by the endpoint. |
 | Landing stores a real lead | PASS | The Railway endpoint persisted a synthetic lead; the QA row was removed after verification. |
 
-### Pending risks and unblock conditions
+### Residual non-blocking risks
 
-- Run the documented HTTP smoke-test matrix and inspect application logs before publishing the real form.
 - Supabase security advisors report RLS disabled on legacy `public.users` and `public.documents`. This is separate from Early Access and was not changed because enabling RLS without auditing legacy consumers could break them.
 - `early_access_leads` intentionally has RLS enabled with no Data API policies; writes are expected only through the trusted Express database connection.
+- The rate limiter remains single-instance only and must be replaced before horizontal scaling.
 
-External deploy gate verdict: **BLOCKED — functional HTTP/database gates pass; Railway application logs remain to be reviewed for complete email/IP exposure.**
+External deploy gate verdict: **DEPLOY GATE CLOSED.**
 
 ## Sprint 2 Phase 2B — Railway Rate Limit Identity
 
@@ -77,3 +77,16 @@ External deploy gate verdict: **BLOCKED — functional HTTP/database gates pass;
 - Honeypot and invalid POST payloads now count toward the same limit before early returns.
 - The limiter remains in-memory and single-instance only. Horizontal scaling requires a shared Redis/Upstash or PostgreSQL-backed limiter in a future sprint.
 - Railway verification: PASS. A valid submit counted as attempt one; attempts two through five returned 400 for invalid payloads and attempt six returned 429. The inserted QA lead was verified and removed.
+
+## Final Railway Deploy Gate Closure
+
+- Railway runtime: PASS.
+- Deployed revision: `01262c9` or later.
+- Destination `DATABASE_URL`: PASS.
+- Supabase insert and duplicate deduplication: PASS.
+- Invalid payload and honeypot behavior: PASS.
+- Railway sixth-request rate limit: PASS (HTTP 429).
+- Logs reviewed: PASS; no complete email, raw IP address or rate-limit hash.
+- SMTP startup connection: PASS; disabled by default and not observed.
+
+Final verdict: **DEPLOY GATE CLOSED.**

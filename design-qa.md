@@ -120,6 +120,8 @@ Sprint 1C verdict: READY TO COMMIT.
 
 ## Sprint 2 Phase 2 — External Deploy Gate Closure Attempt
 
+Historical snapshot from before the corrected Railway database configuration and rate-limit deployment; superseded by the final closure below.
+
 - Environments inspected: destination Supabase PostgreSQL project and `https://aerolex-ai.up.railway.app`.
 - SQL applied: PASS (`create_early_access_leads`).
 - Table verified: PASS; expected schema, constraints, UUID primary key, unique email, timestamp default and RLS are present.
@@ -134,7 +136,7 @@ Sprint 1C verdict: READY TO COMMIT.
 - Early Access table policy: RLS is enabled with no public Data API policies; the intended writer is the trusted Express database connection.
 - Separate legacy risk: Supabase reports RLS disabled on `public.users` and `public.documents`. No policy changes were made because legacy consumers require an audit first.
 
-Final verdict: BLOCKED — correct Railway's destination `DATABASE_URL`/database permissions, restart the service, then repeat valid, duplicate, insertion and application-log checks.
+Historical verdict: BLOCKED at the time; superseded by the final PASS closure below.
 
 ## Sprint 2 Phase 2B — Railway Rate Limit Identity Fix
 
@@ -146,3 +148,22 @@ Final verdict: BLOCKED — correct Railway's destination `DATABASE_URL`/database
 - Ordering: every POST reaching the handler counts, including honeypot and invalid payloads.
 - Scope: single-instance only. Multi-instance Railway deployments require a shared Redis/Upstash or PostgreSQL-backed limiter later.
 - Public verification: valid submit returned 200; four subsequent invalid requests returned 400; the sixth total request returned 429. The single synthetic database row was verified and removed.
+
+## Sprint 2 Phase 2 — Final Deploy Gate Closure
+
+- Railway runtime: PASS.
+- Deployed commit: `01262c9` or later.
+- Corrected destination `DATABASE_URL`: PASS.
+- Valid public submit and Supabase insert: PASS.
+- Duplicate response and single-row deduplication: PASS.
+- Invalid payload response: PASS (HTTP 400).
+- Honeypot response without insertion: PASS (HTTP 200).
+- Railway rate limit: PASS; the sixth total request returned HTTP 429.
+- Railway logs reviewed: PASS.
+- Complete email in endpoint logs: NONE.
+- Raw IP address in endpoint logs: NONE.
+- Rate-limit hash in endpoint logs: NONE.
+- SMTP startup connection: NONE; lazy email behavior remains intact.
+- Build and release validation: PASS.
+
+Final verdict: **DEPLOY GATE CLOSED.**
