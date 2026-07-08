@@ -138,10 +138,11 @@ Final verdict: BLOCKED — correct Railway's destination `DATABASE_URL`/database
 
 ## Sprint 2 Phase 2B — Railway Rate Limit Identity Fix
 
-- Railway rate-limit identity bug: FIXED in implementation; destination deployment verification remains required.
+- Railway rate-limit identity bug: FIXED and verified in the destination deployment.
 - Cause: `trust proxy = 1` could resolve a different managed Railway proxy hop for requests from the same client.
 - Identity: the endpoint prefers the first Express-resolved forwarded client, normalizes forwarded candidates and IPv6-mapped IPv4, then falls back through `req.ip`, controlled proxy headers and the socket address.
 - Key storage: SHA-256 of the `early-access:`-prefixed identity; only the hash is held in the bounded in-memory map.
 - Privacy: raw IP and hashed identity are not persisted or logged; complete email addresses are not logged.
 - Ordering: every POST reaching the handler counts, including honeypot and invalid payloads.
 - Scope: single-instance only. Multi-instance Railway deployments require a shared Redis/Upstash or PostgreSQL-backed limiter later.
+- Public verification: valid submit returned 200; four subsequent invalid requests returned 400; the sixth total request returned 429. The single synthetic database row was verified and removed.

@@ -57,18 +57,17 @@ Environments inspected: destination Supabase PostgreSQL project and the reactiva
 | Duplicate indistinguishable | PASS | The repeated request returned the same HTTP 200 and the database retained one row. |
 | Invalid payload | PASS | Invalid email, role and main pain returned HTTP 400. |
 | Honeypot | PASS | Returned generic HTTP 200 before persistence. |
-| Rate limit | FIXED LOCALLY — DEPLOY PENDING | Railway proxy identity varied with `trust proxy = 1`; the implementation now hashes the first Express-resolved client identity from the trusted proxy chain. |
+| Rate limit | PASS | On Railway, one valid request returned 200, the next four invalid requests returned 400, and the fifth invalid request (sixth total attempt) returned 429. |
 | Application logs omit email/IP | FAIL — NOT VERIFIABLE | Railway application logs are not accessible from this workspace. Database platform logs are not application logs. |
 | Landing stores a real lead | PASS | The Railway endpoint persisted a synthetic lead; the QA row was removed after verification. |
 
 ### Pending risks and unblock conditions
 
-- Deploy the rate-limit identity fix and repeat six requests from one unchanged client/network; the sixth must return HTTP 429.
 - Run the documented HTTP smoke-test matrix and inspect application logs before publishing the real form.
 - Supabase security advisors report RLS disabled on legacy `public.users` and `public.documents`. This is separate from Early Access and was not changed because enabling RLS without auditing legacy consumers could break them.
 - `early_access_leads` intentionally has RLS enabled with no Data API policies; writes are expected only through the trusted Express database connection.
 
-External deploy gate verdict: **BLOCKED — rate-limit fix requires Railway deployment/verification, and Railway application logs remain to be reviewed.**
+External deploy gate verdict: **BLOCKED — functional HTTP/database gates pass; Railway application logs remain to be reviewed for complete email/IP exposure.**
 
 ## Sprint 2 Phase 2B — Railway Rate Limit Identity
 
@@ -77,3 +76,4 @@ External deploy gate verdict: **BLOCKED — rate-limit fix requires Railway depl
 - Raw IP addresses and hashes are neither persisted nor logged.
 - Honeypot and invalid POST payloads now count toward the same limit before early returns.
 - The limiter remains in-memory and single-instance only. Horizontal scaling requires a shared Redis/Upstash or PostgreSQL-backed limiter in a future sprint.
+- Railway verification: PASS. A valid submit counted as attempt one; attempts two through five returned 400 for invalid payloads and attempt six returned 429. The inserted QA lead was verified and removed.
