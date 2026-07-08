@@ -120,17 +120,18 @@ Sprint 1C verdict: READY TO COMMIT.
 
 ## Sprint 2 Phase 2 — External Deploy Gate Closure Attempt
 
-- Environment inspected: destination Supabase PostgreSQL project.
+- Environments inspected: destination Supabase PostgreSQL project and `https://aerolex-ai.up.railway.app`.
 - SQL applied: PASS (`create_early_access_leads`).
 - Table verified: PASS; expected schema, constraints, UUID primary key, unique email, timestamp default and RLS are present.
-- Valid public/staging submit: FAIL — NOT RUN; Railway/Express runtime is not available.
-- Duplicate response: FAIL — NOT RUN.
-- Invalid payload response: FAIL — NOT RUN.
-- Honeypot behavior: FAIL — NOT RUN.
-- Rate limit behavior: FAIL — NOT RUN.
-- Application logs without email/IP: FAIL — NOT VERIFIABLE without a deployed application runtime.
-- Landing stores a real lead: FAIL — NOT RUN; the destination table contained zero rows at verification time.
+- Railway availability: PASS; the root URL returned HTTP 200.
+- Valid public/staging submit: FAIL; the endpoint returned generic HTTP 500.
+- Duplicate response: FAIL; it was indistinguishable but also returned HTTP 500, so persistence/deduplication was not validated.
+- Invalid payload response: PASS; invalid email, role and main pain returned HTTP 400.
+- Honeypot behavior: PASS; it returned generic HTTP 200 before persistence.
+- Rate limit behavior: PASS; the sixth counted attempt returned HTTP 429.
+- Application logs without email/IP: FAIL — NOT VERIFIABLE without Railway log access.
+- Landing stores a real lead: FAIL; Supabase contained zero rows after the valid Railway request.
 - Early Access table policy: RLS is enabled with no public Data API policies; the intended writer is the trusted Express database connection.
 - Separate legacy risk: Supabase reports RLS disabled on `public.users` and `public.documents`. No policy changes were made because legacy consumers require an audit first.
 
-Final verdict: BLOCKED — deploy or resume the Express service, configure its destination `DATABASE_URL`, then run the documented HTTP and log smoke tests.
+Final verdict: BLOCKED — correct Railway's destination `DATABASE_URL`/database permissions, restart the service, then repeat valid, duplicate, insertion and application-log checks.
