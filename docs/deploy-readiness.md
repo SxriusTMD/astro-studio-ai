@@ -44,3 +44,29 @@ This checklist is a deployment gate. Do not publish the real Early Access form u
 - The rate limiter is in-memory and protects only one Node.js instance. Multi-instance deployment requires a shared limiter before scaling horizontally.
 - The SMTP transport is now lazy: startup performs no SMTP verification and sends no health-check email. Existing auth email flows still invoke `sendMail()` on demand.
 - Applying the SQL is intentionally separate from server startup. A missing table is a blocked deployment, not an automatic migration.
+
+## External Deploy Gate Result — 2026-07-08
+
+Environment inspected: destination Supabase PostgreSQL project. No public or staging Express runtime was available for HTTP testing because the Railway service is paused.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| SQL applied | PASS | Migration `create_early_access_leads` is registered in the destination database. |
+| `early_access_leads` table verified | PASS | Table exists with eight expected columns, UUID primary key, unique email, allowlist checks, `created_at` default and RLS enabled. |
+| Valid public/staging submit | FAIL — NOT RUN | No reachable Express deployment exists. |
+| Duplicate indistinguishable | FAIL — NOT RUN | Requires the deployed endpoint and application database role. |
+| Invalid payload | FAIL — NOT RUN | Requires the deployed endpoint. |
+| Honeypot | FAIL — NOT RUN | Requires the deployed endpoint and a row-count comparison. |
+| Rate limit | FAIL — NOT RUN | Requires one running application instance. |
+| Application logs omit email/IP | FAIL — NOT VERIFIABLE | No destination application runtime produced endpoint logs. Database platform logs are not application logs. |
+| Landing stores a real lead | FAIL — NOT RUN | Destination table currently contains zero rows and the landing backend is not deployed. |
+
+### Pending risks and unblock conditions
+
+- Deploy or resume an Express environment and configure its `DATABASE_URL` for the verified destination PostgreSQL database.
+- Confirm that the application role can insert and execute `ON CONFLICT (email) DO NOTHING`.
+- Run the documented HTTP smoke-test matrix and inspect application logs before publishing the real form.
+- Supabase security advisors report RLS disabled on legacy `public.users` and `public.documents`. This is separate from Early Access and was not changed because enabling RLS without auditing legacy consumers could break them.
+- `early_access_leads` intentionally has RLS enabled with no Data API policies; writes are expected only through the trusted Express database connection.
+
+External deploy gate verdict: **BLOCKED — no reachable public/staging Express runtime is available to execute the required HTTP, insertion and application-log checks.**

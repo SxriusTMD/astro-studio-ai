@@ -117,3 +117,20 @@ Sprint 1C verdict: READY TO COMMIT.
 - Deployment checklist: `docs/deploy-readiness.md`.
 - Manual smoke-test matrix: `docs/testing/early-access-smoke-tests.md`.
 - External gates still required before production: destination `DATABASE_URL`, manual SQL application and destination-environment HTTP/log verification.
+
+## Sprint 2 Phase 2 — External Deploy Gate Closure Attempt
+
+- Environment inspected: destination Supabase PostgreSQL project.
+- SQL applied: PASS (`create_early_access_leads`).
+- Table verified: PASS; expected schema, constraints, UUID primary key, unique email, timestamp default and RLS are present.
+- Valid public/staging submit: FAIL — NOT RUN; Railway/Express runtime is not available.
+- Duplicate response: FAIL — NOT RUN.
+- Invalid payload response: FAIL — NOT RUN.
+- Honeypot behavior: FAIL — NOT RUN.
+- Rate limit behavior: FAIL — NOT RUN.
+- Application logs without email/IP: FAIL — NOT VERIFIABLE without a deployed application runtime.
+- Landing stores a real lead: FAIL — NOT RUN; the destination table contained zero rows at verification time.
+- Early Access table policy: RLS is enabled with no public Data API policies; the intended writer is the trusted Express database connection.
+- Separate legacy risk: Supabase reports RLS disabled on `public.users` and `public.documents`. No policy changes were made because legacy consumers require an audit first.
+
+Final verdict: BLOCKED — deploy or resume the Express service, configure its destination `DATABASE_URL`, then run the documented HTTP and log smoke tests.
